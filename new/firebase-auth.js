@@ -1,4 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyBQtQ38cV6dVyqzjudVse_jpHNK0Qq1oY0",
     authDomain: "tctam-main.firebaseapp.com",
@@ -9,3 +11,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
+export { auth, signInWithEmailAndPassword, signInWithPopup, googleProvider, onAuthStateChanged };

@@ -5,12 +5,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quizy</title>
-
-    
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/index.css">
 </head>
 
 <body>
-    <h1>Quizy</h1>
+    <header id="header">
+        <div id="logo">Quizy</div>
+        <div id="items">
+            <button onclick="window.open('https://tctam.nl', '_blank')">TC_tam</button>
+            <button id="login-btn" onclick="window.location.href='login.html'">Login to Quizy</button>
+        </div>
+    </header>
+
+    <div class="hero-wrapper">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Test je kennis, overtref jezelf met Quizy</h1>
+                <p>Daag jezelf uit met interactieve quizzen, leer elke dag iets nieuws en klim naar de top van het
+                    klassement. Speel direct gratis de populairste quizzen.</p>
+                <div class="hero-buttons">
+                    <button id="start-btn" onclick="window.location.href='login.html'">Start Direct</button>
+                    <div class="hero-secondary-btn">
+                        <span class="material-symbols-rounded">play_circle</span>
+                        Quizy in 30 seconden
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="mock-container">
+                    <div class="mock-card">
+                        <span class="material-symbols-rounded mock-icon">language</span>
+                        <div class="mock-card-title">Talen</div>
+                        <div class="mock-tag">Spaans</div>
+                        <div class="mock-progress-bar">
+                            <div class="mock-progress" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="mock-card">
+                        <span class="material-symbols-rounded mock-icon">functions</span>
+                        <div class="mock-card-title">Wiskunde</div>
+                        <div class="mock-tag">Formules</div>
+                        <div class="mock-progress-bar">
+                            <div class="mock-progress" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="mock-card">
+                        <span class="material-symbols-rounded mock-icon">history</span>
+                        <div class="mock-card-title">Geschiedenis</div>
+                        <div class="mock-tag">WO II</div>
+                        <div class="mock-progress-bar">
+                            <div class="mock-progress" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="mock-card">
+                        <span class="material-symbols-rounded mock-icon">biotech</span>
+                        <div class="mock-card-title">Biologie</div>
+                        <div class="mock-tag">DNA</div>
+                        <div class="mock-progress-bar">
+                            <div class="mock-progress" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    <div class="mock-card">
+                        <span class="material-symbols-rounded mock-icon">palette</span>
+                        <div class="mock-card-title">Kunst</div>
+                        <div class="mock-tag">Cultuur</div>
+                        <div class="mock-progress-bar">
+                            <div class="mock-progress" style="width: 65%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="wave-container">
+            <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+                <path fill="var(--bg-light)" d="M0,60 C320,120 420,0 840,40 C1140,70 1300,10 1440,40 L1440,120 L0,120 Z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <section class="features">
+            <div class="card">
+                <span class="material-symbols-rounded card-icon">bolt</span>
+                <h3>Razendsnel Leren</h3>
+                <p>Meteen aan de slag. Kies een leerset, start je sessie en test direct je kennis zonder enige
+                    afleiding.</p>
+            </div>
+            <div class="card">
+                <span class="material-symbols-rounded card-icon">psychology</span>
+                <h3>Eindeloze Onderwerpen</h3>
+                <p>Van talen en wiskunde tot geschiedenis en biologie. Vind of maak de perfecte set voor jouw volgende
+                    toets.</p>
+            </div>
+            <div class="card">
+                <span class="material-symbols-rounded card-icon">trophy</span>
+                <h3>Volg je Voortgang</h3>
+                <p>Zie precies wat je al kent en waar je nog even op moet oefenen. Verbeter je resultaten stap voor
+                    stap.</p>
+            </div>
+        </section>
+
+        <section class="app-showcase">
+            <div class="showcase-content">
+                <h2>Elke klas, elke toets, één ultieme studie-app</h2>
+                <p>Maak eenvoudig je eigen flitskaarten en organiseer je leersets. Studeer altijd, overal en in jouw
+                    eigen tempo met Quizy.</p>
+                <div class="showcase-features">
+                    <div class="showcase-item">
+                        <span class="material-symbols-rounded">edit_note</span>
+                        <span>Creëer je eigen leersets</span>
+                    </div>
+                    <div class="showcase-item">
+                        <span class="material-symbols-rounded">devices</span>
+                        <span>Altijd synchroon op al je apparaten</span>
+                    </div>
+                </div>
+            </div>
+            <div class="showcase-visual">
+                <span class="material-symbols-rounded showcase-icon">school</span>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-left">
+                <span class="footer-brand">Quizy</span>
+                <span class="footer-credit">Gemaakt door Tamer Çevik</span>
+            </div>
+            <div class="footer-right">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSenU2OuAafpBvayn0mgszuJmPA7dDdeHLP5ou0xpljfj0yRcg/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer">Report Bug</a>
+                <a href="https://tctam.nl/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                <a href="https://tctam.nl/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
     <script type="module" src="firebase-auth.js"></script>
 </body>
 

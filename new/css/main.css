@@ -1,0 +1,147 @@
+:root {
+    --bg-dark: #0b0f19;
+    --bg-dark-rgb: 11, 15, 25;
+    --bg-light: #ffffff;
+    --bg-light-rgb: 255, 255, 255;
+    
+    /* Brand Colors */
+    --primary: #10b981;
+    --primary-rgb: 16, 185, 129;
+    --primary-hover: #059669;
+    --primary-active: #047857;
+    
+    /* Text & UI */
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --text-light: #ffffff;
+    --border-light: #f1f5f9;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--bg-dark);
+    line-height: 1.5;
+    margin-top: 100px;
+}
+
+#header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: var(--bg-dark);
+    box-shadow: 0 0 0 100vmax var(--bg-dark);
+    clip-path: inset(0 -100vmax);
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px;
+    height: 100px;
+}
+
+#header #items {
+    display: flex;
+    gap: 12px;
+}
+
+#header #items button {
+    background: var(--bg-dark);
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    padding: 12px 24px;
+    font-size: 1.05em;
+    font-weight: 600;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#header #items button:hover {
+    color: var(--text-light);
+    background: rgba(var(--bg-light-rgb), 0.05);
+}
+
+#header #login-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: var(--text-light) !important;
+    border: none;
+    padding: 12px 28px;
+}
+
+#header #login-btn:hover {
+    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-active) 100%);
+    color: var(--text-light) !important;
+    transform: translateY(-1px);
+}
+
+#logo {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: -0.5px;
+}
+
+footer {
+    background-color: var(--bg-dark);
+    color: var(--text-muted);
+    padding: 40px 24px;
+    border-top: 1px solid rgba(var(--bg-light-rgb), 0.05);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.footer-brand {
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 1.2em;
+    letter-spacing: -0.5px;
+}
+
+.footer-credit {
+    font-size: 0.95em;
+    opacity: 0.8;
+    border-left: 1px solid rgba(var(--bg-light-rgb), 0.15);
+    padding-left: 16px;
+}
+
+.footer-right {
+    display: flex;
+    gap: 24px;
+}
+
+.footer-right a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.95em;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.footer-right a:hover {
+    color: var(--primary);
+}
