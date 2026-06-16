@@ -267,7 +267,8 @@
                         if (redirectUrl) {
                             window.location.href = redirectUrl;
                         } else {
-                            window.location.href = '/quizy/home.html';
+                            const basePath = window.location.pathname.startsWith('/quizy') ? '/quizy' : '';
+                            window.location.href = basePath + '/home.html';
                         }
                     }
                 },

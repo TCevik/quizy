@@ -60,7 +60,8 @@ function initThemeToggle() {
 function logout() {
     localStorage.removeItem('google_access_token');
     localStorage.removeItem('google_token_expiry');
-    window.location.href = '/quizy/index.html';
+    const basePath = window.location.pathname.startsWith('/quizy') ? '/quizy' : '';
+    window.location.href = basePath + '/index.html';
 }
 
 // ── XSS-beveiliging ────────────────────────────────────────────────────────
@@ -817,7 +818,7 @@ function injectCommonLayout() {
         document.body.insertBefore(headerEl, document.body.firstChild);
     }
     
-    const isHome = window.location.pathname.endsWith('home.html') || window.location.pathname.endsWith('home') || window.location.pathname === '/quizy/';
+    const isHome = window.location.pathname.endsWith('home.html') || window.location.pathname.endsWith('home') || window.location.pathname === '/quizy/' || window.location.pathname === '/';
     
     headerEl.innerHTML = `
         <a href="${isHome ? 'index.html' : 'home.html'}" id="logo">TC_tam <strong style="color: #52873e;">Quizy</strong></a>

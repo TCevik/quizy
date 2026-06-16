@@ -9,7 +9,8 @@
         console.warn("Geen toegang: Gebruiker is niet ingelogd of token is verlopen. Redirecting...");
         localStorage.removeItem('google_access_token');
         localStorage.removeItem('google_token_expiry');
-        window.location.href = '/quizy/index.html?redirect=' + encodeURIComponent(window.location.href);
+        const basePath = window.location.pathname.startsWith('/quizy') ? '/quizy' : '';
+        window.location.href = basePath + '/index.html?redirect=' + encodeURIComponent(window.location.href);
         return;
     }
 
@@ -85,11 +86,12 @@
                 localStorage.removeItem('google_access_token');
                 localStorage.removeItem('google_token_expiry');
                 
-                const isLoginPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/quizy/');
+                const isLoginPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/quizy/') || window.location.pathname === '/';
                 if (!isLoginPage) {
                     alert("Je sessie is verlopen. Open Quizy in een nieuw tabblad/venster en log opnieuw in. Daarna kun je hier op 'Opslaan' klikken of doorgaan om je werk te behouden.");
                 } else {
-                    window.location.href = '/quizy/index.html?redirect=' + encodeURIComponent(window.location.href);
+                    const basePath = window.location.pathname.startsWith('/quizy') ? '/quizy' : '';
+                    window.location.href = basePath + '/index.html?redirect=' + encodeURIComponent(window.location.href);
                 }
             }
             return response;
