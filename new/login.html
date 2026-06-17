@@ -35,7 +35,7 @@
                 <div class="input-group">
                     <div class="label-row">
                         <label for="password">Wachtwoord</label>
-                        <a href="#" class="forgot-password">Wachtwoord vergeten?</a>
+                        <a href="#" class="forgot-password" id="forgotPasswordBtn">Wachtwoord vergeten?</a>
                     </div>
                     <div class="input-wrapper">
                         <span class="material-symbols-rounded input-icon">lock</span>
@@ -50,6 +50,29 @@
             </form>
         </div>
     </main>
+
+    <!-- Modal for password reset -->
+    <div id="resetModal" class="modal" style="display: none;">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" id="closeResetModal">&times;</span>
+            <h3>Wachtwoord resetten</h3>
+            <p>Vul je e-mailadres in om een resetlink te ontvangen.</p>
+            <div id="reset-message" class="message" style="display: none;"></div>
+            <form id="resetForm">
+                <div class="input-group">
+                    <label for="reset-email">E-mailadres</label>
+                    <div class="input-wrapper">
+                        <span class="material-symbols-rounded input-icon">mail</span>
+                        <input type="email" id="reset-email" placeholder="naam@voorbeeld.nl" required autocomplete="email">
+                    </div>
+                </div>
+                <button type="submit" class="btn-gradient submit-btn">
+                    <span>Link versturen</span>
+                    <span class="material-symbols-rounded">send</span>
+                </button>
+            </form>
+        </div>
+    </div>
 
     <quizy-footer></quizy-footer>
 

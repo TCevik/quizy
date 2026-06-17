@@ -16,7 +16,16 @@ class QuizyHeader extends HTMLElement {
                 ${isLogin 
                     ? `<a class="btn-gradient" href="index.html">Terug</a>` 
                     : user 
-                        ? `<a class="btn-gradient" href="#" id="logoutBtn">Uitloggen</a>`
+                        ? `
+                            <a href="profile.html" class="btn-gradient">
+                                <span class="material-symbols-rounded" style="margin-right: 8px;">account_circle</span>
+                                Profiel
+                            </a>
+                            <a href="#" id="logoutBtn">
+                                <span class="material-symbols-rounded" style="margin-right: 8px;">logout</span>
+                                Uitloggen
+                            </a>
+                          `
                         : `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`
                 }
             </nav>
