@@ -164,54 +164,6 @@ body {
     transform: translateY(1px);
 }
 
-.login-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 24px 0;
-    color: var(--text-muted);
-}
-
-.login-divider::before,
-.login-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.login-divider:not(:empty)::before {
-    margin-right: 16px;
-}
-
-.login-divider:not(:empty)::after {
-    margin-left: 16px;
-}
-
-.google-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-light);
-    padding: 14px 28px;
-    font-size: 1em;
-    font-weight: 600;
-    border-radius: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    transition: all 0.2s ease;
-    width: 100%;
-}
-
-.google-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.15);
-}
-
-.google-btn:active {
-    transform: scale(0.98);
-}
 
 .signup-prompt {
     text-align: center;
@@ -229,12 +181,6 @@ body {
 
 .signup-prompt a:hover {
     color: var(--primary-hover);
-}
-
-@media (max-width: 540px) {
-    .login-container {
-        padding: 32px 24px;
-    }
 }
 
 .error-message {
