@@ -10,6 +10,10 @@ class QuizyHeader extends HTMLElement {
             user = data?.user;
         }
 
+        const pathname = window.location.pathname;
+        const isDashboard = pathname.includes('dashboard.html');
+        const isProfile = pathname.includes('profile.html');
+
         this.innerHTML = `
             <a href="index.html" class="logo">Quizy</a>
             <nav class="header-items">
@@ -17,7 +21,11 @@ class QuizyHeader extends HTMLElement {
                     ? `<a class="btn-gradient" href="index.html">Terug</a>` 
                     : user 
                         ? `
-                            <a href="profile.html" class="btn-gradient">
+                            <a href="dashboard.html" class="${isDashboard ? 'active' : ''}">
+                                <span class="material-symbols-rounded" style="margin-right: 8px;">dashboard</span>
+                                Dashboard
+                            </a>
+                            <a href="profile.html" class="${isProfile ? 'active' : ''}">
                                 <span class="material-symbols-rounded" style="margin-right: 8px;">account_circle</span>
                                 Profiel
                             </a>

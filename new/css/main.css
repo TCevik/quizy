@@ -93,6 +93,12 @@ body {
     background: rgba(var(--bg-light-rgb), 0.05);
 }
 
+.header-items a.active {
+    color: var(--text-light);
+    background: rgba(var(--bg-light-rgb), 0.1);
+    border-color: rgba(var(--bg-light-rgb), 0.15);
+}
+
 .btn-gradient {
     background: var(--primary);
     color: var(--text-light) !important;
