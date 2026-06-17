@@ -31,6 +31,26 @@
             </div>
 
             <div class="welcome-box">
+                <span class="material-symbols-rounded welcome-icon">person</span>
+                <h3>Weergavenaam aanpassen</h3>
+                <div id="profile-message" class="message" style="display: none;"></div>
+                <form id="changeNameForm" class="login-form">
+                    <div class="input-group">
+                        <label for="display-name">Weergavenaam</label>
+                        <div class="input-wrapper">
+                            <span class="material-symbols-rounded input-icon">person</span>
+                            <input type="text" id="display-name" placeholder="Je weergavenaam" required autocomplete="name">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-gradient submit-btn" style="width: auto; align-self: flex-start; margin-top: 8px;">
+                        <span>Naam bijwerken</span>
+                        <span class="material-symbols-rounded">save</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="welcome-box">
                 <span class="material-symbols-rounded welcome-icon">lock_reset</span>
                 <h3>Wachtwoord wijzigen</h3>
                 <div id="password-message" class="message" style="display: none;"></div>

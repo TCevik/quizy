@@ -20,11 +20,18 @@
     <main class="login-wrapper">
         <div class="login-container glass-panel">
             <div class="login-header">
-                <h2>Welkom terug</h2>
-                <p>Log in om verder te gaan met leren</p>
+                <h2 id="formTitle">Welkom terug</h2>
+                <p id="formSubtitle">Log in om verder te gaan met leren</p>
             </div>
             <div id="error-message" class="error-message" style="display: none;"></div>
             <form class="login-form" id="loginForm">
+                <div class="input-group" id="nameGroup" style="display: none;">
+                    <label for="name">Weergavenaam</label>
+                    <div class="input-wrapper">
+                        <span class="material-symbols-rounded input-icon">person</span>
+                        <input type="text" id="name" placeholder="Je naam" autocomplete="name">
+                    </div>
+                </div>
                 <div class="input-group">
                     <label for="email">E-mailadres</label>
                     <div class="input-wrapper">
@@ -43,11 +50,21 @@
                             autocomplete="current-password">
                     </div>
                 </div>
-                <button type="submit" class="btn-gradient submit-btn">
-                    <span>Inloggen</span>
-                    <span class="material-symbols-rounded">arrow_forward</span>
+                <div class="input-group" id="confirmPasswordGroup" style="display: none;">
+                    <label for="confirm-password">Bevestig wachtwoord</label>
+                    <div class="input-wrapper">
+                        <span class="material-symbols-rounded input-icon">lock</span>
+                        <input type="password" id="confirm-password" placeholder="••••••••" autocomplete="new-password">
+                    </div>
+                </div>
+                <button type="submit" class="btn-gradient submit-btn" id="submitBtn">
+                    <span id="submitText">Inloggen</span>
+                    <span class="material-symbols-rounded" id="submitIcon">arrow_forward</span>
                 </button>
             </form>
+            <div class="signup-prompt">
+                <span id="togglePromptText">Nog geen account?</span> <a href="#" id="toggleAuthBtn">Registreer hier</a>
+            </div>
         </div>
     </main>
 

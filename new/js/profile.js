@@ -32,10 +32,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         userNameEl.textContent = name;
     }
 
+    // Pre-fill display name input
+    const displayNameInput = document.getElementById('display-name');
+    if (displayNameInput && name) {
+        displayNameInput.value = name;
+    }
+
     // Display user's email
     const userEmailEl = document.getElementById('user-email');
     if (userEmailEl) {
         userEmailEl.textContent = user.email;
+    }
+
+    // Change name form submission
+    const changeNameForm = document.getElementById('changeNameForm');
+    const profileMessage = document.getElementById('profile-message');
+
+    function showProfileMessage(text, isSuccess) {
+        if (profileMessage) {
+            profileMessage.textContent = text;
+            profileMessage.className = `message ${isSuccess ? 'success' : 'error'}`;
+            profileMessage.style.display = 'block';
+        }
+    }
+
+    if (changeNameForm) {
+        changeNameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = displayNameInput.value.trim();
+
+            if (!newName) {
+                showProfileMessage('Voer een geldige weergavenaam in.', false);
+                return;
+            }
+
+            showProfileMessage('Weergavenaam bijwerken...', true);
+
+            const { error: updateError } = await supabase.auth.updateUser({
+                data: { full_name: newName, name: newName }
+            });
+
+            if (updateError) {
+                showProfileMessage(`Fout bij het bijwerken: ${updateError.message}`, false);
+            } else {
+                showProfileMessage('Weergavenaam succesvol bijgewerkt!', true);
+                if (userNameEl) {
+                    userNameEl.textContent = newName;
+                }
+            }
+        });
     }
 
     // Password reset link functionality
