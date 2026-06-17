@@ -176,3 +176,18 @@ body {
     z-index: 2;
 }
 
+.login-container {
+    opacity: 0;
+    animation: loginAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+@keyframes loginAppear {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

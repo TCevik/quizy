@@ -1,15 +1,35 @@
 class QuizyHeader extends HTMLElement {
-    connectedCallback() {
+    async connectedCallback() {
         const isLogin = this.hasAttribute('login-page');
+        
+        const supabase = await window.supabaseReady;
+
+        let user = null;
+        if (supabase) {
+            const { data } = await supabase.auth.getUser();
+            user = data?.user;
+        }
+
         this.innerHTML = `
             <a href="index.html" class="logo">Quizy</a>
             <nav class="header-items">
                 ${isLogin 
                     ? `<a class="btn-gradient" href="index.html">Terug</a>` 
-                    : `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`
+                    : user 
+                        ? `<a class="btn-gradient" href="#" id="logoutBtn">Uitloggen</a>`
+                        : `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`
                 }
             </nav>
         `;
+
+        const logoutBtn = this.querySelector('#logoutBtn');
+        if (logoutBtn && supabase) {
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await supabase.auth.signOut();
+                window.location.href = 'index.html';
+            });
+        }
     }
 }
 

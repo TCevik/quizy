@@ -148,7 +148,7 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, transparent, var(--card-color, var(--primary)), transparent);
+    background: var(--card-color, var(--primary));
     opacity: 0.7;
 }
 
@@ -201,31 +201,16 @@
     position: relative;
 }
 
-.card::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--blue-accent) 100%);
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
 .card:hover {
     transform: translateY(-8px);
     box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.04);
-    border-color: transparent;
-}
-
-.card:hover::after {
-    opacity: 0.15;
+    border-color: var(--primary);
 }
 
 .card-icon {
     font-size: 2.2em;
     color: var(--primary);
-    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--primary-rgb), 0.02) 100%);
+    background: rgba(var(--primary-rgb), 0.08);
     width: 60px;
     height: 60px;
     display: flex;
@@ -238,8 +223,8 @@
 }
 
 .card:hover .card-icon {
-    transform: scale(1.1) rotate(5deg);
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    transform: scale(1.1);
+    background: var(--primary);
     color: var(--text-light);
     border-color: transparent;
 }
@@ -274,7 +259,7 @@
 .mock-card:hover .mock-icon {
     background: var(--card-color, var(--primary));
     color: var(--bg-dark);
-    transform: scale(1.1) rotate(-5deg);
+    transform: scale(1.1);
 }
 
 .mock-card-title {
@@ -372,7 +357,7 @@
 .showcase-icon {
     font-size: 6.5em;
     color: var(--primary);
-    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--blue-accent-rgb), 0.03) 100%);
+    background: rgba(var(--primary-rgb), 0.08);
     width: 180px;
     height: 180px;
     display: flex;
@@ -384,8 +369,8 @@
 }
 
 .showcase-visual:hover .showcase-icon {
-    transform: scale(1.08) rotate(6deg);
-    background: linear-gradient(135deg, var(--primary) 0%, var(--blue-accent) 100%);
+    transform: scale(1.08);
+    background: var(--primary);
     color: var(--text-light);
     border-color: transparent;
 }

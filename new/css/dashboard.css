@@ -1,0 +1,91 @@
+/* Dashboard page styling */
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.dashboard-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 40px 24px;
+    background: var(--bg-dark);
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    opacity: 0;
+    animation: dashboardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+.dashboard-header {
+    text-align: left;
+    margin-bottom: 36px;
+    border-bottom: 1px solid rgba(var(--bg-light-rgb), 0.1);
+    padding-bottom: 24px;
+}
+
+.dashboard-header h2 {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+
+.dashboard-header p {
+    color: var(--text-muted);
+    font-size: 1.1em;
+}
+
+.user-email-text {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.dashboard-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.welcome-box {
+    text-align: left;
+    padding: 24px;
+    background: rgba(var(--bg-light-rgb), 0.03);
+    border-radius: 16px;
+    border: 1px solid rgba(var(--bg-light-rgb), 0.05);
+}
+
+.welcome-icon {
+    font-size: 3em;
+    color: var(--primary);
+    margin-bottom: 12px;
+}
+
+.welcome-box h3 {
+    margin-bottom: 8px;
+    font-size: 1.25em;
+    font-weight: 600;
+}
+
+.welcome-box p {
+    color: var(--text-muted);
+}
+
+@keyframes dashboardAppear {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

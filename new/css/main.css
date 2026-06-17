@@ -3,13 +3,13 @@
     --bg-dark-rgb: 11, 15, 25;
     --bg-light: #ffffff;
     --bg-light-rgb: 255, 255, 255;
-    
+
     /* Brand Colors */
-    --primary: #10b981;
-    --primary-rgb: 16, 185, 129;
-    --primary-hover: #059669;
-    --primary-active: #047857;
-    
+    --primary: #43a047;
+    --primary-rgb: 67, 160, 71;
+    --primary-hover: #388e3c;
+    --primary-active: #2e7d32;
+
     /* Text & UI */
     --text-primary: #111827;
     --text-secondary: #4b5563;
@@ -23,8 +23,8 @@
     /* Theme Colors */
     --blue: #60a5fa;
     --blue-rgb: 96, 165, 250;
-    --green: #34d399;
-    --green-rgb: 52, 211, 153;
+    --green: #43a047;
+    --green-rgb: 67, 160, 71;
     --orange: #fb923c;
     --orange-rgb: 251, 146, 60;
     --pink: #f472b6;
@@ -94,7 +94,7 @@ body {
 }
 
 .btn-gradient {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    background: var(--primary);
     color: var(--text-light) !important;
     border: none;
     padding: 12px 28px;
@@ -108,7 +108,7 @@ body {
 }
 
 .btn-gradient:hover {
-    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-active) 100%);
+    background: var(--primary-hover);
     transform: translateY(-1px);
 }
 
@@ -128,7 +128,8 @@ body {
     border: 1px solid rgba(var(--bg-light-rgb), 0.08);
 }
 
-footer, quizy-footer {
+footer,
+quizy-footer {
     display: block;
     background-color: var(--bg-dark);
     color: var(--text-muted);
@@ -181,4 +182,30 @@ footer, quizy-footer {
 
 .footer-right a:hover {
     color: var(--primary);
+}
+
+.page-wave-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--bg-dark);
+    z-index: 999999;
+    transform: translateY(calc(-100% - 120px));
+    transition: transform 0.75s cubic-bezier(0.65, 0, 0.35, 1);
+    pointer-events: none;
+}
+
+.page-wave-overlay svg {
+    position: absolute;
+    bottom: -119px;
+    left: 0;
+    width: 100%;
+    height: 120px;
+    transform: rotate(180deg);
+}
+
+.page-wave-overlay.wave-down {
+    transform: translateY(0);
 }

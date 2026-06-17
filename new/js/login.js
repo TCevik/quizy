@@ -1,21 +1,40 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const loginForm = document.getElementById('loginForm');
     const errorMessage = document.getElementById('error-message');
+    
+    const supabase = await window.supabaseReady;
 
-    if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+    if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            window.location.href = 'dashboard.html';
+            return;
+        }
+    }
+
+    if (loginForm && supabase) {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            if (email && password.length >= 6) {
-                window.location.href = 'dashboard.html';
-            } else {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
                 if (errorMessage) {
-                    errorMessage.textContent = 'Vul een geldig e-mailadres in en een wachtwoord van minimaal 6 tekens.';
+                    errorMessage.textContent = `Inloggen mislukt: ${error.message}`;
                     errorMessage.style.display = 'block';
                 }
+            } else {
+                window.location.href = 'dashboard.html';
             }
         });
     }
