@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     if (userNameEl) {
-        userNameEl.textContent = name;
+        userNameEl.textContent = 'Welkom, ' + name;
     }
 
     // Pre-fill display name input
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 showProfileMessage('Weergavenaam succesvol bijgewerkt!', true);
                 if (userNameEl) {
-                    userNameEl.textContent = newName;
+                    userNameEl.textContent = 'Welkom, ' + newName;
                 }
             }
         });

@@ -24,69 +24,69 @@
             <p><span id="user-email" class="user-email-text">Laden...</span></p>
         </div>
         <div class="dashboard-content">
-            <div class="welcome-box">
-                <span class="material-symbols-rounded welcome-icon">account_circle</span>
-                <h3>Profielgegevens</h3>
-                <p>Welkom op je profielpagina. Hier kun je je accountgegevens inzien.</p>
-            </div>
-
-            <div class="welcome-box">
-                <span class="material-symbols-rounded welcome-icon">person</span>
-                <h3>Weergavenaam aanpassen</h3>
-                <div id="profile-message" class="message" style="display: none;"></div>
-                <form id="changeNameForm" class="login-form">
-                    <div class="input-group">
-                        <label for="display-name">Weergavenaam</label>
-                        <div class="input-wrapper">
-                            <span class="material-symbols-rounded input-icon">person</span>
-                            <input type="text" id="display-name" placeholder="Je weergavenaam" required autocomplete="name">
-                        </div>
+            <div class="profile-grid">
+                <div class="profile-section">
+                    <div class="profile-section-header">
+                        <span class="material-symbols-rounded">person</span>
+                        <h3>Weergavenaam aanpassen</h3>
                     </div>
-
-                    <button type="submit" class="btn-gradient submit-btn" style="width: auto; align-self: flex-start; margin-top: 8px;">
-                        <span>Naam bijwerken</span>
-                        <span class="material-symbols-rounded">save</span>
-                    </button>
-                </form>
-            </div>
-
-            <div class="welcome-box">
-                <span class="material-symbols-rounded welcome-icon">lock_reset</span>
-                <h3>Wachtwoord wijzigen</h3>
-                <div id="password-message" class="message" style="display: none;"></div>
-                <form id="changePasswordForm" class="login-form">
-                    <div class="input-group">
-                        <label for="old-password">Oud wachtwoord (optioneel)</label>
-                        <div class="input-wrapper">
-                            <span class="material-symbols-rounded input-icon">lock</span>
-                            <input type="password" id="old-password" placeholder="••••••••" autocomplete="current-password">
+                    <div id="profile-message" class="message" style="display: none;"></div>
+                    <form id="changeNameForm" class="login-form">
+                        <div class="input-group">
+                            <label for="display-name">Weergavenaam</label>
+                            <div class="input-wrapper">
+                                <span class="material-symbols-rounded input-icon">person</span>
+                                <input type="text" id="display-name" placeholder="Je weergavenaam" required autocomplete="name">
+                            </div>
                         </div>
-                        <div style="margin-top: 4px;">
-                            <a href="#" class="forgot-password" id="resetPasswordBtn">Wachtwoord vergeten? Stuur direct een herstellink</a>
-                        </div>
+
+                        <button type="submit" class="btn-gradient submit-btn" style="width: auto; align-self: flex-start; margin-top: 8px;">
+                            <span>Naam bijwerken</span>
+                            <span class="material-symbols-rounded">save</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-section-header">
+                        <span class="material-symbols-rounded">lock_reset</span>
+                        <h3>Wachtwoord wijzigen</h3>
                     </div>
-                    
-                    <div class="input-group">
-                        <label for="new-password">Nieuw wachtwoord</label>
-                        <div class="input-wrapper">
-                            <span class="material-symbols-rounded input-icon">lock_open</span>
-                            <input type="password" id="new-password" placeholder="••••••••" required autocomplete="new-password">
+                    <div id="password-message" class="message" style="display: none;"></div>
+                    <form id="changePasswordForm" class="login-form">
+                        <div class="input-group">
+                            <label for="old-password">Oud wachtwoord (optioneel)</label>
+                            <div class="input-wrapper">
+                                <span class="material-symbols-rounded input-icon">lock</span>
+                                <input type="password" id="old-password" placeholder="••••••••" autocomplete="current-password">
+                            </div>
+                            <div style="margin-top: 4px;">
+                                <a href="#" class="forgot-password" id="resetPasswordBtn">Wachtwoord vergeten? Stuur direct een herstellink</a>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="confirm-password">Bevestig nieuw wachtwoord</label>
-                        <div class="input-wrapper">
-                            <span class="material-symbols-rounded input-icon">lock_open</span>
-                            <input type="password" id="confirm-password" placeholder="••••••••" required autocomplete="new-password">
+                        
+                        <div class="input-group">
+                            <label for="new-password">Nieuw wachtwoord</label>
+                            <div class="input-wrapper">
+                                <span class="material-symbols-rounded input-icon">lock_open</span>
+                                <input type="password" id="new-password" placeholder="••••••••" required autocomplete="new-password">
+                            </div>
                         </div>
-                    </div>
 
-                    <button type="submit" class="btn-gradient submit-btn" style="width: auto; align-self: flex-start; margin-top: 8px;">
-                        <span>Wachtwoord bijwerken</span>
-                        <span class="material-symbols-rounded">save</span>
-                    </button>
-                </form>
+                        <div class="input-group">
+                            <label for="confirm-password">Bevestig nieuw wachtwoord</label>
+                            <div class="input-wrapper">
+                                <span class="material-symbols-rounded input-icon">lock_open</span>
+                                <input type="password" id="confirm-password" placeholder="••••••••" required autocomplete="new-password">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-gradient submit-btn" style="width: auto; align-self: flex-start; margin-top: 8px;">
+                            <span>Wachtwoord bijwerken</span>
+                            <span class="material-symbols-rounded">save</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </main>
