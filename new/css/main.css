@@ -16,6 +16,23 @@
     --text-muted: #9ca3af;
     --text-light: #ffffff;
     --border-light: #f1f5f9;
+
+    /* Header Dimensions */
+    --header-height: 100px;
+
+    /* Theme Colors */
+    --blue: #60a5fa;
+    --blue-rgb: 96, 165, 250;
+    --green: #34d399;
+    --green-rgb: 52, 211, 153;
+    --orange: #fb923c;
+    --orange-rgb: 251, 146, 60;
+    --pink: #f472b6;
+    --pink-rgb: 244, 114, 182;
+    --purple: #a78bfa;
+    --purple-rgb: 167, 139, 250;
+    --blue-accent: #3b82f6;
+    --blue-accent-rgb: 59, 130, 246;
 }
 
 * {
@@ -29,10 +46,10 @@ body {
     background-color: var(--bg-light);
     color: var(--bg-dark);
     line-height: 1.5;
-    margin-top: 100px;
+    margin-top: var(--header-height);
 }
 
-#header {
+.header {
     position: fixed;
     top: 0;
     left: 0;
@@ -47,15 +64,19 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 24px 24px;
-    height: 100px;
+    height: var(--header-height);
 }
 
-#header #items {
+.header-items {
     display: flex;
     gap: 12px;
+    align-items: center;
 }
 
-#header #items button {
+.header-items a {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
     background: var(--bg-dark);
     color: var(--text-muted);
     border: 1px solid transparent;
@@ -67,32 +88,48 @@ body {
     transition: all 0.2s ease;
 }
 
-#header #items button:hover {
+.header-items a:hover {
     color: var(--text-light);
     background: rgba(var(--bg-light-rgb), 0.05);
 }
 
-#header #login-btn {
+.btn-gradient {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
     color: var(--text-light) !important;
     border: none;
     padding: 12px 28px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
-#header #login-btn:hover {
+.btn-gradient:hover {
     background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-active) 100%);
-    color: var(--text-light) !important;
     transform: translateY(-1px);
 }
 
-#logo {
+.logo {
     font-size: 1.8em;
     font-weight: 700;
     color: var(--text-light);
     letter-spacing: -0.5px;
+    text-decoration: none;
+    cursor: pointer;
 }
 
-footer {
+.glass-panel {
+    background: rgba(var(--bg-dark-rgb), 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(var(--bg-light-rgb), 0.08);
+}
+
+footer, quizy-footer {
+    display: block;
     background-color: var(--bg-dark);
     color: var(--text-muted);
     padding: 40px 24px;
