@@ -8,7 +8,7 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
     <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/profile.css">
     <link rel="stylesheet" href="css/login.css">
     <script src="js/components.js" defer></script>
     <script src="js/main.js" defer></script>
@@ -20,8 +20,16 @@
 
     <main class="dashboard-wrapper">
         <div class="dashboard-header">
-            <h2 id="user-name">Laden...</h2>
-            <p><span id="user-email" class="user-email-text">Laden...</span></p>
+            <div class="profile-header-card">
+                <div class="profile-avatar-container">
+                    <img id="user-avatar" src="" alt="Profielfoto" style="display: none;">
+                    <span id="user-avatar-placeholder" class="material-symbols-rounded">person</span>
+                </div>
+                <div class="profile-header-info">
+                    <h2 id="user-name">Laden...</h2>
+                    <p><span id="user-email" class="user-email-text">Laden...</span></p>
+                </div>
+            </div>
         </div>
         <div class="dashboard-content">
             <div class="profile-grid">
@@ -32,18 +40,56 @@
                     </div>
                     <div id="profile-message" class="message" style="display: none;"></div>
                     <form id="changeNameForm" class="login-form">
-                        <div class="input-group">
-                            <label for="display-name">Weergavenaam</label>
-                            <div class="input-wrapper">
-                                <span class="material-symbols-rounded input-icon">person</span>
-                                <input type="text" id="display-name" placeholder="Je weergavenaam" required autocomplete="name">
+                        <div class="name-input-row">
+                            <div class="input-group">
+                                <label for="display-name">Weergavenaam</label>
+                                <div class="input-wrapper">
+                                    <span class="material-symbols-rounded input-icon">person</span>
+                                    <input type="text" id="display-name" placeholder="Je weergavenaam" required autocomplete="name">
+                                </div>
                             </div>
+
+                            <button type="submit" class="btn-gradient submit-btn">
+                                <span>Bijwerken</span>
+                                <span class="material-symbols-rounded">save</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="profile-section-header" style="margin-top: 32px;">
+                        <span class="material-symbols-rounded">image</span>
+                        <div>
+                            <h3>Profielfoto aanpassen</h3>
+                            <p class="profile-section-subtitle" style="margin: 2px 0 0 0; font-size: 0.85em; color: var(--text-muted);">Kies een link of upload een foto</p>
+                        </div>
+                    </div>
+                    <div id="avatar-message" class="message" style="display: none;"></div>
+                    <form id="changeAvatarForm" class="login-form">
+                        <div class="avatar-link-row">
+                            <div class="input-group">
+                                <label for="avatar-url">Profielfoto URL</label>
+                                <div class="input-wrapper">
+                                    <span class="material-symbols-rounded input-icon">link</span>
+                                    <input type="url" id="avatar-url" placeholder="https://voorbeeld.com/afbeelding.png">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-gradient submit-btn">
+                                <span>Opslaan</span>
+                                <span class="material-symbols-rounded">save</span>
+                            </button>
                         </div>
 
-                        <button type="submit" class="btn-gradient submit-btn" style="width: auto; align-self: flex-start; margin-top: 8px;">
-                            <span>Naam bijwerken</span>
-                            <span class="material-symbols-rounded">save</span>
-                        </button>
+                        <div class="input-group" style="margin-top: -8px;">
+                            <label>Of bestand uploaden</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="avatar-file" accept="image/*" class="file-upload-input">
+                                <div class="file-upload-trigger">
+                                    <span class="material-symbols-rounded">upload_file</span>
+                                    <span id="file-upload-text" class="file-upload-text">Kies een afbeelding...</span>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
 
