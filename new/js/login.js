@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const supabase = await window.supabaseReady;
 
     if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
             window.location.href = 'dashboard.html';
             return;
         }
@@ -88,8 +88,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (error) {
                     if (errorMessage) {
-                        errorMessage.textContent = `Inloggen mislukt: ${error.message}`;
-                        errorMessage.style.display = 'block';
+                        if (error.message.includes('Email not confirmed') || error.message.toLowerCase().includes('confirm')) {
+                            await resendConfirmationEmail(email, errorMessage);
+                        } else {
+                            errorMessage.textContent = `Inloggen mislukt: ${error.message}`;
+                            errorMessage.style.display = 'block';
+                        }
                     }
                 } else {
                     window.location.href = 'dashboard.html';
@@ -219,6 +223,71 @@ document.addEventListener('DOMContentLoaded', async () => {
                     resetForm.reset();
                 }
             }
+        });
+    }
+
+    // Resend confirmation email modal functionality
+    const resendModal = document.getElementById('resendModal');
+    const closeResendModal = document.getElementById('closeResendModal');
+    const resendForm = document.getElementById('resendForm');
+    const resendMessage = document.getElementById('resend-message');
+
+    if (closeResendModal && resendModal) {
+        closeResendModal.addEventListener('click', () => {
+            resendModal.style.display = 'none';
+        });
+
+        // Close on clicking outside modal content
+        window.addEventListener('click', (e) => {
+            if (e.target === resendModal) {
+                resendModal.style.display = 'none';
+            }
+        });
+    }
+
+    async function resendConfirmationEmail(email, customMessageEl = null) {
+        const msgEl = customMessageEl || resendMessage;
+        if (msgEl) {
+            msgEl.textContent = 'Verificatiemail versturen...';
+            if (!customMessageEl) {
+                msgEl.className = 'message';
+            }
+            msgEl.style.display = 'block';
+        }
+
+        const { error } = await supabase.auth.resend({
+            type: 'signup',
+            email: email,
+            options: {
+                emailRedirectTo: window.location.origin + '/dashboard.html'
+            }
+        });
+
+        if (msgEl) {
+            if (error) {
+                msgEl.textContent = `Fout: ${error.message}`;
+                if (!customMessageEl) {
+                    msgEl.className = 'message error';
+                }
+            } else {
+                msgEl.textContent = 'Je e-mailadres is nog niet bevestigd. Er is direct een nieuwe verificatiemail naar je verstuurd!';
+                if (!customMessageEl) {
+                    msgEl.className = 'message success';
+                    if (resendForm) resendForm.reset();
+                } else {
+                    msgEl.style.background = 'rgba(67, 160, 71, 0.15)';
+                    msgEl.style.borderColor = 'rgba(67, 160, 71, 0.3)';
+                    msgEl.style.color = '#43a047';
+                }
+            }
+        }
+    }
+
+    if (resendForm && supabase) {
+        resendForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('resend-email').value;
+            await resendConfirmationEmail(email);
         });
     }
 });

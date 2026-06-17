@@ -91,6 +91,29 @@
         </div>
     </div>
 
+    <!-- Modal for email confirmation resend -->
+    <div id="resendModal" class="modal" style="display: none;">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" id="closeResendModal">&times;</span>
+            <h3>Verificatiemail opnieuw sturen</h3>
+            <p>Vul je e-mailadres in om een nieuwe verificatielink te ontvangen.</p>
+            <div id="resend-message" class="message" style="display: none;"></div>
+            <form id="resendForm">
+                <div class="input-group">
+                    <label for="resend-email">E-mailadres</label>
+                    <div class="input-wrapper">
+                        <span class="material-symbols-rounded input-icon">mail</span>
+                        <input type="email" id="resend-email" placeholder="naam@voorbeeld.nl" required autocomplete="email">
+                    </div>
+                </div>
+                <button type="submit" class="btn-gradient submit-btn">
+                    <span>Mail versturen</span>
+                    <span class="material-symbols-rounded">send</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <quizy-footer></quizy-footer>
 
     <script type="module" src="js/login.js"></script>
