@@ -106,6 +106,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
 
+                if (name.length > 20) {
+                    if (errorMessage) {
+                        errorMessage.textContent = 'Weergavenaam mag maximaal 20 tekens zijn.';
+                        errorMessage.style.display = 'block';
+                    }
+                    return;
+                }
+
                 if (password !== confirmPassword) {
                     if (errorMessage) {
                         errorMessage.textContent = 'Wachtwoorden komen niet overeen.';

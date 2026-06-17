@@ -84,6 +84,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            if (newName.length > 20) {
+                showProfileMessage('Weergavenaam mag maximaal 20 tekens zijn.', false);
+                return;
+            }
+
             showProfileMessage('Weergavenaam bijwerken...', true);
 
             const { error: updateError } = await supabase.auth.updateUser({
