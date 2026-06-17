@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const loginForm = document.getElementById('loginForm');
-    const errorMessage = document.getElementById('error-message');
     
     const supabase = await window.supabaseReady;
 
@@ -30,13 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         toggleAuthBtn.addEventListener('click', (e) => {
             e.preventDefault();
             isLoginMode = !isLoginMode;
-
-            if (errorMessage) {
-                errorMessage.style.display = 'none';
-                errorMessage.style.background = '';
-                errorMessage.style.borderColor = '';
-                errorMessage.style.color = '';
-            }
 
             if (isLoginMode) {
                 formTitle.textContent = 'Welkom terug';
@@ -69,13 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (loginForm && supabase) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (errorMessage) {
-                errorMessage.style.display = 'none';
-                errorMessage.style.background = '';
-                errorMessage.style.borderColor = '';
-                errorMessage.style.color = '';
-            }
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -87,13 +72,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
 
                 if (error) {
-                    if (errorMessage) {
-                        if (error.message.includes('Email not confirmed') || error.message.toLowerCase().includes('confirm')) {
-                            await resendConfirmationEmail(email, errorMessage);
-                        } else {
-                            errorMessage.textContent = `Inloggen mislukt: ${error.message}`;
-                            errorMessage.style.display = 'block';
-                        }
+                    if (error.message.includes('Email not confirmed') || error.message.toLowerCase().includes('confirm')) {
+                        await resendConfirmationEmail(email, null);
+                    } else {
+                        Toast.show(`Inloggen mislukt: ${error.message}`, 'error');
                     }
                 } else {
                     window.location.href = 'dashboard.html';
@@ -103,26 +85,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const confirmPassword = confirmPasswordInput.value;
 
                 if (!name) {
-                    if (errorMessage) {
-                        errorMessage.textContent = 'Weergavenaam is verplicht.';
-                        errorMessage.style.display = 'block';
-                    }
+                    Toast.show('Weergavenaam is verplicht.', 'error');
                     return;
                 }
 
                 if (name.length > 20) {
-                    if (errorMessage) {
-                        errorMessage.textContent = 'Weergavenaam mag maximaal 20 tekens zijn.';
-                        errorMessage.style.display = 'block';
-                    }
+                    Toast.show('Weergavenaam mag maximaal 20 tekens zijn.', 'error');
                     return;
                 }
 
                 if (password !== confirmPassword) {
-                    if (errorMessage) {
-                        errorMessage.textContent = 'Wachtwoorden komen niet overeen.';
-                        errorMessage.style.display = 'block';
-                    }
+                    Toast.show('Wachtwoorden komen niet overeen.', 'error');
                     return;
                 }
 
@@ -138,31 +111,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
 
                 if (error) {
-                    if (errorMessage) {
-                        errorMessage.textContent = `Registratie mislukt: ${error.message}`;
-                        errorMessage.style.display = 'block';
-                    }
+                    Toast.show(`Registratie mislukt: ${error.message}`, 'error');
                 } else {
                     // Check if user is auto-confirmed or if email confirmation is enabled
                     if (data?.user && data.user.identities && data.user.identities.length === 0) {
-                        if (errorMessage) {
-                            errorMessage.textContent = 'Dit e-mailadres is al geregistreerd.';
-                            errorMessage.className = 'error-message';
-                            errorMessage.style.display = 'block';
-                        }
+                        Toast.show('Dit e-mailadres is al geregistreerd.', 'error');
                     } else if (data?.session) {
                         window.location.href = 'dashboard.html';
                     } else {
                         // Email confirmation might be needed
-                        if (errorMessage) {
-                            errorMessage.textContent = 'Registratie succesvol! Controleer je e-mail voor een verificatielink.';
-                            errorMessage.className = 'message success'; // show success instead of red error box, wait, wait, errorMessage has .error-message styling, so we should keep it looking good
-                            // Let's styling it nicely. Actually we can use errorMessage class but change styling or display style
-                            errorMessage.style.background = 'rgba(67, 160, 71, 0.15)';
-                            errorMessage.style.borderColor = 'rgba(67, 160, 71, 0.3)';
-                            errorMessage.style.color = '#43a047';
-                            errorMessage.style.display = 'block';
-                        }
+                        Toast.show('Registratie succesvol! Controleer je e-mail voor een verificatielink.', 'success');
                     }
                 }
             }
@@ -173,15 +131,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resetModal = document.getElementById('resetModal');
     const closeResetModal = document.getElementById('closeResetModal');
     const resetForm = document.getElementById('resetForm');
-    const resetMessage = document.getElementById('reset-message');
 
     if (forgotPasswordBtn && resetModal) {
         forgotPasswordBtn.addEventListener('click', (e) => {
             e.preventDefault();
             resetModal.style.display = 'flex';
-            if (resetMessage) {
-                resetMessage.style.display = 'none';
-            }
         });
     }
 
@@ -203,25 +157,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             e.preventDefault();
             const resetEmail = document.getElementById('reset-email').value;
 
-            if (resetMessage) {
-                resetMessage.textContent = 'Versturen...';
-                resetMessage.className = 'message';
-                resetMessage.style.display = 'block';
-            }
+            Toast.show('Versturen...', 'info');
 
             const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
                 redirectTo: window.location.origin + '/reset-password.html',
             });
 
-            if (resetMessage) {
-                if (error) {
-                    resetMessage.textContent = `Fout: ${error.message}`;
-                    resetMessage.className = 'message error';
-                } else {
-                    resetMessage.textContent = 'Er is een herstellink naar je e-mailadres gestuurd!';
-                    resetMessage.className = 'message success';
-                    resetForm.reset();
-                }
+            if (error) {
+                Toast.show(`Fout: ${error.message}`, 'error');
+            } else {
+                Toast.show('Er is een herstellink naar je e-mailadres gestuurd!', 'success');
+                resetForm.reset();
+                if (resetModal) resetModal.style.display = 'none';
             }
         });
     }
@@ -230,7 +177,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resendModal = document.getElementById('resendModal');
     const closeResendModal = document.getElementById('closeResendModal');
     const resendForm = document.getElementById('resendForm');
-    const resendMessage = document.getElementById('resend-message');
 
     if (closeResendModal && resendModal) {
         closeResendModal.addEventListener('click', () => {
@@ -246,14 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function resendConfirmationEmail(email, customMessageEl = null) {
-        const msgEl = customMessageEl || resendMessage;
-        if (msgEl) {
-            msgEl.textContent = 'Verificatiemail versturen...';
-            if (!customMessageEl) {
-                msgEl.className = 'message';
-            }
-            msgEl.style.display = 'block';
-        }
+        Toast.show('Verificatiemail versturen...', 'info');
 
         const { error } = await supabase.auth.resend({
             type: 'signup',
@@ -263,23 +202,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        if (msgEl) {
-            if (error) {
-                msgEl.textContent = `Fout: ${error.message}`;
-                if (!customMessageEl) {
-                    msgEl.className = 'message error';
-                }
-            } else {
-                msgEl.textContent = 'Je e-mailadres is nog niet bevestigd. Er is direct een nieuwe verificatiemail naar je verstuurd!';
-                if (!customMessageEl) {
-                    msgEl.className = 'message success';
-                    if (resendForm) resendForm.reset();
-                } else {
-                    msgEl.style.background = 'rgba(67, 160, 71, 0.15)';
-                    msgEl.style.borderColor = 'rgba(67, 160, 71, 0.3)';
-                    msgEl.style.color = '#43a047';
-                }
-            }
+        if (error) {
+            Toast.show(`Fout: ${error.message}`, 'error');
+        } else {
+            Toast.show('Je e-mailadres is nog niet bevestigd. Er is direct een nieuwe verificatiemail naar je verstuurd!', 'success');
+            if (resendForm) resendForm.reset();
+            if (resendModal) resendModal.style.display = 'none';
         }
     }
 

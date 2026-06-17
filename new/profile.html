@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/profile.css">
     <link rel="stylesheet" href="css/login.css">
     <script src="js/components.js" defer></script>
+    <script src="js/toast.js" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/supabase-init.js"></script>
 </head>
@@ -38,7 +39,6 @@
                         <span class="material-symbols-rounded">person</span>
                         <h3>Weergavenaam aanpassen</h3>
                     </div>
-                    <div id="profile-message" class="message" style="display: none;"></div>
                     <form id="changeNameForm" class="login-form">
                         <div class="name-input-row">
                             <div class="input-group">
@@ -64,7 +64,6 @@
                         <span class="material-symbols-rounded">lock_reset</span>
                         <h3>Wachtwoord wijzigen</h3>
                     </div>
-                    <div id="password-message" class="message" style="display: none;"></div>
                     <form id="changePasswordForm" class="login-form">
                         <div class="input-group">
                             <label for="old-password">Oud wachtwoord</label>

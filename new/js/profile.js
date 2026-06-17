@@ -64,14 +64,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Change name form submission
     const changeNameForm = document.getElementById('changeNameForm');
-    const profileMessage = document.getElementById('profile-message');
 
     function showProfileMessage(text, isSuccess) {
-        if (profileMessage) {
-            profileMessage.textContent = text;
-            profileMessage.className = `message ${isSuccess ? 'success' : 'error'}`;
-            profileMessage.style.display = 'block';
-        }
+        Toast.show(text, isSuccess ? 'success' : 'error');
     }
 
     if (changeNameForm) {
@@ -113,14 +108,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Password reset link functionality
     const resetPasswordBtn = document.getElementById('resetPasswordBtn');
-    const passwordMessage = document.getElementById('password-message');
 
     function showMessage(text, isSuccess) {
-        if (passwordMessage) {
-            passwordMessage.textContent = text;
-            passwordMessage.className = `message ${isSuccess ? 'success' : 'error'}`;
-            passwordMessage.style.display = 'block';
-        }
+        Toast.show(text, isSuccess ? 'success' : 'error');
     }
 
     if (resetPasswordBtn) {

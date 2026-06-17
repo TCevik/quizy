@@ -14,48 +14,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!supabase) return;
 
     const resetPasswordForm = document.getElementById('resetPasswordForm');
-    const messageEl = document.getElementById('message');
 
     if (resetPasswordForm) {
         resetPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (messageEl) {
-                messageEl.style.display = 'none';
-            }
 
             const password = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
 
             if (password !== confirmPassword) {
-                if (messageEl) {
-                    messageEl.textContent = 'Wachtwoorden komen niet overeen.';
-                    messageEl.className = 'message error';
-                    messageEl.style.display = 'block';
-                }
+                Toast.show('Wachtwoorden komen niet overeen.', 'error');
                 return;
             }
 
-            if (messageEl) {
-                messageEl.textContent = 'Wachtwoord bijwerken...';
-                messageEl.className = 'message';
-                messageEl.style.display = 'block';
-            }
+            Toast.show('Wachtwoord bijwerken...', 'info');
 
             const { error } = await supabase.auth.updateUser({ password });
 
-            if (messageEl) {
-                if (error) {
-                    messageEl.textContent = `Fout bij bijwerken: ${error.message}`;
-                    messageEl.className = 'message error';
-                } else {
-                    messageEl.textContent = 'Wachtwoord succesvol bijgewerkt! Je wordt doorgestuurd...';
-                    messageEl.className = 'message success';
-                    
-                    // Optional: Sign out the recovery session so they log in normally
-                    await supabase.auth.signOut();
+            if (error) {
+                Toast.show(`Fout bij bijwerken: ${error.message}`, 'error');
+            } else {
+                Toast.show('Wachtwoord succesvol bijgewerkt! Je wordt doorgestuurd...', 'success');
+                
+                // Optional: Sign out the recovery session so they log in normally
+                await supabase.auth.signOut();
+                setTimeout(() => {
                     window.location.href = 'login.html';
-                }
+                }, 1500);
             }
         });
     }
