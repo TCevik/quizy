@@ -35,9 +35,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Display user's avatar if exists
     const userAvatarImg = document.getElementById('user-avatar');
     const userAvatarPlaceholder = document.getElementById('user-avatar-placeholder');
-    const avatarUrlInput = document.getElementById('avatar-url');
-    const avatarFileInput = document.getElementById('avatar-file');
-
     function updateAvatarDisplay(url) {
         if (url && url.trim()) {
             userAvatarImg.src = url.trim();
@@ -52,106 +49,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const currentAvatarUrl = user.user_metadata?.avatar_url || '';
     updateAvatarDisplay(currentAvatarUrl);
-
-    if (avatarUrlInput && currentAvatarUrl && !currentAvatarUrl.startsWith('data:')) {
-        avatarUrlInput.value = currentAvatarUrl;
-    }
-
-    async function compressImageToLimit(file, limit = 524288) {
-        const image = await new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = (err) => reject(err);
-            img.src = URL.createObjectURL(file);
-        });
-
-        let width = image.width;
-        let height = image.height;
-        let quality = 0.95;
-        let dataUrl = '';
-        let size = Infinity;
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        while (size > limit && (width > 50 && height > 50)) {
-            canvas.width = width;
-            canvas.height = height;
-            ctx.clearRect(0, 0, width, height);
-            ctx.drawImage(image, 0, 0, width, height);
-            
-            dataUrl = canvas.toDataURL('image/jpeg', quality);
-            
-            const head = 'data:image/jpeg;base64,';
-            const base64Data = dataUrl.substring(head.length);
-            size = Math.round((base64Data.length * 3) / 4);
-
-            if (size <= limit) {
-                break;
-            }
-
-            if (quality > 0.4) {
-                quality -= 0.05;
-            } else {
-                width = Math.round(width * 0.9);
-                height = Math.round(height * 0.9);
-                quality = 0.85;
-            }
-        }
-        
-        URL.revokeObjectURL(image.src);
-        return dataUrl;
-    }
-
-    // Update filename display and auto-save on file selection
-    const fileUploadText = document.getElementById('file-upload-text');
-    if (avatarFileInput && fileUploadText) {
-        avatarFileInput.addEventListener('change', async (e) => {
-            if (e.target.files && e.target.files[0]) {
-                const file = e.target.files[0];
-                fileUploadText.textContent = file.name;
-                fileUploadText.style.color = 'var(--text-light)';
-
-                showAvatarMessage('Afbeelding verwerken en opslaan...', true);
-
-                try {
-                    let base64Url = '';
-                    if (file.size > 524288) {
-                        showAvatarMessage('Afbeelding verkleinen naar < 500KB...', true);
-                        base64Url = await compressImageToLimit(file, 524288);
-                    } else {
-                        base64Url = await new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = () => resolve(reader.result);
-                            reader.onerror = (err) => reject(err);
-                            reader.readAsDataURL(file);
-                        });
-                    }
-
-                    const { error: updateError } = await supabase.auth.updateUser({
-                        data: { 
-                            avatar_url: base64Url
-                        }
-                    });
-
-                    if (updateError) {
-                        showAvatarMessage(`Fout bij het opslaan van afbeelding: ${updateError.message}`, false);
-                    } else {
-                        showAvatarMessage('Profielfoto succesvol geüpload en opgeslagen!', true);
-                        updateAvatarDisplay(base64Url);
-                        if (avatarUrlInput) {
-                            avatarUrlInput.value = '';
-                        }
-                    }
-                } catch (err) {
-                    showAvatarMessage('Fout bij het verwerken van het bestand.', false);
-                }
-            } else {
-                fileUploadText.textContent = 'Kies een afbeelding...';
-                fileUploadText.style.color = 'var(--text-muted)';
-            }
-        });
-    }
 
     // Pre-fill display name input
     const displayNameInput = document.getElementById('display-name');
@@ -207,52 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Change avatar form submission
-    const changeAvatarForm = document.getElementById('changeAvatarForm');
-    const avatarMessage = document.getElementById('avatar-message');
 
-    function showAvatarMessage(text, isSuccess) {
-        if (avatarMessage) {
-            avatarMessage.textContent = text;
-            avatarMessage.className = `message ${isSuccess ? 'success' : 'error'}`;
-            avatarMessage.style.display = 'block';
-        }
-    }
-
-    if (changeAvatarForm) {
-        changeAvatarForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const newAvatarUrl = avatarUrlInput ? avatarUrlInput.value.trim() : '';
-
-            if (!newAvatarUrl) {
-                showAvatarMessage('Voer een URL in.', false);
-                return;
-            }
-
-            showAvatarMessage('Profielfoto bijwerken...', true);
-
-            const { error: updateError } = await supabase.auth.updateUser({
-                data: { 
-                    avatar_url: newAvatarUrl
-                }
-            });
-
-            if (updateError) {
-                showAvatarMessage(`Fout bij het bijwerken van foto: ${updateError.message}`, false);
-            } else {
-                showAvatarMessage('Profielfoto succesvol bijgewerkt!', true);
-                updateAvatarDisplay(newAvatarUrl);
-                if (avatarFileInput) {
-                    avatarFileInput.value = ''; // Reset file input
-                }
-                if (fileUploadText) {
-                    fileUploadText.textContent = 'Kies een afbeelding...';
-                    fileUploadText.style.color = 'var(--text-muted)';
-                }
-            }
-        });
-    }
 
     // Password reset link functionality
     const resetPasswordBtn = document.getElementById('resetPasswordBtn');
