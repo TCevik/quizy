@@ -257,9 +257,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const flashcardsButtons = document.querySelectorAll('#btn-flashcards');
     
     if (btnLearn && learnBubbleMenu) {
-        flashcardsButtons.forEach(btn => {
-            btn.href = `flashcards.html?id=${setId}`;
-        });
         btnLearn.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = learnBubbleMenu.classList.contains('open');
