@@ -250,6 +250,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Learn button bubble effect
+    const btnLearn = document.getElementById('btn-learn');
+    const learnBubbleMenu = document.getElementById('learn-bubble-menu');
+    const flashcardsButtons = document.querySelectorAll('#btn-flashcards');
+    
+    if (btnLearn && learnBubbleMenu) {
+        flashcardsButtons.forEach(btn => {
+            btn.href = `flashcards.html?id=${setId}`;
+        });
+        btnLearn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = learnBubbleMenu.classList.contains('open');
+            if (!isOpen) {
+                learnBubbleMenu.classList.add('open');
+                learnBubbleMenu.style.maxHeight = learnBubbleMenu.scrollHeight + 'px';
+                learnBubbleMenu.style.opacity = '1';
+                learnBubbleMenu.style.transform = 'scale(1)';
+                learnBubbleMenu.style.pointerEvents = 'auto';
+                btnLearn.style.background = 'rgba(255, 255, 255, 0.1)';
+            } else {
+                learnBubbleMenu.classList.remove('open');
+                learnBubbleMenu.style.maxHeight = '0px';
+                learnBubbleMenu.style.opacity = '0';
+                learnBubbleMenu.style.transform = 'scale(0.8)';
+                learnBubbleMenu.style.pointerEvents = 'none';
+                btnLearn.style.background = 'rgba(255, 255, 255, 0.05)';
+            }
+        });
+
+        document.addEventListener('click', () => {
+            learnBubbleMenu.classList.remove('open');
+            learnBubbleMenu.style.maxHeight = '0px';
+            learnBubbleMenu.style.opacity = '0';
+            learnBubbleMenu.style.transform = 'scale(0.8)';
+            learnBubbleMenu.style.pointerEvents = 'none';
+            btnLearn.style.background = 'rgba(255, 255, 255, 0.05)';
+        });
+    }
+
     // Initial load
     loadSetDetails();
 });
