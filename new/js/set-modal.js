@@ -38,7 +38,7 @@ class QuizySetModal extends HTMLElement {
                             <textarea id="set-desc" placeholder="Bijv. Hoofdstuk 3 - Woordenschat en grammatica"></textarea>
                         </div>
 
-                        <!-- Folder & Visibility Row -->
+                        <!-- Folder Row -->
                         <div class="form-row-2col">
                             <div class="form-group">
                                 <label for="set-folder">Map</label>
@@ -47,16 +47,6 @@ class QuizySetModal extends HTMLElement {
                                     <option value="__new__">+ Nieuwe map maken...</option>
                                 </select>
                                 <input type="text" id="new-folder-input" class="hidden-input" placeholder="Naam van nieuwe map">
-                            </div>
-                            <div class="form-group toggle-group-wrapper">
-                                <label>Zichtbaarheid</label>
-                                <div class="toggle-container">
-                                    <span class="toggle-label">Zichtbaar voor anderen</span>
-                                    <label class="switch">
-                                        <input type="checkbox" id="set-visible">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
                             </div>
                         </div>
 
@@ -218,10 +208,7 @@ class QuizySetModal extends HTMLElement {
                 this.newFolderInput.value = data.folder;
             }
         }
-        
-        if (this.querySelector('#set-visible')) {
-            this.querySelector('#set-visible').checked = !!data.isVisible;
-        }
+
 
         const mode = data.mode || 'woorden';
         this.segmentBtns.forEach(b => {
@@ -402,7 +389,6 @@ class QuizySetModal extends HTMLElement {
         if (folder === '__new__') {
             folder = this.newFolderInput.value;
         }
-        const isVisible = this.querySelector('#set-visible').checked;
         const activeSegment = this.querySelector('.segment-btn.active');
         const mode = activeSegment ? activeSegment.getAttribute('data-mode') : 'woorden';
 
@@ -424,7 +410,6 @@ class QuizySetModal extends HTMLElement {
             title,
             description,
             folder,
-            isVisible,
             mode,
             lang1,
             lang2,
