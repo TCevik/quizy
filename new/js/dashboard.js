@@ -334,6 +334,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         });
+
+        dashboardContent.querySelectorAll('.set-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-icon-action')) {
+                    return;
+                }
+                const setId = card.getAttribute('data-id');
+                window.location.href = `set.html?id=${setId}`;
+            });
+        });
     }
 
     // Function to load and display sets
