@@ -383,8 +383,8 @@ class QuizySetModal extends HTMLElement {
             this.col2Header.textContent = 'Definitie';
 
             rows.forEach(row => {
-                row.querySelector('.term-input').placeholder = 'Bijv. Bonjour';
-                row.querySelector('.def-input').placeholder = 'Bijv. Hallo / Goedendag';
+                row.querySelector('.term-input').placeholder = 'Term';
+                row.querySelector('.def-input').placeholder = 'Definitie';
             });
         } else {
             this.col1Header.textContent = lang1;
