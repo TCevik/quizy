@@ -1,3 +1,5 @@
+import { syncSets, syncSetToRemote, deleteLocalSet, getLocalSet, getLocalSets } from './storage.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const supabase = await window.supabaseReady;
 
@@ -34,9 +36,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (setIdToDelete !== null) {
                 const { error: deleteError } = await supabase.from('Sets').delete().eq('id', setIdToDelete);
                 if (deleteError) {
-                    console.error('Error deleting set:', deleteError);
                     if (window.Toast) window.Toast.show('Fout bij verwijderen: ' + deleteError.message, 'error');
                 } else {
+                    await deleteLocalSet(setIdToDelete);
                     if (window.Toast) window.Toast.show('Set succesvol verwijderd!', 'success');
                     loadSets();
                 }
@@ -282,16 +284,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const setToEdit = allSets.find(s => s.id === setId);
                 if (setToEdit && setModalComp) {
                     if (window.Toast) window.Toast.show('Set laden...', 'info');
-                    const { data: fullSet, error: detailError } = await supabase
-                        .from('Sets')
-                        .select('lang_col1, lang_col2, cards')
-                        .eq('id', setId)
-                        .single();
+                    
+                    let fullSet = await getLocalSet(setId);
+                    if (!fullSet || !fullSet.cards) {
+                        const { data: remoteSet, error: detailError } = await supabase
+                            .from('Sets')
+                            .select('lang_col1, lang_col2, cards')
+                            .eq('id', setId)
+                            .single();
 
-                    if (detailError) {
-                        console.error('Error fetching set details:', detailError);
-                        if (window.Toast) window.Toast.show('Fout bij laden van set: ' + detailError.message, 'error');
-                        return;
+                        if (detailError) {
+                            if (window.Toast) window.Toast.show('Fout bij laden van set: ' + detailError.message, 'error');
+                            return;
+                        }
+                        fullSet = { ...setToEdit, ...remoteSet };
                     }
 
                     const mappedData = {
@@ -333,19 +339,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadSets() {
         if (!dashboardContent) return;
 
-        dashboardContent.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">Sets laden...</div>';
-
-        const { data: sets, error: fetchError } = await supabase
-            .from('Sets')
-            .select('id, title, description, folder, type, card_count, updated_at')
-            .eq('user_id', user.id)
-            .order('updated_at', { ascending: false });
-
-        if (fetchError) {
-            console.error('Error fetching sets:', fetchError);
-            dashboardContent.innerHTML = `<div class="no-sets-box"><h3>Fout bij laden</h3><p>${fetchError.message}</p></div>`;
-            return;
+        const localSets = await getLocalSets();
+        if (localSets && localSets.length > 0) {
+            allSets = localSets.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            renderFolderFilter(allSets);
+            renderSets();
+        } else {
+            dashboardContent.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">Sets laden...</div>';
         }
+
+        const sets = await syncSets(supabase, user.id);
 
         allSets = sets || [];
 
@@ -397,22 +400,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (saveMode === 'create') {
                 dbPayload.created_at = new Date().toISOString();
-                const { error: insertError } = await supabase.from('Sets').insert([dbPayload]);
-                if (insertError) {
-                    console.error('Error creating set in Supabase:', insertError);
-                    if (window.Toast) window.Toast.show('Fout bij aanmaken: ' + insertError.message, 'error');
-                } else {
-                    console.log('Set created in Supabase');
+                try {
+                    await syncSetToRemote(supabase, dbPayload);
                     loadSets();
+                } catch (insertError) {
+                    if (window.Toast) window.Toast.show('Fout bij aanmaken: ' + insertError.message, 'error');
                 }
             } else if (saveMode === 'edit') {
-                const { error: updateError } = await supabase.from('Sets').update(dbPayload).eq('id', setData.id);
-                if (updateError) {
-                    console.error('Error updating set in Supabase:', updateError);
-                    if (window.Toast) window.Toast.show('Fout bij bewerken: ' + updateError.message, 'error');
-                } else {
-                    console.log('Set updated in Supabase');
+                try {
+                    await syncSetToRemote(supabase, dbPayload, setData.id);
                     loadSets();
+                } catch (updateError) {
+                    if (window.Toast) window.Toast.show('Fout bij bewerken: ' + updateError.message, 'error');
                 }
             }
         });

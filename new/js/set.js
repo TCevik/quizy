@@ -1,3 +1,5 @@
+import { getSetWithCards, syncSetToRemote, deleteLocalSet, getLocalSet } from './storage.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const supabase = await window.supabaseReady;
 
@@ -28,15 +30,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentSet = null;
 
     async function loadSetDetails() {
-        const { data: set, error: fetchError } = await supabase
-            .from('Sets')
-            .select('*')
-            .eq('id', setId)
-            .eq('user_id', user.id)
-            .single();
+        let set = await getLocalSet(setId);
+        if (set && set.cards) {
+            currentSet = set;
+            window.currentSet = set;
+            renderSetDetails();
+        }
 
-        if (fetchError || !set) {
-            console.error('Error fetching set details:', fetchError);
+        set = await getSetWithCards(supabase, setId, user.id);
+
+        if (!set && !currentSet) {
             if (window.Toast) window.Toast.show('Set kon niet worden geladen.', 'error');
             document.querySelector('.set-wrapper').innerHTML = `
                 <div class="back-nav">
@@ -54,9 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        currentSet = set;
-        window.currentSet = set;
-        renderSetDetails();
+        if (set) {
+            currentSet = set;
+            window.currentSet = set;
+            renderSetDetails();
+        }
     }
 
     function renderSetDetails() {
@@ -171,23 +176,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updated_at: new Date().toISOString()
             };
 
-            const { error: updateError } = await supabase.from('Sets').update(dbPayload).eq('id', currentSet.id);
-            if (updateError) {
-                console.error('Error updating set:', updateError);
-                if (window.Toast) window.Toast.show('Fout bij bewerken: ' + updateError.message, 'error');
-            } else {
+            try {
+                await syncSetToRemote(supabase, dbPayload, currentSet.id);
                 loadSetDetails();
+            } catch (updateError) {
+                if (window.Toast) window.Toast.show('Fout bij bewerken: ' + updateError.message, 'error');
             }
         });
 
         // Initialize folder options for edit modal if there are folders
-        const { data: setsData } = await supabase
-            .from('Sets')
-            .select('folder')
-            .eq('user_id', user.id);
-        if (setsData) {
-            const folders = [...new Set(setsData.map(s => s.folder).filter(f => f && f.trim() !== ''))];
-            setModalComp.updateFolderOptions(folders);
+        const localSets = await getLocalSet(setId); // Fallback: just use current set's folder if offline
+        if (navigator.onLine) {
+            try {
+                const { data: setsData } = await supabase
+                    .from('Sets')
+                    .select('folder')
+                    .eq('user_id', user.id);
+                if (setsData) {
+                    const folders = [...new Set(setsData.map(s => s.folder).filter(f => f && f.trim() !== ''))];
+                    setModalComp.updateFolderOptions(folders);
+                }
+            } catch (e) {}
+        } else if (currentSet && currentSet.folder) {
+            setModalComp.updateFolderOptions([currentSet.folder]);
         }
     }
 
@@ -201,9 +212,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         deleteModal.addEventListener('confirm', async () => {
             const { error: deleteError } = await supabase.from('Sets').delete().eq('id', setId);
             if (deleteError) {
-                console.error('Error deleting set:', deleteError);
                 if (window.Toast) window.Toast.show('Fout bij verwijderen: ' + deleteError.message, 'error');
             } else {
+                await deleteLocalSet(setId);
                 if (window.Toast) window.Toast.show('Set succesvol verwijderd!', 'success');
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
