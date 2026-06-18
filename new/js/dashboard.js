@@ -182,7 +182,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 minute: '2-digit'
             }) : 'Onbekend';
             
-            const cardCount = set.cards ? set.cards.length : 0;
+            let cardCountLabel = 'Onbekend aantal kaarten';
+            if (set.card_count !== undefined && set.card_count !== null) {
+                cardCountLabel = `${set.card_count} kaarten`;
+            } else if (set.cards && Array.isArray(set.cards)) {
+                cardCountLabel = `${set.cards.length} kaarten`;
+            }
             const folderLabel = set.folder && set.folder.trim() !== '' 
                 ? `<span class="set-folder-tag"><span class="material-symbols-rounded" style="font-size:14px;">folder</span> ${set.folder}</span>` 
                 : '';
@@ -202,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="set-card-footer">
                         <div class="set-meta">
                             <span><span class="material-symbols-rounded" style="font-size:16px;">calendar_today</span> Gewijzigd: ${lastUpdated}</span>
-                            <span><span class="material-symbols-rounded" style="font-size:16px;">style</span> ${cardCount} kaarten</span>
+                            <span><span class="material-symbols-rounded" style="font-size:16px;">style</span> ${cardCountLabel}</span>
                         </div>
                         <div class="set-actions">
                             <button class="btn-icon-action edit-btn" title="Bewerken" data-id="${set.id}">
@@ -221,19 +226,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Attach event listeners to card actions
         dashboardContent.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 const setId = parseInt(btn.getAttribute('data-id'));
                 const setToEdit = allSets.find(s => s.id === setId);
                 if (setToEdit && setModalComp) {
+                    if (window.Toast) window.Toast.show('Set laden...', 'info');
+                    const { data: fullSet, error: detailError } = await supabase
+                        .from('Sets')
+                        .select('lang_col1, lang_col2, cards')
+                        .eq('id', setId)
+                        .single();
+
+                    if (detailError) {
+                        console.error('Error fetching set details:', detailError);
+                        if (window.Toast) window.Toast.show('Fout bij laden van set: ' + detailError.message, 'error');
+                        return;
+                    }
+
                     const mappedData = {
                         id: setToEdit.id,
                         title: setToEdit.title,
                         description: setToEdit.description,
                         folder: setToEdit.folder,
                         mode: setToEdit.type,
-                        lang1: setToEdit.lang_col1,
-                        lang2: setToEdit.lang_col2,
-                        rows: setToEdit.cards
+                        lang1: fullSet.lang_col1,
+                        lang2: fullSet.lang_col2,
+                        rows: fullSet.cards
                     };
                     setModalComp.open('edit', mappedData);
                 }
@@ -258,7 +276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const { data: sets, error: fetchError } = await supabase
             .from('Sets')
-            .select('*')
+            .select('id, title, description, folder, type, card_count, updated_at')
             .eq('user_id', user.id)
             .order('updated_at', { ascending: false });
 
@@ -312,6 +330,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lang_col1: setData.lang1,
                 lang_col2: setData.lang2,
                 cards: setData.rows,
+                card_count: setData.rows ? setData.rows.length : 0,
                 updated_at: new Date().toISOString()
             };
 
