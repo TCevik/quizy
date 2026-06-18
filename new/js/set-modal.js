@@ -53,7 +53,7 @@ class QuizySetModal extends HTMLElement {
                                 <div class="toggle-container">
                                     <span class="toggle-label">Zichtbaar voor anderen</span>
                                     <label class="switch">
-                                        <input type="checkbox" id="set-visible" checked>
+                                        <input type="checkbox" id="set-visible">
                                         <span class="slider"></span>
                                     </label>
                                 </div>
