@@ -65,10 +65,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
+            const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
+
             if (isLoginMode) {
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password,
+                    options: {
+                        captchaToken: captchaToken
+                    }
                 });
 
                 if (error) {
@@ -77,6 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     } else {
                         Toast.show(`Inloggen mislukt: ${error.message}`, 'error');
                     }
+                    if (window.turnstile) window.turnstile.reset();
                 } else {
                     window.location.href = 'dashboard.html';
                 }
@@ -103,6 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     email: email,
                     password: password,
                     options: {
+                        captchaToken: captchaToken,
                         data: {
                             name: name,
                             full_name: name
@@ -112,15 +119,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (error) {
                     Toast.show(`Registratie mislukt: ${error.message}`, 'error');
+                    if (window.turnstile) window.turnstile.reset();
                 } else {
                     // Check if user is auto-confirmed or if email confirmation is enabled
                     if (data?.user && data.user.identities && data.user.identities.length === 0) {
                         Toast.show('Dit e-mailadres is al geregistreerd.', 'error');
+                        if (window.turnstile) window.turnstile.reset();
                     } else if (data?.session) {
                         window.location.href = 'dashboard.html';
                     } else {
                         // Email confirmation might be needed
                         Toast.show('Registratie succesvol! Controleer je e-mail voor een verificatielink.', 'success');
+                        if (window.turnstile) window.turnstile.reset();
                     }
                 }
             }
