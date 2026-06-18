@@ -423,27 +423,3 @@ quizy-delete-modal:not(.active) {
     color: #ef4444;
     border-color: rgba(239, 68, 68, 0.2);
 }
-
-/* Side Ads (Left & Right) for Desktop screens */
-.side-ad-left, .side-ad-right {
-    display: none;
-    position: fixed;
-    top: calc(var(--header-height) + 40px);
-    width: 160px;
-    height: 600px;
-    z-index: 90;
-}
-
-.side-ad-left {
-    left: calc(50% - 600px - 180px);
-}
-
-.side-ad-right {
-    right: calc(50% - 600px - 180px);
-}
-
-@media (min-width: 1560px) {
-    .side-ad-left, .side-ad-right {
-        display: block;
-    }
-}
