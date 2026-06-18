@@ -200,7 +200,7 @@ class QuizySetModal extends HTMLElement {
 
         this.termsContainer.innerHTML = '';
         for (let i = 0; i < 6; i++) {
-            this.addTermRow();
+            this.addTermRow('', '', false);
         }
         if (this.modalBody) this.modalBody.scrollTop = 0;
     }
@@ -243,16 +243,17 @@ class QuizySetModal extends HTMLElement {
 
         this.termsContainer.innerHTML = '';
         if (data.rows && data.rows.length > 0) {
-            data.rows.forEach(r => this.addTermRow(r.term, r.definition));
+            data.rows.forEach(r => this.addTermRow(r.term, r.definition, false));
         } else {
             for (let i = 0; i < 6; i++) {
-                this.addTermRow();
+                this.addTermRow('', '', false);
             }
         }
         this.updatePlaceholdersAndHeaders();
+        if (this.modalBody) this.modalBody.scrollTop = 0;
     }
 
-    addTermRow(term = '', definition = '') {
+    addTermRow(term = '', definition = '', shouldScroll = true) {
         const row = document.createElement('div');
         row.className = 'term-row';
         row.innerHTML = `
@@ -281,7 +282,7 @@ class QuizySetModal extends HTMLElement {
         this.updatePlaceholdersAndHeaders();
 
         // Keep the add button at the exact same screen position so spam-clicking doesn't move it
-        if (this.modalBody && this.addRowBtn) {
+        if (shouldScroll && this.modalBody && this.addRowBtn) {
             if (this.scrollAnimFrame) {
                 cancelAnimationFrame(this.scrollAnimFrame);
             }
@@ -443,12 +444,10 @@ class QuizySetModal extends HTMLElement {
         if (window.Toast) {
             window.Toast.show(
                 this.currentMode === 'edit' 
-                    ? 'Wijzigingen succesvol opgeslagen! (Concept)' 
-                    : 'Set succesvol aangemaakt! (Concept)', 
+                    ? 'Wijzigingen succesvol opgeslagen!' 
+                    : 'Set succesvol aangemaakt!', 
                 'success'
             );
-        } else {
-            alert(this.currentMode === 'edit' ? 'Wijzigingen opgeslagen!' : 'Set aangemaakt!');
         }
 
         this.close();

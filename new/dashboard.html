@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/set-modal.css">
     <script src="js/components.js" defer></script>
+    <script src="js/toast.js" defer></script>
     <script src="js/set-modal.js" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/supabase-init.js"></script>
@@ -37,6 +38,23 @@
 
     <!-- Create/Edit Set Modal Component -->
     <quizy-set-modal id="set-modal-comp"></quizy-set-modal>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="modal-overlay">
+        <div class="modal-card glass-panel" style="max-width: 420px;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
+                <h3 style="font-size: 1.3em; font-weight: 600; color: var(--text-light);">Set verwijderen</h3>
+            </div>
+            <div class="modal-body" style="padding: 24px; gap: 8px;">
+                <p style="color: var(--text-muted); font-size: 1em; line-height: 1.5; margin: 0;">Weet je zeker dat je deze set wilt verwijderen?</p>
+                <p style="color: #ef4444; font-size: 0.9em; font-weight: 500; margin: 0;">Dit kan niet ongedaan worden gemaakt.</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; margin-top: 0;">
+                <button id="btn-delete-cancel" class="btn-text">Annuleren</button>
+                <button id="btn-delete-confirm" class="btn-gradient" style="background: #ef4444; padding: 10px 20px;">Verwijderen</button>
+            </div>
+        </div>
+    </div>
 
     <quizy-footer></quizy-footer>
 
