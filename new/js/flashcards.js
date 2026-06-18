@@ -155,7 +155,11 @@ function openFlashcardsQuiz() {
     const progressFillEl = document.getElementById('fc-progress-fill');
 
     function updateCard() {
+        cardEl.classList.add('no-transition');
         cardEl.classList.remove('flipped');
+        
+        // Force reflow
+        cardEl.offsetHeight;
         
         const card = activeQueue[currentIndex];
         frontTextEl.textContent = card.term;
@@ -165,6 +169,10 @@ function openFlashcardsQuiz() {
         const progressPercentage = (learnedCardKeys.size / totalUniqueCards) * 100;
         progressTextEl.textContent = `Geleerd: ${learnedCardKeys.size} van ${totalUniqueCards} kaarten${isReviewPhase ? ' (Herhalingsfase)' : ''}`;
         progressFillEl.style.width = `${progressPercentage}%`;
+        
+        setTimeout(() => {
+            cardEl.classList.remove('no-transition');
+        }, 50);
     }
 
     function checkFinished() {

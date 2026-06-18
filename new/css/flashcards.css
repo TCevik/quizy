@@ -85,6 +85,10 @@
     transform: rotateY(180deg);
 }
 
+.flashcard-wrapper.no-transition .flashcard-inner {
+    transition: none !important;
+}
+
 .flashcard-face {
     position: absolute;
     width: 100%;

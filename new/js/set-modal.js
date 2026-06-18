@@ -64,6 +64,20 @@ class QuizySetModal extends HTMLElement {
                             <!-- Dynamic languages selects go here -->
                         </div>
 
+                        <!-- Import Container -->
+                        <div id="import-container" class="form-group hidden-input" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 16px; margin-top: 10px;">
+                            <label for="import-text" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Lijst importeren (formaat: term, definitie; term, definitie;)</span>
+                                <button type="button" id="btn-close-import" class="modal-close-btn" style="padding: 2px;">
+                                    <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
+                                </button>
+                            </label>
+                            <textarea id="import-text" placeholder="Bijv.: apple, appel; pear, peer; banana, banaan;" style="min-height: 120px; font-family: monospace; font-size: 0.9em;"></textarea>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
+                                <button type="button" id="btn-do-import" class="btn-gradient" style="padding: 8px 16px; font-size: 0.9em;">Voeg toe aan lijst</button>
+                            </div>
+                        </div>
+
                         <!-- Terms/Definitions Input Table -->
                         <div class="terms-section">
                             <div class="terms-header-row">
@@ -153,6 +167,36 @@ class QuizySetModal extends HTMLElement {
                 this.handleSubmit();
             });
         }
+
+        // Import handlers
+        this.addEventListener('click', (e) => {
+            const importBtn = e.target.closest('#btn-import-terms');
+            if (importBtn) {
+                e.preventDefault();
+                const importContainer = this.querySelector('#import-container');
+                if (importContainer) {
+                    importContainer.classList.toggle('active');
+                    if (importContainer.classList.contains('active')) {
+                        this.querySelector('#import-text').focus();
+                    }
+                }
+            }
+
+            const closeImportBtn = e.target.closest('#btn-close-import');
+            if (closeImportBtn) {
+                e.preventDefault();
+                const importContainer = this.querySelector('#import-container');
+                if (importContainer) {
+                    importContainer.classList.remove('active');
+                }
+            }
+
+            const doImportBtn = e.target.closest('#btn-do-import');
+            if (doImportBtn) {
+                e.preventDefault();
+                this.handleImport();
+            }
+        });
     }
 
     open(mode = 'create', setData = null) {
@@ -319,7 +363,11 @@ class QuizySetModal extends HTMLElement {
                             ${this.languages.map(l => `<option value="${l.name}">${l.name}</option>`).join('')}
                         </select>
                     </div>
-                    <div></div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button type="button" id="btn-import-terms" class="btn-secondary" title="Woorden importeren" style="height: 42px; width: 44px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <span class="material-symbols-rounded">download</span>
+                        </button>
+                    </div>
                 </div>
             `;
         } else {
@@ -337,7 +385,11 @@ class QuizySetModal extends HTMLElement {
                             ${this.languages.map((l, idx) => `<option value="${l.name}" ${idx === 0 ? 'selected' : ''}>${l.name}</option>`).join('')}
                         </select>
                     </div>
-                    <div></div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button type="button" id="btn-import-terms" class="btn-secondary" title="Woorden importeren" style="height: 42px; width: 44px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <span class="material-symbols-rounded">download</span>
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -449,6 +501,71 @@ class QuizySetModal extends HTMLElement {
         this.folderSelect.innerHTML = html;
         if (currentVal) {
             this.folderSelect.value = currentVal;
+        }
+    }
+
+    handleImport() {
+        const importTextarea = this.querySelector('#import-text');
+        if (!importTextarea) return;
+
+        const text = importTextarea.value;
+        const pairs = text.split(';').map(p => p.trim()).filter(p => p.length > 0);
+        const parsedRows = [];
+
+        pairs.forEach(pair => {
+            const commaIndex = pair.indexOf(',');
+            if (commaIndex !== -1) {
+                const term = pair.substring(0, commaIndex).trim();
+                const definition = pair.substring(commaIndex + 1).trim();
+                if (term || definition) {
+                    parsedRows.push({ term, definition });
+                }
+            } else {
+                const term = pair.trim();
+                if (term) {
+                    parsedRows.push({ term, definition: '' });
+                }
+            }
+        });
+
+        if (parsedRows.length === 0) {
+            if (window.Toast) {
+                window.Toast.show('Geen geldige woorden gevonden om te importeren.', 'error');
+            }
+            return;
+        }
+
+        // Check if existing rows are all empty
+        const existingRows = this.termsContainer.querySelectorAll('.term-row');
+        let allEmpty = true;
+        existingRows.forEach(row => {
+            const t = row.querySelector('.term-input').value.trim();
+            const d = row.querySelector('.def-input').value.trim();
+            if (t || d) {
+                allEmpty = false;
+            }
+        });
+
+        if (allEmpty) {
+            this.termsContainer.innerHTML = '';
+        }
+
+        parsedRows.forEach(row => {
+            this.addTermRow(row.term, row.definition, false);
+        });
+
+        this.updateDeleteButtonsState();
+        this.updatePlaceholdersAndHeaders();
+
+        // Clear textarea and hide container
+        importTextarea.value = '';
+        const importContainer = this.querySelector('#import-container');
+        if (importContainer) {
+            importContainer.classList.remove('active');
+        }
+
+        if (window.Toast) {
+            window.Toast.show(`${parsedRows.length} woorden succesvol geïmporteerd!`, 'success');
         }
     }
 }
