@@ -25,10 +25,13 @@ body {
 }
 
 .dashboard-header {
-    text-align: left;
-    margin-bottom: 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid rgba(var(--bg-light-rgb), 0.1);
     padding-bottom: 24px;
+    margin-bottom: 36px;
+    gap: 16px;
 }
 
 .dashboard-header h2 {
@@ -42,6 +45,15 @@ body {
 .dashboard-header p {
     color: var(--text-muted);
     font-size: 1.1em;
+}
+
+#btn-create-set {
+    border-radius: 12px;
+    font-size: 1.05em;
+    padding: 12px 24px;
+    gap: 8px;
+    display: flex;
+    align-items: center;
 }
 
 .user-email-text {

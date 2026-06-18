@@ -19,4 +19,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (userEmailEl) {
         userEmailEl.textContent = user.email;
     }
+
+    // Set modal component interaction
+    const setModalComp = document.getElementById('set-modal-comp');
+    const createSetBtn = document.getElementById('btn-create-set');
+
+    if (createSetBtn && setModalComp) {
+        createSetBtn.addEventListener('click', () => {
+            setModalComp.open('create');
+        });
+    }
+
+    if (setModalComp) {
+        setModalComp.addEventListener('save', (e) => {
+            console.log('Set opgeslagen via component:', e.detail);
+        });
+    }
 });

@@ -9,7 +9,9 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/set-modal.css">
     <script src="js/components.js" defer></script>
+    <script src="js/set-modal.js" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/supabase-init.js"></script>
 </head>
@@ -19,17 +21,22 @@
 
     <main class="dashboard-wrapper">
         <div class="dashboard-header">
-            <h2>Welkom bij Quizy</h2>
-            <p>Ingelogd als: <span id="user-email" class="user-email-text">Laden...</span></p>
+            <div>
+                <h2>Welkom bij Quizy</h2>
+                <p>Ingelogd als: <span id="user-email" class="user-email-text">Laden...</span></p>
+            </div>
+            <button id="btn-create-set" class="btn-gradient">
+                <span class="material-symbols-rounded">add</span>
+                Nieuwe set
+            </button>
         </div>
         <div class="dashboard-content">
-            <div class="welcome-box">
-                <span class="material-symbols-rounded welcome-icon">dashboard</span>
-                <h3>Je bent klaar om te leren!</h3>
-                <p>Kies een quiz of beheer je leersets om te beginnen.</p>
-            </div>
+            
         </div>
     </main>
+
+    <!-- Create/Edit Set Modal Component -->
+    <quizy-set-modal id="set-modal-comp"></quizy-set-modal>
 
     <quizy-footer></quizy-footer>
 
