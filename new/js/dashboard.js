@@ -63,6 +63,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let allSets = [];
     let currentFolderFilter = 'all';
+    let currentPage = 1;
+    const pageSize = 20;
     const folderFilterContainer = document.getElementById('folder-filter-container');
 
     // Function to render folder filter chips
@@ -143,6 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 currentFolderFilter = chip.getAttribute('data-folder');
                 folderFilterContainer.querySelectorAll('.folder-chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
+                currentPage = 1;
                 renderSets();
             });
         });
@@ -172,8 +175,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // Clamp currentPage
+        const totalPages = Math.ceil(filteredSets.length / pageSize);
+        if (currentPage > totalPages) {
+            currentPage = Math.max(1, totalPages);
+        }
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageSets = filteredSets.slice(startIndex, endIndex);
+
         let html = '<div class="sets-grid">';
-        filteredSets.forEach(set => {
+        pageSets.forEach(set => {
             const lastUpdated = set.updated_at ? new Date(set.updated_at).toLocaleDateString('nl-NL', {
                 day: '2-digit',
                 month: 'short',
@@ -222,7 +235,62 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         });
         html += '</div>';
+
+        // Add pagination HTML if totalPages > 1
+        if (totalPages > 1) {
+            html += `
+                <div class="pagination-container">
+                    <button class="pagination-btn" id="btn-page-prev10" ${currentPage <= 10 ? 'disabled' : ''}>
+                        <span class="material-symbols-rounded">keyboard_double_arrow_left</span> -10
+                    </button>
+                    <button class="pagination-btn" id="btn-page-prev" ${currentPage === 1 ? 'disabled' : ''}>
+                        <span class="material-symbols-rounded">chevron_left</span> Vorige
+                    </button>
+                    <span class="pagination-info">Pagina ${currentPage} van ${totalPages}</span>
+                    <button class="pagination-btn" id="btn-page-next" ${currentPage === totalPages ? 'disabled' : ''}>
+                        Volgende <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
+                    <button class="pagination-btn" id="btn-page-next10" ${currentPage + 10 > totalPages ? 'disabled' : ''}>
+                        +10 <span class="material-symbols-rounded">keyboard_double_arrow_right</span>
+                    </button>
+                </div>
+            `;
+        }
+
         dashboardContent.innerHTML = html;
+
+        // Attach event listeners to pagination buttons
+        if (totalPages > 1) {
+            const btnPrev10 = document.getElementById('btn-page-prev10');
+            const btnPrev = document.getElementById('btn-page-prev');
+            const btnNext = document.getElementById('btn-page-next');
+            const btnNext10 = document.getElementById('btn-page-next10');
+
+            if (btnPrev10) {
+                btnPrev10.addEventListener('click', () => {
+                    currentPage = Math.max(1, currentPage - 10);
+                    renderSets();
+                });
+            }
+            if (btnPrev) {
+                btnPrev.addEventListener('click', () => {
+                    currentPage = Math.max(1, currentPage - 1);
+                    renderSets();
+                });
+            }
+            if (btnNext) {
+                btnNext.addEventListener('click', () => {
+                    currentPage = Math.min(totalPages, currentPage + 1);
+                    renderSets();
+                });
+            }
+            if (btnNext10) {
+                btnNext10.addEventListener('click', () => {
+                    currentPage = Math.min(totalPages, currentPage + 10);
+                    renderSets();
+                });
+            }
+        }
 
         // Attach event listeners to card actions
         dashboardContent.querySelectorAll('.edit-btn').forEach(btn => {
