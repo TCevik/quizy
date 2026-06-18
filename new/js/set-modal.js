@@ -44,8 +44,6 @@ class QuizySetModal extends HTMLElement {
                                 <label for="set-folder">Map</label>
                                 <select id="set-folder">
                                     <option value="">Geen map</option>
-                                    <option value="school">School</option>
-                                    <option value="talen">Talen</option>
                                     <option value="__new__">+ Nieuwe map maken...</option>
                                 </select>
                                 <input type="text" id="new-folder-input" class="hidden-input" placeholder="Naam van nieuwe map">
@@ -451,6 +449,22 @@ class QuizySetModal extends HTMLElement {
         }
 
         this.close();
+    }
+
+    updateFolderOptions(folders) {
+        if (!this.folderSelect) return;
+        const currentVal = this.folderSelect.value;
+        let html = '<option value="">Geen map</option>';
+        folders.forEach(folder => {
+            if (folder && folder.trim() !== '') {
+                html += `<option value="${folder}">${folder}</option>`;
+            }
+        });
+        html += '<option value="__new__">+ Nieuwe map maken...</option>';
+        this.folderSelect.innerHTML = html;
+        if (currentVal) {
+            this.folderSelect.value = currentVal;
+        }
     }
 }
 
