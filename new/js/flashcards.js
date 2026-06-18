@@ -136,10 +136,6 @@ function openFlashcardsQuiz() {
                     <div class="progress-bar-fill" id="fc-progress-fill"></div>
                 </div>
             </div>
-
-            <div class="shortcuts-hint">
-                Tip: [←] of [Enter] = Fout | [→] of [Spatie] = Goed | Klik op de kaart = Omdraaien
-            </div>
         </div>
     `;
 
@@ -336,23 +332,7 @@ function openFlashcardsQuiz() {
 
     closeBtn.addEventListener('click', () => {
         overlay.classList.remove('active');
-        document.removeEventListener('keydown', handleKeyDown);
     });
-
-    function handleKeyDown(e) {
-        if (e.code === 'Space') {
-            e.preventDefault();
-            if (!isAnimating) cardEl.classList.toggle('flipped');
-        } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
-            submitAnswer(true);
-        } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
-            submitAnswer(false);
-        } else if (e.code === 'Escape') {
-            closeBtn.click();
-        }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
 
     // Initial card setup
     updateCard();
