@@ -138,8 +138,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnDeleteSet = document.getElementById('btn-delete-set');
     const setModalComp = document.getElementById('set-modal-comp');
     const deleteModal = document.getElementById('delete-confirm-modal');
-    const btnDeleteCancel = document.getElementById('btn-delete-cancel');
-    const btnDeleteConfirm = document.getElementById('btn-delete-confirm');
 
     if (btnEditSet && setModalComp) {
         btnEditSet.addEventListener('click', () => {
@@ -195,30 +193,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (btnDeleteSet && deleteModal) {
         btnDeleteSet.addEventListener('click', () => {
-            deleteModal.classList.add('active');
+            deleteModal.open(setId);
         });
     }
 
-    if (btnDeleteCancel && deleteModal) {
-        btnDeleteCancel.addEventListener('click', () => {
-            deleteModal.classList.remove('active');
-        });
-        deleteModal.addEventListener('click', (e) => {
-            if (e.target === deleteModal) {
-                deleteModal.classList.remove('active');
-            }
-        });
-    }
-
-    if (btnDeleteConfirm && deleteModal) {
-        btnDeleteConfirm.addEventListener('click', async () => {
+    if (deleteModal) {
+        deleteModal.addEventListener('confirm', async () => {
             const { error: deleteError } = await supabase.from('Sets').delete().eq('id', setId);
             if (deleteError) {
                 console.error('Error deleting set:', deleteError);
                 if (window.Toast) window.Toast.show('Fout bij verwijderen: ' + deleteError.message, 'error');
             } else {
                 if (window.Toast) window.Toast.show('Set succesvol verwijderd!', 'success');
-                deleteModal.classList.remove('active');
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 1000);

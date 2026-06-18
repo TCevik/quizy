@@ -1,51 +1,95 @@
 class QuizyHeader extends HTMLElement {
     async connectedCallback() {
         const isLogin = this.hasAttribute('login-page');
-        
-        const supabase = await window.supabaseReady;
+        const pathname = window.location.pathname;
+        const isDashboard = pathname.includes('dashboard.html');
+        const isProfile = pathname.includes('profile.html');
 
+        // Check localStorage to guess login state and avoid navigation flashes
+        const hasSession = Object.keys(localStorage).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+
+        // Render initial UI immediately (synchronously)
+        let initialMenuHTML = '';
+        if (isLogin) {
+            initialMenuHTML = `<a class="btn-gradient" href="index.html">Terug</a>`;
+        } else if (hasSession) {
+            initialMenuHTML = `
+                <a href="dashboard.html" class="${isDashboard ? 'active' : ''}">
+                    <span class="material-symbols-rounded" style="margin-right: 8px;">dashboard</span>
+                    Dashboard
+                </a>
+                <a href="profile.html" class="${isProfile ? 'active' : ''}">
+                    <span class="material-symbols-rounded" style="margin-right: 8px;">account_circle</span>
+                    Profiel
+                </a>
+                <a href="#" id="logoutBtn">
+                    <span class="material-symbols-rounded" style="margin-right: 8px;">logout</span>
+                    Uitloggen
+                </a>
+            `;
+        } else {
+            initialMenuHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
+        }
+
+        this.innerHTML = `
+            <a href="index.html" class="logo">Quizy</a>
+            <nav class="header-items" id="header-menu">
+                ${initialMenuHTML}
+            </nav>
+        `;
+
+        const setupLogout = () => {
+            const logoutBtn = this.querySelector('#logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const supabase = await window.supabaseReady;
+                    if (supabase) {
+                        await supabase.auth.signOut();
+                        window.location.href = 'index.html';
+                    }
+                });
+            }
+        };
+
+        setupLogout();
+
+        // Verify/fetch actual user state asynchronously
+        const supabase = await window.supabaseReady;
         let user = null;
         if (supabase) {
             const { data } = await supabase.auth.getUser();
             user = data?.user;
         }
 
-        const pathname = window.location.pathname;
-        const isDashboard = pathname.includes('dashboard.html');
-        const isProfile = pathname.includes('profile.html');
+        const menu = this.querySelector('#header-menu');
+        if (!menu) return;
 
-        this.innerHTML = `
-            <a href="index.html" class="logo">Quizy</a>
-            <nav class="header-items">
-                ${isLogin 
-                    ? `<a class="btn-gradient" href="index.html">Terug</a>` 
-                    : user 
-                        ? `
-                            <a href="dashboard.html" class="${isDashboard ? 'active' : ''}">
-                                <span class="material-symbols-rounded" style="margin-right: 8px;">dashboard</span>
-                                Dashboard
-                            </a>
-                            <a href="profile.html" class="${isProfile ? 'active' : ''}">
-                                <span class="material-symbols-rounded" style="margin-right: 8px;">account_circle</span>
-                                Profiel
-                            </a>
-                            <a href="#" id="logoutBtn">
-                                <span class="material-symbols-rounded" style="margin-right: 8px;">logout</span>
-                                Uitloggen
-                            </a>
-                          `
-                        : `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`
+        // If the actual state differs from our guess, update it
+        if (!isLogin) {
+            if (user) {
+                const currentHTML = menu.innerHTML;
+                // Only replace if not already rendered to prevent flash
+                if (!currentHTML.includes('logoutBtn')) {
+                    menu.innerHTML = `
+                        <a href="dashboard.html" class="${isDashboard ? 'active' : ''}">
+                            <span class="material-symbols-rounded" style="margin-right: 8px;">dashboard</span>
+                            Dashboard
+                        </a>
+                        <a href="profile.html" class="${isProfile ? 'active' : ''}">
+                            <span class="material-symbols-rounded" style="margin-right: 8px;">account_circle</span>
+                            Profiel
+                        </a>
+                        <a href="#" id="logoutBtn">
+                            <span class="material-symbols-rounded" style="margin-right: 8px;">logout</span>
+                            Uitloggen
+                        </a>
+                    `;
+                    setupLogout();
                 }
-            </nav>
-        `;
-
-        const logoutBtn = this.querySelector('#logoutBtn');
-        if (logoutBtn && supabase) {
-            logoutBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await supabase.auth.signOut();
-                window.location.href = 'index.html';
-            });
+            } else {
+                menu.innerHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
+            }
         }
     }
 }
@@ -70,3 +114,46 @@ class QuizyFooter extends HTMLElement {
 
 customElements.define('quizy-header', QuizyHeader);
 customElements.define('quizy-footer', QuizyFooter);
+
+class QuizyDeleteModal extends HTMLElement {
+    connectedCallback() {
+        this.className = 'modal-overlay';
+        this.innerHTML = `
+            <div class="modal-card glass-panel" style="max-width: 420px;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
+                    <h3 style="font-size: 1.3em; font-weight: 600; color: var(--text-light);">Set verwijderen</h3>
+                </div>
+                <div class="modal-body" style="padding: 24px; gap: 8px;">
+                    <p style="color: var(--text-muted); font-size: 1em; line-height: 1.5; margin: 0;">Weet je zeker dat je deze set wilt verwijderen?</p>
+                    <p style="color: #ef4444; font-size: 0.9em; font-weight: 500; margin: 0;">Dit kan niet ongedaan worden gemaakt.</p>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; margin-top: 0;">
+                    <button id="btn-delete-cancel" class="btn-text">Annuleren</button>
+                    <button id="btn-delete-confirm" class="btn-gradient" style="background: #ef4444; padding: 10px 20px;">Verwijderen</button>
+                </div>
+            </div>
+        `;
+
+        this.addEventListener('click', (e) => {
+            if (e.target === this || e.target.id === 'btn-delete-cancel') {
+                this.close();
+            }
+        });
+
+        this.querySelector('#btn-delete-confirm').addEventListener('click', () => {
+            this.dispatchEvent(new CustomEvent('confirm', { detail: { id: this._targetId } }));
+            this.close();
+        });
+    }
+
+    open(targetId = null) {
+        this._targetId = targetId;
+        this.classList.add('active');
+    }
+
+    close() {
+        this._targetId = null;
+        this.classList.remove('active');
+    }
+}
+customElements.define('quizy-delete-modal', QuizyDeleteModal);

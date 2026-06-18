@@ -27,25 +27,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Delete Confirmation Modal Elements
     const deleteModal = document.getElementById('delete-confirm-modal');
-    const btnDeleteCancel = document.getElementById('btn-delete-cancel');
-    const btnDeleteConfirm = document.getElementById('btn-delete-confirm');
-    let setIdToDelete = null;
 
-    if (btnDeleteCancel && deleteModal) {
-        btnDeleteCancel.addEventListener('click', () => {
-            deleteModal.classList.remove('active');
-            setIdToDelete = null;
-        });
-        deleteModal.addEventListener('click', (e) => {
-            if (e.target === deleteModal) {
-                deleteModal.classList.remove('active');
-                setIdToDelete = null;
-            }
-        });
-    }
-
-    if (btnDeleteConfirm && deleteModal) {
-        btnDeleteConfirm.addEventListener('click', async () => {
+    if (deleteModal) {
+        deleteModal.addEventListener('confirm', async (e) => {
+            const setIdToDelete = e.detail.id;
             if (setIdToDelete !== null) {
                 const { error: deleteError } = await supabase.from('Sets').delete().eq('id', setIdToDelete);
                 if (deleteError) {
@@ -55,8 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (window.Toast) window.Toast.show('Set succesvol verwijderd!', 'success');
                     loadSets();
                 }
-                deleteModal.classList.remove('active');
-                setIdToDelete = null;
             }
         });
     }
@@ -328,9 +311,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         dashboardContent.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                setIdToDelete = parseInt(btn.getAttribute('data-id'));
+                const setId = parseInt(btn.getAttribute('data-id'));
                 if (deleteModal) {
-                    deleteModal.classList.add('active');
+                    deleteModal.open(setId);
                 }
             });
         });

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const overlay = document.createElement('div');
     overlay.classList.add('page-wave-overlay');
     overlay.innerHTML = `
@@ -7,10 +7,33 @@ document.addEventListener('DOMContentLoaded', () => {
         </svg>
     `;
     document.body.appendChild(overlay);
+
+    const hasSession = Object.keys(localStorage).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+    const startBtns = document.querySelectorAll('a[href="login.html"]');
+
+    if (hasSession) {
+        startBtns.forEach(btn => {
+            btn.href = 'dashboard.html';
+        });
+    }
+
+    const supabase = await window.supabaseReady;
+    if (supabase) {
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) {
+            startBtns.forEach(btn => {
+                btn.href = 'dashboard.html';
+            });
+        } else {
+            startBtns.forEach(btn => {
+                btn.href = 'login.html';
+            });
+        }
+    }
 });
 
 document.addEventListener('click', (e) => {
-    const link = e.target.closest('a[href="login.html"]');
+    const link = e.target.closest('a[href="login.html"], a[href="dashboard.html"], a[href="profile.html"]');
     if (link) {
         e.preventDefault();
         const targetUrl = link.href;
