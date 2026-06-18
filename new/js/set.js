@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         currentSet = set;
+        window.currentSet = set;
         renderSetDetails();
     }
 
