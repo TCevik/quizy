@@ -394,7 +394,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lang_col1: setData.lang1,
                 lang_col2: setData.lang2,
                 cards: setData.rows,
-                card_count: setData.rows ? setData.rows.length : 0,
                 updated_at: new Date().toISOString()
             };
 

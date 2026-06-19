@@ -184,7 +184,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             lang_col1: currentSet.lang_col1,
             lang_col2: currentSet.lang_col2,
             cards: currentSet.cards,
-            card_count: currentSet.cards ? currentSet.cards.length : 0,
             settings: currentSet.settings || null,
             updated_at: new Date().toISOString()
         };
@@ -232,7 +231,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lang_col1: setData.lang1,
                 lang_col2: setData.lang2,
                 cards: setData.rows,
-                card_count: setData.rows ? setData.rows.length : 0,
                 settings: (currentSet && currentSet.settings) || null,
                 updated_at: new Date().toISOString()
             };
