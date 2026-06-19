@@ -16,13 +16,31 @@ function openFlashcardsQuiz() {
         return;
     }
 
+    const mainWrapper = document.querySelector('main.set-wrapper');
     let overlay = document.getElementById('flashcards-overlay');
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'flashcards-overlay';
         overlay.className = 'flashcards-overlay';
-        document.body.appendChild(overlay);
+        if (mainWrapper) {
+            mainWrapper.appendChild(overlay);
+        } else {
+            document.body.appendChild(overlay);
+        }
     }
+
+    // Hide only the siblings of overlay inside mainWrapper to keep header/footer
+    if (mainWrapper) {
+        Array.from(mainWrapper.children).forEach(child => {
+            if (child !== overlay) {
+                if (!child.hasAttribute('data-prev-display')) {
+                    child.setAttribute('data-prev-display', child.style.display || '');
+                }
+                child.style.display = 'none';
+            }
+        });
+    }
+    window.scrollTo(0, 0);
 
     const originalCards = window.currentSet.cards;
     const totalUniqueCards = originalCards.length;
@@ -140,9 +158,8 @@ function openFlashcardsQuiz() {
     `;
 
     // Show overlay
-    requestAnimationFrame(() => {
-        overlay.classList.add('active');
-    });
+    overlay.style.display = 'flex';
+    overlay.classList.add('active');
 
     const cardEl = document.getElementById('fc-card');
     const frontTextEl = document.getElementById('fc-front-text');
@@ -194,6 +211,15 @@ function openFlashcardsQuiz() {
             });
             document.getElementById('fc-finish-close').addEventListener('click', () => {
                 overlay.classList.remove('active');
+                overlay.style.display = 'none'; 
+                if (mainWrapper) {
+                    Array.from(mainWrapper.children).forEach(child => {
+                        if (child !== overlay) {
+                            child.style.display = child.getAttribute('data-prev-display') || '';
+                            child.removeAttribute('data-prev-display');
+                        }
+                    });
+                }
             });
             return true;
         }
@@ -340,6 +366,15 @@ function openFlashcardsQuiz() {
 
     closeBtn.addEventListener('click', () => {
         overlay.classList.remove('active');
+        overlay.style.display = 'none'; 
+        if (mainWrapper) {
+            Array.from(mainWrapper.children).forEach(child => {
+                if (child !== overlay) {
+                    child.style.display = child.getAttribute('data-prev-display') || '';
+                    child.removeAttribute('data-prev-display');
+                }
+            });
+        }
     });
 
     // Initial card setup
