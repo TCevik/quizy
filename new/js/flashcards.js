@@ -11,9 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openFlashcardsQuiz(options = {}) {
-    const starOnly = !!options.starOnly;
-    let randomize = !!options.randomize;
-    let swapSides = !!options.swapSides;
+    const savedSettings = (window.currentSet && window.currentSet.settings) || {};
+    const starOnly = ('starOnly' in options) ? !!options.starOnly : !!savedSettings.starOnly;
+    let randomize = ('randomize' in options) ? !!options.randomize : !!savedSettings.randomize;
+    let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
 
     if (!window.currentSet || !window.currentSet.cards || window.currentSet.cards.length === 0) {
         if (window.Toast) window.Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
@@ -312,6 +313,16 @@ function openFlashcardsQuiz(options = {}) {
             const onConfirm = () => {
                 confirmModal.style.display = 'none';
                 settingsPanel.classList.remove('active');
+                if (window.currentSet) {
+                    window.currentSet.settings = {
+                        starOnly: newStarOnly,
+                        randomize: newRandomize,
+                        swapSides: newSwapSides
+                    };
+                    if (window.saveAndSyncCurrentSet) {
+                        window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
+                    }
+                }
                 openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides });
                 cleanup();
             };
@@ -327,6 +338,16 @@ function openFlashcardsQuiz(options = {}) {
             confirmOk.addEventListener('click', onConfirm);
             confirmCancel.addEventListener('click', onCancel);
         } else {
+            if (window.currentSet) {
+                window.currentSet.settings = {
+                    starOnly: newStarOnly,
+                    randomize: newRandomize,
+                    swapSides: newSwapSides
+                };
+                if (window.saveAndSyncCurrentSet) {
+                    window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
+                }
+            }
             if (newRandomize !== randomize) {
                 randomize = newRandomize;
                 if (randomize) {
