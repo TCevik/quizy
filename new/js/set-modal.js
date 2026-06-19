@@ -240,7 +240,7 @@ class QuizySetModal extends HTMLElement {
     fillFormData(data) {
         if (this.querySelector('#set-title')) this.querySelector('#set-title').value = data.title || '';
         if (this.querySelector('#set-desc')) this.querySelector('#set-desc').value = data.description || '';
-        
+
         if (data.folder) {
             const hasOption = Array.from(this.folderSelect.options).some(opt => opt.value === data.folder);
             if (hasOption) {
@@ -264,7 +264,7 @@ class QuizySetModal extends HTMLElement {
         });
 
         this.renderLanguageSelection(mode);
-        
+
         const lang1Select = this.querySelector('#set-language-1');
         const lang2Select = this.querySelector('#set-language-2');
         if (lang1Select && data.lang1) lang1Select.value = data.lang1;
@@ -315,15 +315,15 @@ class QuizySetModal extends HTMLElement {
             if (this.scrollAnimFrame) {
                 cancelAnimationFrame(this.scrollAnimFrame);
             }
-            
+
             // Record the target Y position we want the button to stay at
             const targetY = this.addRowBtn.getBoundingClientRect().top;
             const start = Date.now();
-            
+
             const animateScroll = () => {
                 const currentY = this.addRowBtn.getBoundingClientRect().top;
                 const deltaY = currentY - targetY;
-                
+
                 // If button moved down (deltaY > 0), scroll down by exactly that amount
                 if (Math.abs(deltaY) > 0) {
                     this.modalBody.scrollTop += deltaY;
@@ -457,6 +457,13 @@ class QuizySetModal extends HTMLElement {
             });
         });
 
+        if (rows.length < 3) {
+            if (window.Toast) {
+                window.Toast.show('Een set moet minimaal 3 kaarten bevatten.', 'error');
+            }
+            return;
+        }
+
         const payload = {
             id: this.currentSetId,
             title,
@@ -478,9 +485,9 @@ class QuizySetModal extends HTMLElement {
 
         if (window.Toast) {
             window.Toast.show(
-                this.currentMode === 'edit' 
-                    ? 'Wijzigingen succesvol opgeslagen!' 
-                    : 'Set succesvol aangemaakt!', 
+                this.currentMode === 'edit'
+                    ? 'Wijzigingen succesvol opgeslagen!'
+                    : 'Set succesvol aangemaakt!',
                 'success'
             );
         }
