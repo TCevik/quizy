@@ -231,7 +231,7 @@ class QuizySetModal extends HTMLElement {
         this.renderLanguageSelection('woorden');
 
         this.termsContainer.innerHTML = '';
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 5; i++) {
             this.addTermRow('', '', false);
         }
         if (this.modalBody) this.modalBody.scrollTop = 0;
@@ -274,7 +274,7 @@ class QuizySetModal extends HTMLElement {
         if (data.rows && data.rows.length > 0) {
             data.rows.forEach(r => this.addTermRow(r.term, r.definition, false));
         } else {
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 5; i++) {
                 this.addTermRow('', '', false);
             }
         }
@@ -295,7 +295,7 @@ class QuizySetModal extends HTMLElement {
 
         const deleteBtn = row.querySelector('.btn-delete-row');
         deleteBtn.addEventListener('click', () => {
-            const allRows = this.termsContainer.querySelectorAll('.term-row');
+            const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
             if (allRows.length > 3) {
                 row.classList.add('removing');
                 row.addEventListener('animationend', () => {
@@ -340,7 +340,7 @@ class QuizySetModal extends HTMLElement {
     }
 
     updateDeleteButtonsState() {
-        const allRows = this.termsContainer.querySelectorAll('.term-row');
+        const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
         allRows.forEach(row => {
             const deleteBtn = row.querySelector('.btn-delete-row');
             if (allRows.length <= 3) {
