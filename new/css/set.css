@@ -188,7 +188,7 @@ body {
 
 .term-card {
     display: grid;
-    grid-template-columns: 40px 1fr 1fr;
+    grid-template-columns: 40px 1fr 1fr auto;
     align-items: center;
     padding: 24px;
     border-radius: 16px;
@@ -223,6 +223,23 @@ body {
     word-break: break-word;
 }
 
+.btn-star-card {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.btn-star-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.1);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .term-card {
@@ -249,6 +266,10 @@ body {
     
     .search-box {
         max-width: 100%;
+    }
+
+    .btn-star-card {
+        justify-self: end;
     }
 }
 

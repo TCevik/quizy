@@ -125,16 +125,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let html = '';
         cards.forEach((card, index) => {
+            const isStarred = !!card.starred;
+            const starFill = isStarred ? "font-variation-settings: 'FILL' 1;" : "font-variation-settings: 'FILL' 0;";
+            const starColor = isStarred ? "color: var(--primary);" : "color: var(--text-muted);";
             html += `
                 <div class="term-card glass-panel">
                     <div class="term-number">${index + 1}</div>
                     <div class="term-side">${escapeHtml(card.term)}</div>
                     <div class="def-side">${escapeHtml(card.definition)}</div>
+                    <button class="btn-star-card" data-index="${index}">
+                        <span class="material-symbols-rounded" style="${starFill} ${starColor} font-size: 22px;">star</span>
+                    </button>
                 </div>
             `;
         });
 
         termsListEl.innerHTML = html;
+
+        // Add event listener for starring cards
+        termsListEl.querySelectorAll('.btn-star-card').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.getAttribute('data-index'), 10);
+                const card = cards[idx];
+                
+                card.starred = !card.starred;
+                
+                const dbPayload = {
+                    title: currentSet.title,
+                    description: currentSet.description,
+                    folder: currentSet.folder,
+                    type: currentSet.type,
+                    lang_col1: currentSet.lang_col1,
+                    lang_col2: currentSet.lang_col2,
+                    cards: currentSet.cards,
+                    card_count: currentSet.cards ? currentSet.cards.length : 0,
+                    updated_at: new Date().toISOString()
+                };
+
+                try {
+                    await syncSetToRemote(supabase, dbPayload, currentSet.id);
+                    const icon = btn.querySelector('.material-symbols-rounded');
+                    if (card.starred) {
+                        icon.style.fontVariationSettings = "'FILL' 1";
+                        icon.style.color = "var(--primary)";
+                    } else {
+                        icon.style.fontVariationSettings = "'FILL' 0";
+                        icon.style.color = "var(--text-muted)";
+                    }
+                } catch (updateError) {
+                    if (window.Toast) window.Toast.show('Fout bij bijwerken van ster: ' + updateError.message, 'error');
+                }
+            });
+        });
     }
 
     // Helper to escape HTML to prevent XSS
