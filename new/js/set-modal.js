@@ -27,15 +27,15 @@ class QuizySetModal extends HTMLElement {
                             <span class="material-symbols-rounded">close</span>
                         </button>
                     </div>
-                    <form id="create-set-form" class="modal-body">
+                    <form id="create-set-form" class="modal-body" autocomplete="off">
                         <!-- Title & Description -->
                         <div class="form-group">
                             <label for="set-title">Titel</label>
-                            <input type="text" id="set-title" placeholder="Bijv. Franse onregelmatige werkwoorden" minlength="4" maxlength="40" required>
+                            <input type="text" id="set-title" placeholder="Bijv. Franse onregelmatige werkwoorden" autocomplete="off">
                         </div>
                         <div class="form-group">
                             <label for="set-desc">Beschrijving <span class="label-optional">(optioneel)</span></label>
-                            <textarea id="set-desc" placeholder="Bijv. Hoofdstuk 3 - Woordenschat en grammatica" maxlength="300"></textarea>
+                            <textarea id="set-desc" placeholder="Bijv. Hoofdstuk 3 - Woordenschat en grammatica" autocomplete="off"></textarea>
                         </div>
 
                         <!-- Folder Row -->
@@ -46,7 +46,7 @@ class QuizySetModal extends HTMLElement {
                                     <option value="">Geen map</option>
                                     <option value="__new__">+ Nieuwe map maken...</option>
                                 </select>
-                                <input type="text" id="new-folder-input" class="hidden-input" placeholder="Naam van nieuwe map" maxlength="30">
+                                <input type="text" id="new-folder-input" class="hidden-input" placeholder="Naam van nieuwe map" autocomplete="off">
                             </div>
                         </div>
 
@@ -72,7 +72,7 @@ class QuizySetModal extends HTMLElement {
                                     <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
                                 </button>
                             </label>
-                            <textarea id="import-text" placeholder="Bijv.: apple, appel; pear, peer; banana, banaan;" style="min-height: 120px; font-family: monospace; font-size: 0.9em;"></textarea>
+                            <textarea id="import-text" placeholder="Bijv.: apple, appel; pear, peer; banana, banaan;" style="min-height: 120px; font-family: monospace; font-size: 0.9em;" autocomplete="off"></textarea>
                             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
                                 <button type="button" id="btn-do-import" class="btn-gradient" style="padding: 8px 16px; font-size: 0.9em;">Voeg toe aan lijst</button>
                             </div>
@@ -136,11 +136,9 @@ class QuizySetModal extends HTMLElement {
             this.folderSelect.addEventListener('change', () => {
                 if (this.folderSelect.value === '__new__') {
                     this.newFolderInput.classList.add('active');
-                    this.newFolderInput.required = true;
                     this.newFolderInput.focus();
                 } else {
                     this.newFolderInput.classList.remove('active');
-                    this.newFolderInput.required = false;
                     this.newFolderInput.value = '';
                 }
             });
@@ -223,7 +221,6 @@ class QuizySetModal extends HTMLElement {
     resetForm() {
         this.form.reset();
         this.newFolderInput.classList.remove('active');
-        this.newFolderInput.required = false;
 
         this.segmentBtns.forEach(b => b.classList.remove('active'));
         if (this.segmentBtns[0]) this.segmentBtns[0].classList.add('active');
@@ -248,7 +245,6 @@ class QuizySetModal extends HTMLElement {
             } else {
                 this.folderSelect.value = '__new__';
                 this.newFolderInput.classList.add('active');
-                this.newFolderInput.required = true;
                 this.newFolderInput.value = data.folder;
             }
         }
@@ -294,8 +290,8 @@ class QuizySetModal extends HTMLElement {
         const row = document.createElement('div');
         row.className = 'term-row';
         row.innerHTML = `
-            <input type="text" class="term-input" value="${term}" maxlength="300" required>
-            <input type="text" class="def-input" value="${definition}" maxlength="300" required>
+            <input type="text" class="term-input" value="${term}" autocomplete="off">
+            <input type="text" class="def-input" value="${definition}" autocomplete="off">
             <button type="button" class="btn-delete-row" title="Verwijder rij">
                 <span class="material-symbols-rounded">delete</span>
             </button>
@@ -443,54 +439,111 @@ class QuizySetModal extends HTMLElement {
     }
 
     handleSubmit() {
-        const title = this.querySelector('#set-title').value.substring(0, 40);
-        const description = this.querySelector('#set-desc').value.substring(0, 300);
+        const titleInput = this.querySelector('#set-title');
+        const title = titleInput.value.trim();
+
+        if (!title) {
+            if (window.Toast) window.Toast.show('Titel is verplicht.', 'error');
+            return;
+        }
+
+        if (title.length < 4) {
+            if (window.Toast) window.Toast.show('Titel moet minimaal 4 tekens lang zijn.', 'error');
+            return;
+        }
+
+        if (title.length > 40) {
+            const over = title.length - 40;
+            if (window.Toast) window.Toast.show(`Titel is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 40).`, 'error');
+            return;
+        }
+
+        const description = this.querySelector('#set-desc').value.trim();
+        if (description.length > 300) {
+            const over = description.length - 300;
+            if (window.Toast) window.Toast.show(`Beschrijving is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 300).`, 'error');
+            return;
+        }
+
         let folder = this.folderSelect.value;
         if (folder === '__new__') {
-            folder = this.newFolderInput.value.substring(0, 30);
+            folder = this.newFolderInput.value.trim();
+            if (!folder) {
+                if (window.Toast) window.Toast.show('Vul een naam in voor de nieuwe map.', 'error');
+                return;
+            }
+            if (folder.length > 30) {
+                const over = folder.length - 30;
+                if (window.Toast) window.Toast.show(`Mapnaam is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 30).`, 'error');
+                return;
+            }
         }
+
         const activeSegment = this.querySelector('.segment-btn.active');
         const mode = activeSegment ? activeSegment.getAttribute('data-mode') : 'woorden';
 
         const lang1Select = this.querySelector('#set-language-1');
         const lang2Select = this.querySelector('#set-language-2');
-        const lang1 = lang1Select ? lang1Select.value : '';
-        const lang2 = lang2Select ? lang2Select.value : '';
+        const lang1 = lang1Select ? lang1Select.value.trim() : '';
+        const lang2 = lang2Select ? lang2Select.value.trim() : '';
+
+        if (!lang1) {
+            if (window.Toast) window.Toast.show('Kies een geldige taal.', 'error');
+            return;
+        }
 
         const rows = [];
+        let hasIncompleteRow = false;
+        let maxTermOver = 0;
+        let maxDefOver = 0;
         this.termsContainer.querySelectorAll('.term-row').forEach(row => {
-            rows.push({
-                term: row.querySelector('.term-input').value.substring(0, 300),
-                definition: row.querySelector('.def-input').value.substring(0, 300)
-            });
+            const term = row.querySelector('.term-input').value.trim();
+            const definition = row.querySelector('.def-input').value.trim();
+            if (term.length > 300) {
+                maxTermOver = Math.max(maxTermOver, term.length - 300);
+            }
+            if (definition.length > 300) {
+                maxDefOver = Math.max(maxDefOver, definition.length - 300);
+            }
+            if (term && definition) {
+                rows.push({ term, definition });
+            } else if (term || definition) {
+                hasIncompleteRow = true;
+            }
         });
 
+        if (maxTermOver > 0 || maxDefOver > 0) {
+            const maxOver = Math.max(maxTermOver, maxDefOver);
+            if (window.Toast) window.Toast.show(`Een term of definitie is te lang (${maxOver} ${maxOver === 1 ? 'teken' : 'tekens'} over de limiet van 300).`, 'error');
+            return;
+        }
+
+        if (hasIncompleteRow) {
+            if (window.Toast) window.Toast.show('Vul voor elke kaart zowel de term als de definitie in.', 'error');
+            return;
+        }
+
         if (rows.length < 3) {
-            if (window.Toast) {
-                window.Toast.show('Een set moet minimaal 3 kaarten bevatten.', 'error');
-            }
+            if (window.Toast) window.Toast.show('Een set moet minimaal 3 kaarten bevatten.', 'error');
             return;
         }
 
         if (rows.length > 200) {
-            if (window.Toast) {
-                window.Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
-            }
+            if (window.Toast) window.Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
             return;
         }
 
         const payload = {
             id: this.currentSetId,
             title,
-            description,
-            folder,
+            description: description || null,
+            folder: folder || null,
             mode,
             lang1,
-            lang2,
+            lang2: lang2 || null,
             rows
         };
 
-        // Dispatch a custom event with the data
         this.dispatchEvent(new CustomEvent('save', {
             detail: {
                 mode: this.currentMode,
@@ -509,7 +562,7 @@ class QuizySetModal extends HTMLElement {
 
         this.close();
     }
-
+    
     updateFolderOptions(folders) {
         if (!this.folderSelect) return;
         const currentVal = this.folderSelect.value;

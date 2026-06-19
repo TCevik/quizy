@@ -35,8 +35,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formSubtitle.textContent = 'Log in om verder te gaan met leren';
                 nameGroup.style.display = 'none';
                 confirmPasswordGroup.style.display = 'none';
-                nameInput.removeAttribute('required');
-                confirmPasswordInput.removeAttribute('required');
                 submitText.textContent = 'Inloggen';
                 submitIcon.textContent = 'arrow_forward';
                 togglePromptText.textContent = 'Nog geen account?';
@@ -47,8 +45,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formSubtitle.textContent = 'Meld je aan om te beginnen met leren';
                 nameGroup.style.display = 'block';
                 confirmPasswordGroup.style.display = 'block';
-                nameInput.setAttribute('required', 'required');
-                confirmPasswordInput.setAttribute('required', 'required');
                 submitText.textContent = 'Registreren';
                 submitIcon.textContent = 'person_add';
                 togglePromptText.textContent = 'Heb je al een account?';
@@ -62,8 +58,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+
+            if (!email) {
+                Toast.show('E-mailadres is verplicht.', 'error');
+                return;
+            }
+
+            if (!password) {
+                Toast.show('Wachtwoord is verplicht.', 'error');
+                return;
+            }
 
             const captchaToken = loginForm.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
 
@@ -96,7 +102,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 if (name.length > 20) {
-                    Toast.show('Weergavenaam mag maximaal 20 tekens zijn.', 'error');
+                    const over = name.length - 20;
+                    Toast.show(`Weergavenaam is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 20).`, 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    Toast.show('Wachtwoord moet minimaal 6 tekens lang zijn.', 'error');
+                    return;
+                }
+
+                if (!confirmPassword) {
+                    Toast.show('Bevestig het wachtwoord.', 'error');
                     return;
                 }
 
@@ -165,7 +182,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (resetForm && supabase) {
         resetForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const resetEmail = document.getElementById('reset-email').value;
+            const resetEmail = document.getElementById('reset-email').value.trim();
+            if (!resetEmail) {
+                Toast.show('E-mailadres is verplicht.', 'error');
+                return;
+            }
             const captchaToken = resetForm.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
 
             Toast.show('Versturen...', 'info');
@@ -244,7 +265,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (resendForm && supabase) {
         resendForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('resend-email').value;
+            const email = document.getElementById('resend-email').value.trim();
+            if (!email) {
+                Toast.show('E-mailadres is verplicht.', 'error');
+                return;
+            }
             await resendConfirmationEmail(email);
         });
     }

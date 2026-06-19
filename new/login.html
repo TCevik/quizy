@@ -27,19 +27,19 @@
                 <h2 id="formTitle">Welkom terug</h2>
                 <p id="formSubtitle">Log in om verder te gaan met leren</p>
             </div>
-            <form class="login-form" id="loginForm">
+            <form class="login-form" id="loginForm" autocomplete="off">
                 <div class="input-group" id="nameGroup" style="display: none;">
                     <label for="name">Weergavenaam</label>
                     <div class="input-wrapper">
                         <span class="material-symbols-rounded input-icon">person</span>
-                        <input type="text" id="name" placeholder="Je naam" autocomplete="name" maxlength="20">
+                        <input type="text" id="name" placeholder="Je naam">
                     </div>
                 </div>
                 <div class="input-group">
                     <label for="email">E-mailadres</label>
                     <div class="input-wrapper">
                         <span class="material-symbols-rounded input-icon">mail</span>
-                        <input type="email" id="email" placeholder="naam@voorbeeld.nl" required autocomplete="email">
+                        <input type="email" id="email" placeholder="naam@voorbeeld.nl">
                     </div>
                 </div>
                 <div class="input-group">
@@ -49,15 +49,14 @@
                     </div>
                     <div class="input-wrapper">
                         <span class="material-symbols-rounded input-icon">lock</span>
-                        <input type="password" id="password" placeholder="••••••••" required
-                            autocomplete="current-password">
+                        <input type="password" id="password" placeholder="••••••••" autocomplete="off">
                     </div>
                 </div>
                 <div class="input-group" id="confirmPasswordGroup" style="display: none;">
                     <label for="confirm-password">Bevestig wachtwoord</label>
                     <div class="input-wrapper">
                         <span class="material-symbols-rounded input-icon">lock</span>
-                        <input type="password" id="confirm-password" placeholder="••••••••" autocomplete="new-password">
+                        <input type="password" id="confirm-password" placeholder="••••••••" autocomplete="off">
                     </div>
                 </div>
                 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
@@ -79,12 +78,12 @@
             <span class="close-btn" id="closeResetModal">&times;</span>
             <h3>Wachtwoord resetten</h3>
             <p>Vul je e-mailadres in om een resetlink te ontvangen.</p>
-            <form id="resetForm">
+            <form id="resetForm" autocomplete="off">
                 <div class="input-group">
                     <label for="reset-email">E-mailadres</label>
                     <div class="input-wrapper">
                         <span class="material-symbols-rounded input-icon">mail</span>
-                        <input type="email" id="reset-email" placeholder="naam@voorbeeld.nl" required autocomplete="email">
+                        <input type="email" id="reset-email" placeholder="naam@voorbeeld.nl" autocomplete="off">
                     </div>
                 </div>
                 <div class="cf-turnstile" data-sitekey="0x4AAAAAADnaOROhBcRf-NwH"></div>
@@ -102,12 +101,12 @@
             <span class="close-btn" id="closeResendModal">&times;</span>
             <h3>Verificatiemail opnieuw sturen</h3>
             <p>Vul je e-mailadres in om een nieuwe verificatielink te ontvangen.</p>
-            <form id="resendForm">
+            <form id="resendForm" autocomplete="off">
                 <div class="input-group">
                     <label for="resend-email">E-mailadres</label>
                     <div class="input-wrapper">
                         <span class="material-symbols-rounded input-icon">mail</span>
-                        <input type="email" id="resend-email" placeholder="naam@voorbeeld.nl" required autocomplete="email">
+                        <input type="email" id="resend-email" placeholder="naam@voorbeeld.nl" autocomplete="off">
                     </div>
                 </div>
                 <div class="cf-turnstile" data-sitekey="0x4AAAAAADnaOROhBcRf-NwH"></div>

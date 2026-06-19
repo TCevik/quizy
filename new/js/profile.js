@@ -80,7 +80,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             if (newName.length > 20) {
-                showProfileMessage('Weergavenaam mag maximaal 20 tekens zijn.', false);
+                const over = newName.length - 20;
+                showProfileMessage(`Weergavenaam is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 20).`, false);
                 return;
             }
 
@@ -140,8 +141,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
 
+            if (!newPassword) {
+                showMessage('Nieuw wachtwoord is verplicht.', false);
+                return;
+            }
+
             if (newPassword.length < 6) {
                 showMessage('Het nieuwe wachtwoord moet minimaal 6 tekens lang zijn.', false);
+                return;
+            }
+
+            if (!confirmPassword) {
+                showMessage('Bevestig het nieuwe wachtwoord.', false);
                 return;
             }
 

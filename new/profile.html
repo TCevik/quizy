@@ -42,37 +42,37 @@
                         <span class="material-symbols-rounded">person</span>
                         <h3>Weergavenaam aanpassen</h3>
                     </div>
-                    <form id="changeNameForm" class="login-form">
+                    <form id="changeNameForm" class="login-form" autocomplete="off">
                         <div class="name-input-row">
                             <div class="input-group">
                                 <label for="display-name">Weergavenaam</label>
                                 <div class="input-wrapper">
                                     <span class="material-symbols-rounded input-icon">person</span>
-                                    <input type="text" id="display-name" placeholder="Je weergavenaam" required autocomplete="name" maxlength="20">
+                                    <input type="text" id="display-name" placeholder="Je weergavenaam" autocomplete="off">
                                 </div>
                             </div>
-
+ 
                             <button type="submit" class="btn-gradient submit-btn">
                                 <span>Bijwerken</span>
                                 <span class="material-symbols-rounded">save</span>
                             </button>
                         </div>
                     </form>
-
-
+ 
+ 
                 </div>
-
+ 
                 <div class="profile-section">
                     <div class="profile-section-header">
                         <span class="material-symbols-rounded">lock_reset</span>
                         <h3>Wachtwoord wijzigen</h3>
                     </div>
-                    <form id="changePasswordForm" class="login-form">
+                    <form id="changePasswordForm" class="login-form" autocomplete="off">
                         <div class="input-group">
                             <label for="old-password">Oud wachtwoord</label>
                             <div class="input-wrapper">
                                 <span class="material-symbols-rounded input-icon">lock</span>
-                                <input type="password" id="old-password" placeholder="••••••••" autocomplete="current-password">
+                                <input type="password" id="old-password" placeholder="••••••••" autocomplete="off">
                             </div>
                             <div style="margin-top: 4px;">
                                 <a href="#" class="forgot-password" id="resetPasswordBtn">Wachtwoord vergeten? Stuur direct een herstellink</a>
@@ -83,18 +83,18 @@
                             <label for="new-password">Nieuw wachtwoord</label>
                             <div class="input-wrapper">
                                 <span class="material-symbols-rounded input-icon">lock_open</span>
-                                <input type="password" id="new-password" placeholder="••••••••" required autocomplete="new-password">
+                                <input type="password" id="new-password" placeholder="••••••••" autocomplete="off">
                             </div>
                         </div>
-
+ 
                         <div class="input-group">
                             <label for="confirm-password">Bevestig nieuw wachtwoord</label>
                             <div class="input-wrapper">
                                 <span class="material-symbols-rounded input-icon">lock_open</span>
-                                <input type="password" id="confirm-password" placeholder="••••••••" required autocomplete="new-password">
+                                <input type="password" id="confirm-password" placeholder="••••••••" autocomplete="off">
                             </div>
                         </div>
-
+ 
                         <button type="submit" class="btn-gradient submit-btn" style="width: auto; align-self: flex-start; margin-top: 8px;">
                             <span>Wachtwoord bijwerken</span>
                             <span class="material-symbols-rounded">save</span>
