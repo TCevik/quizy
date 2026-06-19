@@ -67,12 +67,12 @@ class QuizySetModal extends HTMLElement {
                         <!-- Import Container -->
                         <div id="import-container" class="form-group hidden-input" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 16px; margin-top: 10px;">
                             <label for="import-text" style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Lijst importeren (formaat: term, definitie; term, definitie;)</span>
+                                <span>Lijst importeren (formaat: term [tab] definitie per regel)</span>
                                 <button type="button" id="btn-close-import" class="modal-close-btn" style="padding: 2px;">
                                     <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
                                 </button>
                             </label>
-                            <textarea id="import-text" placeholder="Bijv.: apple, appel; pear, peer; banana, banaan;" style="min-height: 120px; font-family: monospace; font-size: 0.9em;" autocomplete="off"></textarea>
+                            <textarea id="import-text" placeholder="Bijv.:&#10;apple&#9;appel&#10;peer&#9;peer" style="min-height: 120px; font-family: monospace; font-size: 0.9em;" autocomplete="off"></textarea>
                             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
                                 <button type="button" id="btn-do-import" class="btn-gradient" style="padding: 8px 16px; font-size: 0.9em;">Voeg toe aan lijst</button>
                             </div>
@@ -195,6 +195,19 @@ class QuizySetModal extends HTMLElement {
                 this.handleImport();
             }
         });
+
+        const importTextarea = this.querySelector('#import-text');
+        if (importTextarea) {
+            importTextarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = importTextarea.selectionStart;
+                    const end = importTextarea.selectionEnd;
+                    importTextarea.value = importTextarea.value.substring(0, start) + '\t' + importTextarea.value.substring(end);
+                    importTextarea.selectionStart = importTextarea.selectionEnd = start + 1;
+                }
+            });
+        }
     }
 
     open(mode = 'create', setData = null) {
@@ -588,18 +601,6 @@ class QuizySetModal extends HTMLElement {
                 definition: parts.slice(1).join('\t').substring(0, 300)
             };
         }
-        if (str.includes(';')) {
-            const idx = str.indexOf(';');
-            let term = str.substring(0, idx).trim().substring(0, 300);
-            let definition = str.substring(idx + 1).replace(/^[,\s\-:=]+/, '').trim().substring(0, 300);
-            return { term, definition };
-        }
-        if (str.includes(',')) {
-            const lastIdx = str.lastIndexOf(',');
-            let term = str.substring(0, lastIdx).trim().substring(0, 300);
-            let definition = str.substring(lastIdx + 1).trim().substring(0, 300);
-            return { term, definition };
-        }
         return {
             term: str.substring(0, 300),
             definition: ''
@@ -615,24 +616,10 @@ class QuizySetModal extends HTMLElement {
         const parsedRows = [];
 
         lines.forEach(line => {
-            const rawParts = line.split(';');
-            const parts = [];
-            for (let i = 0; i < rawParts.length; i++) {
-                let part = rawParts[i].trim();
-                if (!part) continue;
-                if ((part.startsWith(',') || part.startsWith(';') || part.startsWith('-')) && parts.length > 0) {
-                    parts[parts.length - 1] = parts[parts.length - 1] + ';' + rawParts[i];
-                } else {
-                    parts.push(rawParts[i]);
-                }
+            const { term, definition } = this.splitImportCard(line);
+            if (term || definition) {
+                parsedRows.push({ term, definition });
             }
-
-            parts.forEach(part => {
-                const { term, definition } = this.splitImportCard(part);
-                if (term || definition) {
-                    parsedRows.push({ term, definition });
-                }
-            });
         });
 
         if (parsedRows.length === 0) {
