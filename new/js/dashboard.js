@@ -48,9 +48,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let allSets = [];
     let currentFolderFilter = 'all';
+    let searchQuery = '';
     let currentPage = 1;
     const pageSize = 20;
     const folderFilterContainer = document.getElementById('folder-filter-container');
+    const searchInput = document.getElementById('search-input');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase().trim();
+            currentPage = 1;
+            renderSets();
+        });
+    }
 
     // Function to render folder filter chips
     function renderFolderFilter(sets) {
@@ -149,12 +159,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        if (searchQuery) {
+            filteredSets = filteredSets.filter(s => s.title && s.title.toLowerCase().includes(searchQuery));
+        }
+
         if (filteredSets.length === 0) {
             dashboardContent.innerHTML = `
                 <div class="no-sets-box" style="padding: 40px 24px;">
-                    <span class="material-symbols-rounded no-sets-icon">folder_open</span>
-                    <h3>Geen sets in deze map</h3>
-                    <p>Er zijn nog geen studiesets aan deze map toegevoegd.</p>
+                    <span class="material-symbols-rounded no-sets-icon">${searchQuery ? 'search_off' : 'folder_open'}</span>
+                    <h3>${searchQuery ? 'Geen resultaten' : 'Geen sets in deze map'}</h3>
+                    <p>${searchQuery ? 'Geen studiesets gevonden die voldoen aan de zoekterm.' : 'Er zijn nog geen studiesets aan deze map toegevoegd.'}</p>
                 </div>
             `;
             return;
