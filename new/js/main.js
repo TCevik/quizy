@@ -48,3 +48,21 @@ document.addEventListener('click', (e) => {
         }
     }
 });
+
+window.speakText = function(text, langName) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const langMap = {
+        'Nederlands': 'nl-NL',
+        'Engels': 'en-US',
+        'Frans': 'fr-FR',
+        'Duits': 'de-DE',
+        'Spaans': 'es-ES'
+    };
+    const langCode = langMap[langName] || langName || '';
+    if (langCode) {
+        utterance.lang = langCode;
+    }
+    window.speechSynthesis.speak(utterance);
+};

@@ -221,6 +221,9 @@ function openMultipleChoiceQuiz(options = {}) {
             </div>
             
             <div class="mc-question-card" id="mc-question">
+                <button class="btn-mc-speak" title="Uitspreken">
+                    <span class="material-symbols-rounded">volume_up</span>
+                </button>
                 <button class="btn-mc-star">
                     <span class="material-symbols-rounded">star</span>
                 </button>
@@ -650,6 +653,20 @@ function openMultipleChoiceQuiz(options = {}) {
             if (window.Toast) window.Toast.show('Fout bij bijwerken van ster: ' + err.message, 'error');
         }
     });
+
+    const speakBtn = overlay.querySelector('.btn-mc-speak');
+    if (speakBtn) {
+        speakBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currentCard = activeQueue[currentIndex];
+            if (!currentCard) return;
+            const text = swapSides ? currentCard.definition : currentCard.term;
+            const lang = swapSides ? (window.currentSet.lang_col2 || window.currentSet.lang_col1) : window.currentSet.lang_col1;
+            if (window.speakText) {
+                window.speakText(text, lang);
+            }
+        });
+    }
 
     nextBtn.addEventListener('click', handleNext);
     closeBtn.addEventListener('click', closeMC);

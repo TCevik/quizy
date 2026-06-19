@@ -223,6 +223,9 @@ function openFlashcardsQuiz(options = {}) {
             <div class="flashcard-wrapper" id="fc-card">
                 <div class="flashcard-inner">
                     <div class="flashcard-face flashcard-front">
+                        <button class="btn-flashcard-speak" title="Uitspreken">
+                            <span class="material-symbols-rounded">volume_up</span>
+                        </button>
                         <button class="btn-flashcard-star">
                             <span class="material-symbols-rounded">star</span>
                         </button>
@@ -230,6 +233,9 @@ function openFlashcardsQuiz(options = {}) {
                         <div class="flashcard-text" id="fc-front-text">Laden...</div>
                     </div>
                     <div class="flashcard-face flashcard-back">
+                        <button class="btn-flashcard-speak" title="Uitspreken">
+                            <span class="material-symbols-rounded">volume_up</span>
+                        </button>
                         <button class="btn-flashcard-star">
                             <span class="material-symbols-rounded">star</span>
                         </button>
@@ -610,6 +616,35 @@ function openFlashcardsQuiz(options = {}) {
         if (isAnimating) return;
         cardEl.classList.toggle('flipped');
     });
+
+    const frontSpeakBtn = cardEl.querySelector('.flashcard-front .btn-flashcard-speak');
+    const backSpeakBtn = cardEl.querySelector('.flashcard-back .btn-flashcard-speak');
+
+    if (frontSpeakBtn) {
+        frontSpeakBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currentCard = activeQueue[currentIndex];
+            if (!currentCard) return;
+            const text = swapSides ? currentCard.definition : currentCard.term;
+            const lang = swapSides ? (window.currentSet.lang_col2 || window.currentSet.lang_col1) : window.currentSet.lang_col1;
+            if (window.speakText) {
+                window.speakText(text, lang);
+            }
+        });
+    }
+
+    if (backSpeakBtn) {
+        backSpeakBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currentCard = activeQueue[currentIndex];
+            if (!currentCard) return;
+            const text = swapSides ? currentCard.term : currentCard.definition;
+            const lang = swapSides ? window.currentSet.lang_col1 : (window.currentSet.lang_col2 || window.currentSet.lang_col1);
+            if (window.speakText) {
+                window.speakText(text, lang);
+            }
+        });
+    }
 
     const starBtns = overlay.querySelectorAll('.btn-flashcard-star');
     starBtns.forEach(btn => {

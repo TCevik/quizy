@@ -423,3 +423,23 @@ quizy-delete-modal:not(.active) {
     color: #ef4444;
     border-color: rgba(239, 68, 68, 0.2);
 }
+
+/* Speaker / TTS button */
+.btn-speak {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+
+.btn-speak:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--primary);
+    transform: scale(1.1);
+}

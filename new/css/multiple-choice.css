@@ -307,3 +307,27 @@
 .mc-settings-actions button {
     flex: 1;
 }
+
+.btn-mc-speak {
+    position: absolute;
+    top: 20px;
+    right: 70px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.btn-mc-speak:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+    color: var(--primary);
+}

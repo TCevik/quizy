@@ -131,8 +131,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             html += `
                 <div class="term-card glass-panel">
                     <div class="term-number">${index + 1}</div>
-                    <div class="term-side">${escapeHtml(card.term)}</div>
-                    <div class="def-side">${escapeHtml(card.definition)}</div>
+                    <div class="term-side" style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                        <span>${escapeHtml(card.term)}</span>
+                        <button class="btn-speak btn-speak-term" data-index="${index}" title="Uitspreken">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">volume_up</span>
+                        </button>
+                    </div>
+                    <div class="def-side" style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                        <span>${escapeHtml(card.definition)}</span>
+                        <button class="btn-speak btn-speak-def" data-index="${index}" title="Uitspreken">
+                            <span class="material-symbols-rounded" style="font-size: 18px;">volume_up</span>
+                        </button>
+                    </div>
                     <button class="btn-star-card" data-index="${index}">
                         <span class="material-symbols-rounded" style="${starFill} ${starColor} font-size: 22px;">star</span>
                     </button>
@@ -141,6 +151,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         termsListEl.innerHTML = html;
+
+        // Add event listeners for speaking terms & definitions
+        termsListEl.querySelectorAll('.btn-speak-term').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.getAttribute('data-index'), 10);
+                const card = cards[idx];
+                if (window.speakText) {
+                    window.speakText(card.term, currentSet.lang_col1);
+                }
+            });
+        });
+
+        termsListEl.querySelectorAll('.btn-speak-def').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.getAttribute('data-index'), 10);
+                const card = cards[idx];
+                if (window.speakText) {
+                    window.speakText(card.definition, currentSet.lang_col2 || currentSet.lang_col1);
+                }
+            });
+        });
 
         // Add event listener for starring cards
         termsListEl.querySelectorAll('.btn-star-card').forEach(btn => {
