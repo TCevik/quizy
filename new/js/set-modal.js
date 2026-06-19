@@ -31,7 +31,7 @@ class QuizySetModal extends HTMLElement {
                         <!-- Title & Description -->
                         <div class="form-group">
                             <label for="set-title">Titel</label>
-                            <input type="text" id="set-title" placeholder="Bijv. Franse onregelmatige werkwoorden" maxlength="40" required>
+                            <input type="text" id="set-title" placeholder="Bijv. Franse onregelmatige werkwoorden" minlength="4" maxlength="40" required>
                         </div>
                         <div class="form-group">
                             <label for="set-desc">Beschrijving <span class="label-optional">(optioneel)</span></label>
