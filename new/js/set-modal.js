@@ -46,7 +46,7 @@ class QuizySetModal extends HTMLElement {
                                     <option value="">Geen map</option>
                                     <option value="__new__">+ Nieuwe map maken...</option>
                                 </select>
-                                <input type="text" id="new-folder-input" class="hidden-input" placeholder="Naam van nieuwe map">
+                                <input type="text" id="new-folder-input" class="hidden-input" placeholder="Naam van nieuwe map" maxlength="30">
                             </div>
                         </div>
 
@@ -272,22 +272,30 @@ class QuizySetModal extends HTMLElement {
 
         this.termsContainer.innerHTML = '';
         if (data.rows && data.rows.length > 0) {
-            data.rows.forEach(r => this.addTermRow(r.term, r.definition, false));
+            data.rows.slice(0, 200).forEach(r => this.addTermRow(r.term, r.definition, false, false));
         } else {
             for (let i = 0; i < 5; i++) {
-                this.addTermRow('', '', false);
+                this.addTermRow('', '', false, false);
             }
         }
         this.updatePlaceholdersAndHeaders();
         if (this.modalBody) this.modalBody.scrollTop = 0;
     }
 
-    addTermRow(term = '', definition = '', shouldScroll = true) {
+    addTermRow(term = '', definition = '', shouldScroll = true, showToastOnLimit = true) {
+        const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
+        if (allRows.length >= 200) {
+            if (showToastOnLimit && window.Toast) {
+                window.Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
+            }
+            return;
+        }
+
         const row = document.createElement('div');
         row.className = 'term-row';
         row.innerHTML = `
-            <input type="text" class="term-input" value="${term}" required>
-            <input type="text" class="def-input" value="${definition}" required>
+            <input type="text" class="term-input" value="${term}" maxlength="300" required>
+            <input type="text" class="def-input" value="${definition}" maxlength="300" required>
             <button type="button" class="btn-delete-row" title="Verwijder rij">
                 <span class="material-symbols-rounded">delete</span>
             </button>
@@ -439,7 +447,7 @@ class QuizySetModal extends HTMLElement {
         const description = this.querySelector('#set-desc').value.substring(0, 300);
         let folder = this.folderSelect.value;
         if (folder === '__new__') {
-            folder = this.newFolderInput.value;
+            folder = this.newFolderInput.value.substring(0, 30);
         }
         const activeSegment = this.querySelector('.segment-btn.active');
         const mode = activeSegment ? activeSegment.getAttribute('data-mode') : 'woorden';
@@ -452,14 +460,21 @@ class QuizySetModal extends HTMLElement {
         const rows = [];
         this.termsContainer.querySelectorAll('.term-row').forEach(row => {
             rows.push({
-                term: row.querySelector('.term-input').value,
-                definition: row.querySelector('.def-input').value
+                term: row.querySelector('.term-input').value.substring(0, 300),
+                definition: row.querySelector('.def-input').value.substring(0, 300)
             });
         });
 
         if (rows.length < 3) {
             if (window.Toast) {
                 window.Toast.show('Een set moet minimaal 3 kaarten bevatten.', 'error');
+            }
+            return;
+        }
+
+        if (rows.length > 200) {
+            if (window.Toast) {
+                window.Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
             }
             return;
         }
@@ -522,13 +537,13 @@ class QuizySetModal extends HTMLElement {
         pairs.forEach(pair => {
             const commaIndex = pair.indexOf(',');
             if (commaIndex !== -1) {
-                const term = pair.substring(0, commaIndex).trim();
-                const definition = pair.substring(commaIndex + 1).trim();
+                const term = pair.substring(0, commaIndex).trim().substring(0, 300);
+                const definition = pair.substring(commaIndex + 1).trim().substring(0, 300);
                 if (term || definition) {
                     parsedRows.push({ term, definition });
                 }
             } else {
-                const term = pair.trim();
+                const term = pair.trim().substring(0, 300);
                 if (term) {
                     parsedRows.push({ term, definition: '' });
                 }
@@ -557,8 +572,23 @@ class QuizySetModal extends HTMLElement {
             this.termsContainer.innerHTML = '';
         }
 
+        const currentCount = allEmpty ? 0 : existingRows.length;
+        if (currentCount + parsedRows.length > 200) {
+            const allowedCount = 200 - currentCount;
+            if (allowedCount <= 0) {
+                if (window.Toast) {
+                    window.Toast.show('De set heeft al het maximum van 200 kaarten bereikt.', 'error');
+                }
+                return;
+            }
+            parsedRows.splice(allowedCount);
+            if (window.Toast) {
+                window.Toast.show(`Slechts ${allowedCount} woorden konden worden geïmporteerd (maximaal 200 kaarten).`, 'warning');
+            }
+        }
+
         parsedRows.forEach(row => {
-            this.addTermRow(row.term, row.definition, false);
+            this.addTermRow(row.term, row.definition, false, false);
         });
 
         this.updateDeleteButtonsState();
