@@ -31,11 +31,11 @@ class QuizySetModal extends HTMLElement {
                         <!-- Title & Description -->
                         <div class="form-group">
                             <label for="set-title">Titel</label>
-                            <input type="text" id="set-title" placeholder="Bijv. Franse onregelmatige werkwoorden" required>
+                            <input type="text" id="set-title" placeholder="Bijv. Franse onregelmatige werkwoorden" maxlength="40" required>
                         </div>
                         <div class="form-group">
                             <label for="set-desc">Beschrijving <span class="label-optional">(optioneel)</span></label>
-                            <textarea id="set-desc" placeholder="Bijv. Hoofdstuk 3 - Woordenschat en grammatica"></textarea>
+                            <textarea id="set-desc" placeholder="Bijv. Hoofdstuk 3 - Woordenschat en grammatica" maxlength="300"></textarea>
                         </div>
 
                         <!-- Folder Row -->
@@ -435,8 +435,8 @@ class QuizySetModal extends HTMLElement {
     }
 
     handleSubmit() {
-        const title = this.querySelector('#set-title').value;
-        const description = this.querySelector('#set-desc').value;
+        const title = this.querySelector('#set-title').value.substring(0, 40);
+        const description = this.querySelector('#set-desc').value.substring(0, 300);
         let folder = this.folderSelect.value;
         if (folder === '__new__') {
             folder = this.newFolderInput.value;
