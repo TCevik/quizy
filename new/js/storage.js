@@ -143,14 +143,18 @@ export async function syncSetToRemote(supabase, dbPayload, setId = null) {
     if (setId) {
         const { error: updateError } = await supabase.from('Sets').update(dbPayload).eq('id', setId);
         if (updateError) throw updateError;
+        
         dbPayload.id = setId;
-        await saveLocalSet(dbPayload);
+        const existingSet = await getLocalSet(setId);
+        const mergedPayload = existingSet ? { ...existingSet, ...dbPayload } : dbPayload;
+        await saveLocalSet(mergedPayload);
     } else {
         const { data, error: insertError } = await supabase.from('Sets').insert([dbPayload]).select('id, created_at, updated_at').single();
         if (insertError) throw insertError;
+        
         dbPayload.id = data.id;
         dbPayload.created_at = data.created_at;
         dbPayload.updated_at = data.updated_at;
         await saveLocalSet(dbPayload);
     }
-}
+}   
