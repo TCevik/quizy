@@ -11,7 +11,8 @@
 .flashcards-overlay.active {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 20px;
 }
 
 .flashcards-container {
@@ -296,10 +297,32 @@
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
     flex-direction: column;
     gap: 16px;
+    max-height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
     opacity: 0;
     transform: scale(0);
     transform-origin: calc(100% - 60px) 0px;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease, visibility 0.3s;
+}
+
+.fc-settings-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fc-settings-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 3px;
+}
+
+.fc-settings-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+}
+
+.fc-settings-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
 }
 
 .fc-settings-panel.active {

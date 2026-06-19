@@ -1,5 +1,5 @@
-/* Multiple Choice CSS */
-.mc-overlay {
+/* Spelling Mode CSS */
+.sp-overlay {
     display: none; /* hidden by default */
     width: 100%;
     min-height: calc(100vh - 200px);
@@ -8,14 +8,14 @@
     box-sizing: border-box;
 }
 
-.mc-overlay.active {
+.sp-overlay.active {
     display: flex;
     justify-content: center;
     align-items: flex-start;
     padding-top: 20px;
 }
 
-.mc-container {
+.sp-container {
     width: 90%;
     max-width: 600px;
     display: flex;
@@ -24,7 +24,7 @@
     gap: 20px;
 }
 
-.mc-header {
+.sp-header {
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -32,32 +32,13 @@
     color: var(--text-light);
 }
 
-.mc-title {
+.sp-title {
     font-size: 1.3em;
     font-weight: 700;
 }
 
-.btn-close-mc {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-light);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-close-mc:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: rotate(90deg);
-}
-
 /* Question Area */
-.mc-question-card {
+.sp-question-card {
     width: 100%;
     min-height: 180px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
@@ -73,7 +54,7 @@
     position: relative;
 }
 
-.btn-mc-star {
+.btn-sp-star {
     position: absolute;
     top: 20px;
     right: 20px;
@@ -91,16 +72,40 @@
     z-index: 10;
 }
 
-.btn-mc-star:hover {
+.btn-sp-star:hover {
     background: rgba(255, 255, 255, 0.15);
     transform: scale(1.1);
 }
 
-.btn-mc-star.starred {
+.btn-sp-star.starred {
     color: #ffca28;
 }
 
-.mc-question-label {
+.btn-sp-speak {
+    position: absolute;
+    top: 20px;
+    right: 70px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.btn-sp-speak:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+    color: var(--primary);
+}
+
+.sp-question-label {
     font-size: 0.8em;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -109,7 +114,7 @@
     font-weight: 700;
 }
 
-.mc-question-text {
+.sp-question-text {
     font-size: 1.8em;
     font-weight: 600;
     line-height: 1.4;
@@ -117,94 +122,100 @@
     color: var(--text-light);
 }
 
-/* Options Grid */
-.mc-options-grid {
+/* Input Area */
+.sp-input-form {
     width: 100%;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-@media (min-width: 480px) {
-    .mc-options-grid {
-        grid-template-columns: 1fr 1fr;
-    }
+.sp-input-wrapper {
+    position: relative;
+    width: 100%;
 }
 
-.mc-option-btn {
+.sp-input {
+    width: 100%;
     background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-light);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    padding: 20px;
-    font-size: 1.05em;
+    padding: 18px 24px;
+    color: var(--text-light);
+    font-size: 1.15em;
     font-weight: 500;
-    text-align: left;
-    cursor: pointer;
+    outline: none;
+    box-sizing: border-box;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    word-break: break-word;
 }
 
-.mc-option-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-}
-
-.mc-option-btn:disabled {
-    cursor: default;
-}
-
-.mc-option-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+.sp-input:focus {
     background: rgba(255, 255, 255, 0.08);
-    font-size: 0.9em;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.15);
+}
+
+/* Feedback Area */
+.sp-feedback-card {
+    width: 100%;
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+    animation: slideIn 0.3s ease;
+}
+
+.sp-feedback-card.correct {
+    background: rgba(67, 160, 71, 0.1);
+    border: 1px solid rgba(67, 160, 71, 0.3);
+}
+
+.sp-feedback-card.incorrect {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.sp-feedback-status {
     font-weight: 700;
-    flex-shrink: 0;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sp-feedback-status.correct {
+    color: #43a047;
+}
+
+.sp-feedback-status.incorrect {
+    color: #ef4444;
+}
+
+.sp-feedback-detail {
+    color: var(--text-light);
+    font-size: 1.05em;
+    line-height: 1.5;
+}
+
+.sp-feedback-original {
     color: var(--text-muted);
+    font-size: 0.9em;
+    text-decoration: line-through;
+    opacity: 0.8;
 }
 
-/* Correct / Incorrect states */
-.mc-option-btn.correct {
-    background: rgba(67, 160, 71, 0.2) !important;
-    border-color: rgba(67, 160, 71, 0.6) !important;
-    color: #81c784 !important;
-}
-
-.mc-option-btn.correct .mc-option-badge {
-    background: #43a047 !important;
-    color: #ffffff !important;
-}
-
-.mc-option-btn.incorrect {
-    background: rgba(239, 68, 68, 0.2) !important;
-    border-color: rgba(239, 68, 68, 0.6) !important;
-    color: #e57373 !important;
-}
-
-.mc-option-btn.incorrect .mc-option-badge {
-    background: #ef4444 !important;
-    color: #ffffff !important;
-}
-
-/* Next Action Area */
-.mc-action-area {
+/* Actions */
+.sp-action-area {
     width: 100%;
     display: flex;
     justify-content: flex-end;
+    gap: 12px;
     min-height: 48px;
 }
 
-.btn-mc-next {
-    background: var(--primary);
+.btn-sp-action {
     color: #ffffff;
     border: none;
     padding: 12px 28px;
@@ -218,13 +229,28 @@
     gap: 8px;
 }
 
-.btn-mc-next:hover {
+.btn-sp-action.primary {
+    background: var(--primary);
+}
+
+.btn-sp-action.primary:hover {
     background: var(--primary-hover);
     transform: translateY(-2px);
 }
 
+.btn-sp-action.secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+.btn-sp-action.secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
 /* Settings Panel */
-.mc-settings-panel {
+.sp-settings-panel {
     display: flex;
     visibility: hidden;
     pointer-events: none;
@@ -252,32 +278,32 @@
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease, visibility 0.3s;
 }
 
-.mc-settings-panel::-webkit-scrollbar {
+.sp-settings-panel::-webkit-scrollbar {
     width: 6px;
 }
 
-.mc-settings-panel::-webkit-scrollbar-track {
+.sp-settings-panel::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.02);
     border-radius: 3px;
 }
 
-.mc-settings-panel::-webkit-scrollbar-thumb {
+.sp-settings-panel::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
 }
 
-.mc-settings-panel::-webkit-scrollbar-thumb:hover {
+.sp-settings-panel::-webkit-scrollbar-thumb:hover {
     background: var(--primary);
 }
 
-.mc-settings-panel.active {
+.sp-settings-panel.active {
     visibility: visible;
     pointer-events: auto;
     opacity: 1;
     transform: scale(1);
 }
 
-.mc-settings-title {
+.sp-settings-title {
     margin: 0;
     font-size: 1.2em;
     font-weight: 600;
@@ -287,32 +313,32 @@
     gap: 8px;
 }
 
-.mc-setting-item {
+.sp-setting-item {
     display: flex;
     flex-direction: column;
     gap: 8px;
     text-align: left;
 }
 
-.mc-setting-row {
+.sp-setting-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
 }
 
-.mc-setting-label {
+.sp-setting-label {
     cursor: pointer;
     color: var(--text-light);
     font-weight: 500;
 }
 
-.mc-setting-description {
+.sp-setting-description {
     font-size: 0.85em;
     color: var(--text-muted);
 }
 
-.mc-warning-text {
+.sp-warning-text {
     font-size: 0.85em;
     color: #ef4444;
     font-weight: 500;
@@ -320,37 +346,24 @@
     margin-top: 4px;
 }
 
-.mc-settings-actions {
+.sp-settings-actions {
     display: flex;
     gap: 12px;
     margin-top: 8px;
     width: 100%;
 }
 
-.mc-settings-actions button {
+.sp-settings-actions button {
     flex: 1;
 }
 
-.btn-mc-speak {
-    position: absolute;
-    top: 20px;
-    right: 70px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-muted);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 10;
-}
-
-.btn-mc-speak:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.1);
-    color: var(--primary);
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
