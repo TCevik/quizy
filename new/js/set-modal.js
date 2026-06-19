@@ -452,9 +452,9 @@ class QuizySetModal extends HTMLElement {
             return;
         }
 
-        if (title.length > 40) {
-            const over = title.length - 40;
-            if (window.Toast) window.Toast.show(`Titel is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 40).`, 'error');
+        if (title.length > 100) {
+            const over = title.length - 100;
+            if (window.Toast) window.Toast.show(`Titel is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 100).`, 'error');
             return;
         }
 
@@ -579,28 +579,60 @@ class QuizySetModal extends HTMLElement {
         }
     }
 
+    splitImportCard(str) {
+        str = str.trim();
+        if (str.includes('\t')) {
+            const parts = str.split('\t');
+            return {
+                term: parts[0].trim().substring(0, 300),
+                definition: parts.slice(1).join('\t').substring(0, 300)
+            };
+        }
+        if (str.includes(';')) {
+            const idx = str.indexOf(';');
+            let term = str.substring(0, idx).trim().substring(0, 300);
+            let definition = str.substring(idx + 1).replace(/^[,\s\-:=]+/, '').trim().substring(0, 300);
+            return { term, definition };
+        }
+        if (str.includes(',')) {
+            const lastIdx = str.lastIndexOf(',');
+            let term = str.substring(0, lastIdx).trim().substring(0, 300);
+            let definition = str.substring(lastIdx + 1).trim().substring(0, 300);
+            return { term, definition };
+        }
+        return {
+            term: str.substring(0, 300),
+            definition: ''
+        };
+    }
+
     handleImport() {
         const importTextarea = this.querySelector('#import-text');
         if (!importTextarea) return;
 
         const text = importTextarea.value;
-        const pairs = text.split(';').map(p => p.trim()).filter(p => p.length > 0);
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
         const parsedRows = [];
 
-        pairs.forEach(pair => {
-            const commaIndex = pair.indexOf(',');
-            if (commaIndex !== -1) {
-                const term = pair.substring(0, commaIndex).trim().substring(0, 300);
-                const definition = pair.substring(commaIndex + 1).trim().substring(0, 300);
+        lines.forEach(line => {
+            const rawParts = line.split(';');
+            const parts = [];
+            for (let i = 0; i < rawParts.length; i++) {
+                let part = rawParts[i].trim();
+                if (!part) continue;
+                if ((part.startsWith(',') || part.startsWith(';') || part.startsWith('-')) && parts.length > 0) {
+                    parts[parts.length - 1] = parts[parts.length - 1] + ';' + rawParts[i];
+                } else {
+                    parts.push(rawParts[i]);
+                }
+            }
+
+            parts.forEach(part => {
+                const { term, definition } = this.splitImportCard(part);
                 if (term || definition) {
                     parsedRows.push({ term, definition });
                 }
-            } else {
-                const term = pair.trim().substring(0, 300);
-                if (term) {
-                    parsedRows.push({ term, definition: '' });
-                }
-            }
+            });
         });
 
         if (parsedRows.length === 0) {
