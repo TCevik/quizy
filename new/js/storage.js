@@ -132,6 +132,14 @@ export async function getSetWithCards(supabase, setId, userId) {
 }
 
 export async function syncSetToRemote(supabase, dbPayload, setId = null) {
+    if (dbPayload.cards && Array.isArray(dbPayload.cards)) {
+        dbPayload.cards.forEach(card => {
+            if (card.starred === false || card.starred === null || card.starred === undefined) {
+                delete card.starred;
+            }
+        });
+    }
+
     if (setId) {
         const { error: updateError } = await supabase.from('Sets').update(dbPayload).eq('id', setId);
         if (updateError) throw updateError;
