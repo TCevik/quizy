@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const blocker = document.createElement('div');
+    blocker.classList.add('mobile-blocker');
+    blocker.innerHTML = `
+        <div style="padding: 20px;">
+            <h1>Quizy</h1>
+            <p>Quizy is momenteel alleen beschikbaar op schermen breder dan 1200 px. Gebruik een groter scherm of maximaliseer je venster.</p>
+        </div>
+    `;
+    document.body.appendChild(blocker);
+
     const overlay = document.createElement('div');
     overlay.classList.add('page-wave-overlay');
     overlay.innerHTML = `
