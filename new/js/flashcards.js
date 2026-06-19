@@ -10,9 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function openFlashcardsQuiz() {
+function openFlashcardsQuiz(options = {}) {
+    const starOnly = !!options.starOnly;
+    let randomize = !!options.randomize;
+
     if (!window.currentSet || !window.currentSet.cards || window.currentSet.cards.length === 0) {
         if (window.Toast) window.Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
+        return;
+    }
+
+    let originalCards = window.currentSet.cards;
+    if (starOnly) {
+        originalCards = originalCards.filter(c => c.starred);
+    }
+
+    if (originalCards.length === 0) {
+        if (window.Toast) window.Toast.show('Je hebt geen woorden met een ster om te oefenen.', 'error');
         return;
     }
 
@@ -42,7 +55,6 @@ function openFlashcardsQuiz() {
     }
     window.scrollTo(0, 0);
 
-    const originalCards = window.currentSet.cards;
     const totalUniqueCards = originalCards.length;
     
     // Map to track the number of times each card is answered incorrectly
@@ -52,6 +64,20 @@ function openFlashcardsQuiz() {
     
     // The current active queue of cards to display
     let activeQueue = [...originalCards];
+
+    // Helper to shuffle array in place
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    if (randomize) {
+        shuffleArray(activeQueue);
+    }
+
     let currentIndex = 0;
     let isReviewPhase = false;
     let isAnimating = false;
@@ -114,12 +140,65 @@ function openFlashcardsQuiz() {
 
     // Render the overlay content
     overlay.innerHTML = `
-        <div class="flashcards-container">
+        <div class="flashcards-container" style="position: relative;">
             <div class="flashcards-header">
                 <span class="flashcards-title">${escapeHtml(window.currentSet.title || 'Flashcards')}</span>
-                <button class="btn-close-flashcards" id="fc-close">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
+                <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                    <button class="btn-close-flashcards" id="fc-settings-btn" title="Instellingen" style="transform: none;">
+                        <span class="material-symbols-rounded">settings</span>
+                    </button>
+                    <button class="btn-close-flashcards" id="fc-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                    <!-- Settings Panel -->
+                    <div id="fc-settings-panel" class="fc-settings-panel">
+                        <h3 class="fc-settings-title">
+                            <span class="material-symbols-rounded">settings</span> Instellingen
+                        </h3>
+                        <div class="fc-setting-item">
+                            <div class="fc-setting-row">
+                                <label for="fc-star-only" class="fc-setting-label">Alleen sterwoorden</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="fc-star-only" ${starOnly ? 'checked' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Oefen alleen de woorden die je met een ster hebt gemarkeerd.</span>
+                            <span class="fc-warning-text" id="fc-star-warning">Let op: Dit start een nieuwe sessie. Je voortgang gaat verloren!</span>
+                        </div>
+                        <div class="fc-setting-item">
+                            <div class="fc-setting-row">
+                                <label for="fc-randomize" class="fc-setting-label">Willekeurige volgorde</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="fc-randomize" ${randomize ? 'checked' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Schud de kaarten in een willekeurige volgorde vanaf het volgende woord.</span>
+                        </div>
+                        <div class="fc-settings-actions">
+                            <button class="btn-control" id="fc-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
+                            <button class="btn-control" id="fc-settings-cancel">Annuleren</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Confirmation Modal -->
+            <div id="fc-confirm-modal" class="fc-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(11, 15, 25, 0.85); z-index: 1000; align-items: center; justify-content: center;">
+                <div class="glass-panel" style="max-width: 420px; width: 90%; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(22, 22, 30, 0.95); box-shadow: 0 20px 40px rgba(0,0,0,0.6); overflow: hidden; display: flex; flex-direction: column;">
+                    <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
+                        <h3 style="font-size: 1.2em; font-weight: 600; color: var(--text-light); margin: 0; text-align: left;">Sessie herstarten?</h3>
+                    </div>
+                    <div style="padding: 24px; display: flex; flex-direction: column; gap: 8px; text-align: left;">
+                        <p style="color: var(--text-muted); font-size: 0.95em; line-height: 1.5; margin: 0;">Weet je zeker dat je de instellingen voor ster-woorden wilt wijzigen?</p>
+                        <p style="color: #ef4444; font-size: 0.9em; font-weight: 500; margin: 0;">Dit start een nieuwe sessie en je huidige voortgang gaat verloren.</p>
+                    </div>
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; display: flex; justify-content: flex-end; gap: 12px; background: rgba(0,0,0,0.2);">
+                        <button id="fc-confirm-cancel" class="btn-control" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; font-size: 0.9em;">Annuleren</button>
+                        <button id="fc-confirm-ok" class="btn-control" style="background: var(--primary); border: none; color: #fff; padding: 8px 16px; font-size: 0.9em;">Ja, begin opnieuw</button>
+                    </div>
+                </div>
             </div>
             
             <div class="flashcard-wrapper" id="fc-card">
@@ -177,6 +256,107 @@ function openFlashcardsQuiz() {
     const progressTextEl = document.getElementById('fc-progress-text');
     const progressFillEl = document.getElementById('fc-progress-fill');
 
+    // Settings elements
+    const settingsBtn = document.getElementById('fc-settings-btn');
+    const settingsPanel = document.getElementById('fc-settings-panel');
+    const settingsSave = document.getElementById('fc-settings-save');
+    const settingsCancel = document.getElementById('fc-settings-cancel');
+    const starOnlyCheckbox = document.getElementById('fc-star-only');
+    const randomizeCheckbox = document.getElementById('fc-randomize');
+    const starWarning = document.getElementById('fc-star-warning');
+
+    settingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsPanel.classList.toggle('active');
+        starWarning.style.display = (starOnlyCheckbox.checked !== starOnly) ? 'block' : 'none';
+    });
+
+    starOnlyCheckbox.addEventListener('change', () => {
+        starWarning.style.display = (starOnlyCheckbox.checked !== starOnly) ? 'block' : 'none';
+    });
+
+    settingsCancel.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsPanel.classList.remove('active');
+        starOnlyCheckbox.checked = starOnly;
+        randomizeCheckbox.checked = randomize;
+        starWarning.style.display = 'none';
+    });
+
+    settingsSave.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newStarOnly = starOnlyCheckbox.checked;
+        const newRandomize = randomizeCheckbox.checked;
+
+        if (newStarOnly !== starOnly) {
+            const confirmModal = document.getElementById('fc-confirm-modal');
+            const confirmOk = document.getElementById('fc-confirm-ok');
+            const confirmCancel = document.getElementById('fc-confirm-cancel');
+            
+            confirmModal.style.display = 'flex';
+            
+            const onConfirm = () => {
+                confirmModal.style.display = 'none';
+                settingsPanel.classList.remove('active');
+                openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize });
+                cleanup();
+            };
+            const onCancel = () => {
+                confirmModal.style.display = 'none';
+                cleanup();
+            };
+            const cleanup = () => {
+                confirmOk.removeEventListener('click', onConfirm);
+                confirmCancel.removeEventListener('click', onCancel);
+            };
+            
+            confirmOk.addEventListener('click', onConfirm);
+            confirmCancel.addEventListener('click', onCancel);
+        } else {
+            if (newRandomize !== randomize) {
+                randomize = newRandomize;
+                if (randomize) {
+                    const remaining = activeQueue.slice(currentIndex + 1);
+                    shuffleArray(remaining);
+                    activeQueue.splice(currentIndex + 1, activeQueue.length - (currentIndex + 1), ...remaining);
+                    if (window.Toast) window.Toast.show('Kaarten worden nu in willekeurige volgorde getoond.', 'success');
+                } else {
+                    const remaining = activeQueue.slice(currentIndex + 1);
+                    remaining.sort((a, b) => {
+                        return originalCards.indexOf(a) - originalCards.indexOf(b);
+                    });
+                    activeQueue.splice(currentIndex + 1, activeQueue.length - (currentIndex + 1), ...remaining);
+                    if (window.Toast) window.Toast.show('Willekeurige volgorde uitgeschakeld. Kaarten gaan verder in de originele volgorde.', 'info');
+                }
+            }
+            settingsPanel.classList.remove('active');
+        }
+    });
+
+    const clickOutsideHandler = (e) => {
+        if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
+            settingsPanel.classList.remove('active');
+            starOnlyCheckbox.checked = starOnly;
+            randomizeCheckbox.checked = randomize;
+            starWarning.style.display = 'none';
+        }
+    };
+    document.addEventListener('click', clickOutsideHandler);
+
+    function closeFlashcards() {
+        document.removeEventListener('click', clickOutsideHandler);
+        overlay.classList.remove('active');
+        overlay.style.display = 'none'; 
+        if (mainWrapper) {
+            Array.from(mainWrapper.children).forEach(child => {
+                if (child !== overlay) {
+                    child.style.display = child.getAttribute('data-prev-display') || '';
+                    child.removeAttribute('data-prev-display');
+                }
+            });
+        }
+    }
+
     function updateCard() {
         cardEl.classList.add('no-transition');
         cardEl.classList.remove('flipped');
@@ -226,19 +406,10 @@ function openFlashcardsQuiz() {
             `;
             
             document.getElementById('fc-restart').addEventListener('click', () => {
-                openFlashcardsQuiz();
+                openFlashcardsQuiz({ starOnly, randomize });
             });
             document.getElementById('fc-finish-close').addEventListener('click', () => {
-                overlay.classList.remove('active');
-                overlay.style.display = 'none'; 
-                if (mainWrapper) {
-                    Array.from(mainWrapper.children).forEach(child => {
-                        if (child !== overlay) {
-                            child.style.display = child.getAttribute('data-prev-display') || '';
-                            child.removeAttribute('data-prev-display');
-                        }
-                    });
-                }
+                closeFlashcards();
             });
             return true;
         }
@@ -428,16 +599,7 @@ function openFlashcardsQuiz() {
     });
 
     closeBtn.addEventListener('click', () => {
-        overlay.classList.remove('active');
-        overlay.style.display = 'none'; 
-        if (mainWrapper) {
-            Array.from(mainWrapper.children).forEach(child => {
-                if (child !== overlay) {
-                    child.style.display = child.getAttribute('data-prev-display') || '';
-                    child.removeAttribute('data-prev-display');
-                }
-            });
-        }
+        closeFlashcards();
     });
 
     // Initial card setup
