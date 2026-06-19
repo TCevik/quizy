@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
+            const captchaToken = loginForm.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
 
             if (isLoginMode) {
                 const { data, error } = await supabase.auth.signInWithPassword({
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     } else {
                         Toast.show(`Inloggen mislukt: ${error.message}`, 'error');
                     }
-                    if (window.turnstile) window.turnstile.reset();
+                    resetAllTurnstiles();
                 } else {
                     window.location.href = 'dashboard.html';
                 }
@@ -119,18 +119,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (error) {
                     Toast.show(`Registratie mislukt: ${error.message}`, 'error');
-                    if (window.turnstile) window.turnstile.reset();
+                    resetAllTurnstiles();
                 } else {
                     // Check if user is auto-confirmed or if email confirmation is enabled
                     if (data?.user && data.user.identities && data.user.identities.length === 0) {
                         Toast.show('Dit e-mailadres is al geregistreerd.', 'error');
-                        if (window.turnstile) window.turnstile.reset();
+                        resetAllTurnstiles();
                     } else if (data?.session) {
                         window.location.href = 'dashboard.html';
                     } else {
                         // Email confirmation might be needed
                         Toast.show('Registratie succesvol! Controleer je e-mail voor een verificatielink.', 'success');
-                        if (window.turnstile) window.turnstile.reset();
+                        resetAllTurnstiles();
                     }
                 }
             }
@@ -166,18 +166,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         resetForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const resetEmail = document.getElementById('reset-email').value;
+            const captchaToken = resetForm.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
 
             Toast.show('Versturen...', 'info');
 
             const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
                 redirectTo: window.location.origin + '/reset-password.html',
+                captchaToken: captchaToken
             });
 
             if (error) {
                 Toast.show(`Fout: ${error.message}`, 'error');
+                resetAllTurnstiles();
             } else {
                 Toast.show('Er is een herstellink naar je e-mailadres gestuurd!', 'success');
                 resetForm.reset();
+                resetAllTurnstiles();
                 if (resetModal) resetModal.style.display = 'none';
             }
         });
@@ -201,22 +205,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function resetAllTurnstiles() {
+        if (window.turnstile) {
+            document.querySelectorAll('.cf-turnstile').forEach(div => {
+                try {
+                    window.turnstile.reset(div);
+                } catch (e) {}
+            });
+        }
+    }
+
     async function resendConfirmationEmail(email, customMessageEl = null) {
         Toast.show('Verificatiemail versturen...', 'info');
+
+        const captchaToken = (resendForm ? resendForm.querySelector('[name="cf-turnstile-response"]')?.value : null) || 
+                             (loginForm ? loginForm.querySelector('[name="cf-turnstile-response"]')?.value : null) || undefined;
 
         const { error } = await supabase.auth.resend({
             type: 'signup',
             email: email,
             options: {
-                emailRedirectTo: window.location.origin + '/dashboard.html'
+                emailRedirectTo: window.location.origin + '/dashboard.html',
+                captchaToken: captchaToken
             }
         });
 
         if (error) {
             Toast.show(`Fout: ${error.message}`, 'error');
+            resetAllTurnstiles();
         } else {
             Toast.show('Je e-mailadres is nog niet bevestigd. Er is direct een nieuwe verificatiemail naar je verstuurd!', 'success');
             if (resendForm) resendForm.reset();
+            resetAllTurnstiles();
             if (resendModal) resendModal.style.display = 'none';
         }
     }
