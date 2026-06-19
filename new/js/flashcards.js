@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function openFlashcardsQuiz(options = {}) {
     const starOnly = !!options.starOnly;
     let randomize = !!options.randomize;
+    let swapSides = !!options.swapSides;
 
     if (!window.currentSet || !window.currentSet.cards || window.currentSet.cards.length === 0) {
         if (window.Toast) window.Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
@@ -176,6 +177,16 @@ function openFlashcardsQuiz(options = {}) {
                             </div>
                             <span class="fc-setting-description">Schud de kaarten in een willekeurige volgorde vanaf het volgende woord.</span>
                         </div>
+                        <div class="fc-setting-item">
+                            <div class="fc-setting-row">
+                                <label for="fc-swap-sides" class="fc-setting-label">${window.currentSet.mode === 'talen' ? 'Talen omdraaien' : 'Term en definitie omdraaien'}</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="fc-swap-sides" ${swapSides ? 'checked' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">${window.currentSet.mode === 'talen' ? `Toon ${escapeHtml(window.currentSet.lang2 || 'de vertaling')} op de voorkant en ${escapeHtml(window.currentSet.lang1 || 'het woord')} op de achterkant.` : 'Toon de definitie op de voorkant en de term op de achterkant.'}</span>
+                        </div>
                         <div class="fc-settings-actions">
                             <button class="btn-control" id="fc-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
                             <button class="btn-control" id="fc-settings-cancel">Annuleren</button>
@@ -263,6 +274,7 @@ function openFlashcardsQuiz(options = {}) {
     const settingsCancel = document.getElementById('fc-settings-cancel');
     const starOnlyCheckbox = document.getElementById('fc-star-only');
     const randomizeCheckbox = document.getElementById('fc-randomize');
+    const swapSidesCheckbox = document.getElementById('fc-swap-sides');
     const starWarning = document.getElementById('fc-star-warning');
 
     settingsBtn.addEventListener('click', (e) => {
@@ -280,6 +292,7 @@ function openFlashcardsQuiz(options = {}) {
         settingsPanel.classList.remove('active');
         starOnlyCheckbox.checked = starOnly;
         randomizeCheckbox.checked = randomize;
+        if (swapSidesCheckbox) swapSidesCheckbox.checked = swapSides;
         starWarning.style.display = 'none';
     });
 
@@ -287,6 +300,7 @@ function openFlashcardsQuiz(options = {}) {
         e.stopPropagation();
         const newStarOnly = starOnlyCheckbox.checked;
         const newRandomize = randomizeCheckbox.checked;
+        const newSwapSides = swapSidesCheckbox ? swapSidesCheckbox.checked : false;
 
         if (newStarOnly !== starOnly) {
             const confirmModal = document.getElementById('fc-confirm-modal');
@@ -298,7 +312,7 @@ function openFlashcardsQuiz(options = {}) {
             const onConfirm = () => {
                 confirmModal.style.display = 'none';
                 settingsPanel.classList.remove('active');
-                openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize });
+                openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides });
                 cleanup();
             };
             const onCancel = () => {
@@ -329,6 +343,11 @@ function openFlashcardsQuiz(options = {}) {
                     if (window.Toast) window.Toast.show('Willekeurige volgorde uitgeschakeld. Kaarten gaan verder in de originele volgorde.', 'info');
                 }
             }
+            if (newSwapSides !== swapSides) {
+                swapSides = newSwapSides;
+                updateCard();
+                if (window.Toast) window.Toast.show(window.currentSet.mode === 'talen' ? 'Talen zijn omgedraaid.' : 'Term en definitie zijn omgedraaid.', 'success');
+            }
             settingsPanel.classList.remove('active');
         }
     });
@@ -338,6 +357,7 @@ function openFlashcardsQuiz(options = {}) {
             settingsPanel.classList.remove('active');
             starOnlyCheckbox.checked = starOnly;
             randomizeCheckbox.checked = randomize;
+            if (swapSidesCheckbox) swapSidesCheckbox.checked = swapSides;
             starWarning.style.display = 'none';
         }
     };
@@ -365,8 +385,30 @@ function openFlashcardsQuiz(options = {}) {
         cardEl.offsetHeight;
         
         const card = activeQueue[currentIndex];
-        frontTextEl.textContent = card.term;
-        backTextEl.textContent = card.definition;
+        const frontLabel = cardEl.querySelector('.flashcard-front .flashcard-label');
+        const backLabel = cardEl.querySelector('.flashcard-back .flashcard-label');
+
+        if (swapSides) {
+            frontTextEl.textContent = card.definition;
+            backTextEl.textContent = card.term;
+            if (window.currentSet.mode === 'talen') {
+                frontLabel.textContent = window.currentSet.lang2 || 'Definitie';
+                backLabel.textContent = window.currentSet.lang1 || 'Term';
+            } else {
+                frontLabel.textContent = 'Definitie';
+                backLabel.textContent = 'Term';
+            }
+        } else {
+            frontTextEl.textContent = card.term;
+            backTextEl.textContent = card.definition;
+            if (window.currentSet.mode === 'talen') {
+                frontLabel.textContent = window.currentSet.lang1 || 'Term';
+                backLabel.textContent = window.currentSet.lang2 || 'Definitie';
+            } else {
+                frontLabel.textContent = 'Term';
+                backLabel.textContent = 'Definitie';
+            }
+        }
         
         // Update star buttons
         const isStarred = !!card.starred;
@@ -406,7 +448,7 @@ function openFlashcardsQuiz(options = {}) {
             `;
             
             document.getElementById('fc-restart').addEventListener('click', () => {
-                openFlashcardsQuiz({ starOnly, randomize });
+                openFlashcardsQuiz({ starOnly, randomize, swapSides });
             });
             document.getElementById('fc-finish-close').addEventListener('click', () => {
                 closeFlashcards();
