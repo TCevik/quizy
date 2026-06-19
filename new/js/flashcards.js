@@ -12,7 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function openFlashcardsQuiz(options = {}) {
     const savedSettings = (window.currentSet && window.currentSet.settings) || {};
-    const starOnly = ('starOnly' in options) ? !!options.starOnly : !!savedSettings.starOnly;
+    const hasStarred = window.currentSet && window.currentSet.cards && window.currentSet.cards.some(c => c.starred);
+    let starOnly = ('starOnly' in options) ? !!options.starOnly : !!savedSettings.starOnly;
+    if (!hasStarred) {
+        starOnly = false;
+        if (window.currentSet && window.currentSet.settings && window.currentSet.settings.starOnly) {
+            window.currentSet.settings.starOnly = false;
+        }
+    }
     let randomize = ('randomize' in options) ? !!options.randomize : !!savedSettings.randomize;
     let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
 
@@ -159,9 +166,9 @@ function openFlashcardsQuiz(options = {}) {
                         </h3>
                         <div class="fc-setting-item">
                             <div class="fc-setting-row">
-                                <label for="fc-star-only" class="fc-setting-label">Alleen sterwoorden</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="fc-star-only" ${starOnly ? 'checked' : ''}>
+                                <label for="fc-star-only" class="fc-setting-label" style="${!hasStarred ? 'opacity: 0.5; cursor: not-allowed;' : ''}">Alleen sterwoorden</label>
+                                <label class="fc-switch" style="${!hasStarred ? 'opacity: 0.5; cursor: not-allowed; pointer-events: none;' : ''}">
+                                    <input type="checkbox" id="fc-star-only" ${starOnly ? 'checked' : ''} ${!hasStarred ? 'disabled' : ''}>
                                     <span class="fc-slider"></span>
                                 </label>
                             </div>
@@ -626,6 +633,28 @@ function openFlashcardsQuiz(options = {}) {
             });
 
             try {
+                const hasStarredNow = window.currentSet && window.currentSet.cards && window.currentSet.cards.some(c => c.starred);
+                if (!hasStarredNow) {
+                    if (window.currentSet.settings) {
+                        window.currentSet.settings.starOnly = false;
+                    }
+                    if (starOnlyCheckbox) {
+                        starOnlyCheckbox.checked = false;
+                        starOnlyCheckbox.disabled = true;
+                        const label = overlay.querySelector('label[for="fc-star-only"]');
+                        const switchEl = overlay.querySelector('.fc-switch');
+                        if (label) label.style.cssText = 'opacity: 0.5; cursor: not-allowed;';
+                        if (switchEl) switchEl.style.cssText = 'opacity: 0.5; cursor: not-allowed; pointer-events: none;';
+                    }
+                } else {
+                    if (starOnlyCheckbox) {
+                        starOnlyCheckbox.disabled = false;
+                        const label = overlay.querySelector('label[for="fc-star-only"]');
+                        const switchEl = overlay.querySelector('.fc-switch');
+                        if (label) label.style.cssText = '';
+                        if (switchEl) switchEl.style.cssText = '';
+                    }
+                }
                 await window.saveAndSyncCurrentSet();
                 if (window.refreshTermsList) {
                     window.refreshTermsList();

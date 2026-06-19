@@ -118,13 +118,6 @@ body {
     margin-top: 20px;
 }
 
-@media (max-width: 768px) {
-    .profile-grid {
-        grid-template-columns: 1fr;
-        gap: 32px;
-    }
-}
-
 .profile-section {
     display: flex;
     flex-direction: column;
@@ -211,14 +204,6 @@ body {
     flex: 1;
 }
 
-@media (max-width: 600px) {
-    .avatar-inputs-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-}
-
 .name-input-row {
     display: flex;
     gap: 16px;
@@ -241,14 +226,6 @@ body {
     align-items: center;
 }
 
-@media (max-width: 600px) {
-    .name-input-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-}
-
 .avatar-link-row {
     display: flex;
     gap: 16px;
@@ -269,12 +246,4 @@ body {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-}
-
-@media (max-width: 600px) {
-    .avatar-link-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
 }

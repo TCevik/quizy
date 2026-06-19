@@ -152,6 +152,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 card.starred = !card.starred;
                 
                 try {
+                    const hasStarred = cards.some(c => c.starred);
+                    if (!hasStarred && currentSet.settings && currentSet.settings.starOnly) {
+                        currentSet.settings.starOnly = false;
+                    }
                     await window.saveAndSyncCurrentSet();
                     const icon = btn.querySelector('.material-symbols-rounded');
                     if (card.starred) {

@@ -96,12 +96,6 @@
     gap: 20px;
 }
 
-@media (max-width: 600px) {
-    .form-row-2col {
-        grid-template-columns: 1fr;
-    }
-}
-
 /* Toggle Switch Styling */
 .toggle-group-wrapper {
     justify-content: flex-start;

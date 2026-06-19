@@ -1,0 +1,309 @@
+/* Multiple Choice CSS */
+.mc-overlay {
+    display: none; /* hidden by default */
+    width: 100%;
+    min-height: calc(100vh - 200px);
+    background: transparent;
+    padding: 0px 0 40px 0;
+    box-sizing: border-box;
+}
+
+.mc-overlay.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mc-container {
+    width: 90%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.mc-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-light);
+}
+
+.mc-title {
+    font-size: 1.3em;
+    font-weight: 700;
+}
+
+.btn-close-mc {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-close-mc:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: rotate(90deg);
+}
+
+/* Question Area */
+.mc-question-card {
+    width: 100%;
+    min-height: 180px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-radius: 24px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+}
+
+.btn-mc-star {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.btn-mc-star:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+}
+
+.btn-mc-star.starred {
+    color: #ffca28;
+}
+
+.mc-question-label {
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.mc-question-text {
+    font-size: 1.8em;
+    font-weight: 600;
+    line-height: 1.4;
+    word-break: break-word;
+    color: var(--text-light);
+}
+
+/* Options Grid */
+.mc-options-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+@media (min-width: 480px) {
+    .mc-options-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.mc-option-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-light);
+    border-radius: 16px;
+    padding: 20px;
+    font-size: 1.05em;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    word-break: break-word;
+}
+
+.mc-option-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.mc-option-btn:disabled {
+    cursor: default;
+}
+
+.mc-option-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.9em;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+/* Correct / Incorrect states */
+.mc-option-btn.correct {
+    background: rgba(67, 160, 71, 0.2) !important;
+    border-color: rgba(67, 160, 71, 0.6) !important;
+    color: #81c784 !important;
+}
+
+.mc-option-btn.correct .mc-option-badge {
+    background: #43a047 !important;
+    color: #ffffff !important;
+}
+
+.mc-option-btn.incorrect {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: rgba(239, 68, 68, 0.6) !important;
+    color: #e57373 !important;
+}
+
+.mc-option-btn.incorrect .mc-option-badge {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+/* Next Action Area */
+.mc-action-area {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    min-height: 48px;
+}
+
+.btn-mc-next {
+    background: var(--primary);
+    color: #ffffff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-mc-next:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+/* Settings Panel */
+.mc-settings-panel {
+    display: flex;
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 320px;
+    background: rgba(22, 22, 30, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 18px;
+    box-sizing: border-box;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    flex-direction: column;
+    gap: 16px;
+    opacity: 0;
+    transform: scale(0);
+    transform-origin: calc(100% - 60px) 0px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease, visibility 0.3s;
+}
+
+.mc-settings-panel.active {
+    visibility: visible;
+    pointer-events: auto;
+    opacity: 1;
+    transform: scale(1);
+}
+
+.mc-settings-title {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mc-setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.mc-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.mc-setting-label {
+    cursor: pointer;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.mc-setting-description {
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+.mc-warning-text {
+    font-size: 0.85em;
+    color: #ef4444;
+    font-weight: 500;
+    display: none;
+    margin-top: 4px;
+}
+
+.mc-settings-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.mc-settings-actions button {
+    flex: 1;
+}
