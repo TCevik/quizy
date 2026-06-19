@@ -22,6 +22,7 @@ function openMultipleChoiceQuiz(options = {}) {
     }
     let randomize = ('randomize' in options) ? !!options.randomize : !!savedSettings.randomize;
     let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
+    let autoSpeak = ('autoSpeak' in options) ? !!options.autoSpeak : !!savedSettings.autoSpeak;
 
     if (!window.currentSet || !window.currentSet.cards || window.currentSet.cards.length === 0) {
         if (window.Toast) window.Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
@@ -195,6 +196,16 @@ function openMultipleChoiceQuiz(options = {}) {
                             </div>
                             <span class="fc-setting-description">${window.currentSet.mode === 'talen' ? `Toon ${escapeHtml(window.currentSet.lang2 || 'de vertaling')} als vraag en ${escapeHtml(window.currentSet.lang1 || 'het woord')} als antwoord.` : 'Toon de definitie als vraag en de term als antwoord.'}</span>
                         </div>
+                        <div class="mc-setting-item">
+                            <div class="mc-setting-row">
+                                <label for="mc-auto-speak" class="fc-setting-label">Automatisch uitspreken</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="mc-auto-speak" ${autoSpeak ? 'checked' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Spreek de vraag automatisch uit wanneer deze in beeld komt.</span>
+                        </div>
                         <div class="mc-settings-actions">
                             <button class="btn-control" id="mc-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
                             <button class="btn-control" id="mc-settings-cancel">Annuleren</button>
@@ -272,6 +283,7 @@ function openMultipleChoiceQuiz(options = {}) {
     const starOnlyCheckbox = document.getElementById('mc-star-only');
     const randomizeCheckbox = document.getElementById('mc-randomize');
     const swapSidesCheckbox = document.getElementById('mc-swap-sides');
+    const autoSpeakCheckbox = document.getElementById('mc-auto-speak');
     const starWarning = document.getElementById('mc-star-warning');
 
     settingsBtn.addEventListener('click', (e) => {
@@ -290,6 +302,7 @@ function openMultipleChoiceQuiz(options = {}) {
         starOnlyCheckbox.checked = starOnly;
         randomizeCheckbox.checked = randomize;
         if (swapSidesCheckbox) swapSidesCheckbox.checked = swapSides;
+        if (autoSpeakCheckbox) autoSpeakCheckbox.checked = autoSpeak;
         starWarning.style.display = 'none';
     });
 
@@ -298,6 +311,7 @@ function openMultipleChoiceQuiz(options = {}) {
         const newStarOnly = starOnlyCheckbox.checked;
         const newRandomize = randomizeCheckbox.checked;
         const newSwapSides = swapSidesCheckbox ? swapSidesCheckbox.checked : false;
+        const newAutoSpeak = autoSpeakCheckbox ? autoSpeakCheckbox.checked : false;
 
         if (newStarOnly !== starOnly) {
             const confirmModal = document.getElementById('mc-confirm-modal');
@@ -313,13 +327,14 @@ function openMultipleChoiceQuiz(options = {}) {
                     window.currentSet.settings = {
                         starOnly: newStarOnly,
                         randomize: newRandomize,
-                        swapSides: newSwapSides
+                        swapSides: newSwapSides,
+                        autoSpeak: newAutoSpeak
                     };
                     if (window.saveAndSyncCurrentSet) {
                         window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                     }
                 }
-                openMultipleChoiceQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides });
+                openMultipleChoiceQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak });
                 cleanup();
             };
             const onCancel = () => {
@@ -338,7 +353,8 @@ function openMultipleChoiceQuiz(options = {}) {
                 window.currentSet.settings = {
                     starOnly: newStarOnly,
                     randomize: newRandomize,
-                    swapSides: newSwapSides
+                    swapSides: newSwapSides,
+                    autoSpeak: newAutoSpeak
                 };
                 if (window.saveAndSyncCurrentSet) {
                     window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
@@ -365,6 +381,10 @@ function openMultipleChoiceQuiz(options = {}) {
                 updateQuestion();
                 if (window.Toast) window.Toast.show(window.currentSet.mode === 'talen' ? 'Talen zijn omgedraaid.' : 'Term en definitie zijn omgedraaid.', 'success');
             }
+            if (newAutoSpeak !== autoSpeak) {
+                autoSpeak = newAutoSpeak;
+                if (window.Toast) window.Toast.show(autoSpeak ? 'Automatisch uitspreken ingeschakeld.' : 'Automatisch uitspreken uitgeschakeld.', 'success');
+            }
             settingsPanel.classList.remove('active');
         }
     });
@@ -375,6 +395,7 @@ function openMultipleChoiceQuiz(options = {}) {
             starOnlyCheckbox.checked = starOnly;
             randomizeCheckbox.checked = randomize;
             if (swapSidesCheckbox) swapSidesCheckbox.checked = swapSides;
+            if (autoSpeakCheckbox) autoSpeakCheckbox.checked = autoSpeak;
             starWarning.style.display = 'none';
         }
     };
@@ -472,6 +493,14 @@ function openMultipleChoiceQuiz(options = {}) {
         const progressPercentage = (learnedCardKeys.size / totalUniqueCards) * 100;
         progressTextEl.textContent = `Geleerd: ${learnedCardKeys.size} van ${totalUniqueCards} kaarten${isReviewPhase ? ' (Herhalingsfase)' : ''}`;
         progressFillEl.style.width = `${progressPercentage}%`;
+
+        if (autoSpeak) {
+            const text = swapSides ? card.definition : card.term;
+            const lang = swapSides ? (window.currentSet.lang_col2 || window.currentSet.lang_col1) : window.currentSet.lang_col1;
+            if (window.speakText) {
+                window.speakText(text, lang);
+            }
+        }
     }
 
     function selectOption(selectedBtn, selectedText) {

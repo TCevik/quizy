@@ -22,6 +22,7 @@ function openFlashcardsQuiz(options = {}) {
     }
     let randomize = ('randomize' in options) ? !!options.randomize : !!savedSettings.randomize;
     let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
+    let autoSpeak = ('autoSpeak' in options) ? !!options.autoSpeak : !!savedSettings.autoSpeak;
 
     if (!window.currentSet || !window.currentSet.cards || window.currentSet.cards.length === 0) {
         if (window.Toast) window.Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
@@ -195,6 +196,16 @@ function openFlashcardsQuiz(options = {}) {
                             </div>
                             <span class="fc-setting-description">${window.currentSet.mode === 'talen' ? `Toon ${escapeHtml(window.currentSet.lang2 || 'de vertaling')} op de voorkant en ${escapeHtml(window.currentSet.lang1 || 'het woord')} op de achterkant.` : 'Toon de definitie op de voorkant en de term op de achterkant.'}</span>
                         </div>
+                        <div class="fc-setting-item">
+                            <div class="fc-setting-row">
+                                <label for="fc-auto-speak" class="fc-setting-label">Automatisch uitspreken</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="fc-auto-speak" ${autoSpeak ? 'checked' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Spreek woorden automatisch uit wanneer ze in beeld komen of bij het omdraaien.</span>
+                        </div>
                         <div class="fc-settings-actions">
                             <button class="btn-control" id="fc-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
                             <button class="btn-control" id="fc-settings-cancel">Annuleren</button>
@@ -289,6 +300,7 @@ function openFlashcardsQuiz(options = {}) {
     const starOnlyCheckbox = document.getElementById('fc-star-only');
     const randomizeCheckbox = document.getElementById('fc-randomize');
     const swapSidesCheckbox = document.getElementById('fc-swap-sides');
+    const autoSpeakCheckbox = document.getElementById('fc-auto-speak');
     const starWarning = document.getElementById('fc-star-warning');
 
     settingsBtn.addEventListener('click', (e) => {
@@ -307,6 +319,7 @@ function openFlashcardsQuiz(options = {}) {
         starOnlyCheckbox.checked = starOnly;
         randomizeCheckbox.checked = randomize;
         if (swapSidesCheckbox) swapSidesCheckbox.checked = swapSides;
+        if (autoSpeakCheckbox) autoSpeakCheckbox.checked = autoSpeak;
         starWarning.style.display = 'none';
     });
 
@@ -315,6 +328,7 @@ function openFlashcardsQuiz(options = {}) {
         const newStarOnly = starOnlyCheckbox.checked;
         const newRandomize = randomizeCheckbox.checked;
         const newSwapSides = swapSidesCheckbox ? swapSidesCheckbox.checked : false;
+        const newAutoSpeak = autoSpeakCheckbox ? autoSpeakCheckbox.checked : false;
 
         if (newStarOnly !== starOnly) {
             const confirmModal = document.getElementById('fc-confirm-modal');
@@ -330,13 +344,14 @@ function openFlashcardsQuiz(options = {}) {
                     window.currentSet.settings = {
                         starOnly: newStarOnly,
                         randomize: newRandomize,
-                        swapSides: newSwapSides
+                        swapSides: newSwapSides,
+                        autoSpeak: newAutoSpeak
                     };
                     if (window.saveAndSyncCurrentSet) {
                         window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                     }
                 }
-                openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides });
+                openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak });
                 cleanup();
             };
             const onCancel = () => {
@@ -355,7 +370,8 @@ function openFlashcardsQuiz(options = {}) {
                 window.currentSet.settings = {
                     starOnly: newStarOnly,
                     randomize: newRandomize,
-                    swapSides: newSwapSides
+                    swapSides: newSwapSides,
+                    autoSpeak: newAutoSpeak
                 };
                 if (window.saveAndSyncCurrentSet) {
                     window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
@@ -382,6 +398,10 @@ function openFlashcardsQuiz(options = {}) {
                 updateCard();
                 if (window.Toast) window.Toast.show(window.currentSet.mode === 'talen' ? 'Talen zijn omgedraaid.' : 'Term en definitie zijn omgedraaid.', 'success');
             }
+            if (newAutoSpeak !== autoSpeak) {
+                autoSpeak = newAutoSpeak;
+                if (window.Toast) window.Toast.show(autoSpeak ? 'Automatisch uitspreken ingeschakeld.' : 'Automatisch uitspreken uitgeschakeld.', 'success');
+            }
             settingsPanel.classList.remove('active');
         }
     });
@@ -392,6 +412,7 @@ function openFlashcardsQuiz(options = {}) {
             starOnlyCheckbox.checked = starOnly;
             randomizeCheckbox.checked = randomize;
             if (swapSidesCheckbox) swapSidesCheckbox.checked = swapSides;
+            if (autoSpeakCheckbox) autoSpeakCheckbox.checked = autoSpeak;
             starWarning.style.display = 'none';
         }
     };
@@ -465,6 +486,14 @@ function openFlashcardsQuiz(options = {}) {
         setTimeout(() => {
             cardEl.classList.remove('no-transition');
         }, 50);
+
+        if (autoSpeak) {
+            const text = swapSides ? card.definition : card.term;
+            const lang = swapSides ? (window.currentSet.lang_col2 || window.currentSet.lang_col1) : window.currentSet.lang_col1;
+            if (window.speakText) {
+                window.speakText(text, lang);
+            }
+        }
     }
 
     function checkFinished() {
@@ -611,10 +640,27 @@ function openFlashcardsQuiz(options = {}) {
         }
     }
 
+    function triggerFlipSpeech() {
+        if (!autoSpeak) return;
+        const isFlipped = cardEl.classList.contains('flipped');
+        const currentCard = activeQueue[currentIndex];
+        if (!currentCard) return;
+        if (isFlipped) {
+            const text = swapSides ? currentCard.term : currentCard.definition;
+            const lang = swapSides ? window.currentSet.lang_col1 : (window.currentSet.lang_col2 || window.currentSet.lang_col1);
+            if (window.speakText) window.speakText(text, lang);
+        } else {
+            const text = swapSides ? currentCard.definition : currentCard.term;
+            const lang = swapSides ? (window.currentSet.lang_col2 || window.currentSet.lang_col1) : window.currentSet.lang_col1;
+            if (window.speakText) window.speakText(text, lang);
+        }
+    }
+
     // Event listeners
     cardEl.addEventListener('click', () => {
         if (isAnimating) return;
         cardEl.classList.toggle('flipped');
+        triggerFlipSpeech();
     });
 
     const frontSpeakBtn = cardEl.querySelector('.flashcard-front .btn-flashcard-speak');
@@ -715,6 +761,7 @@ function openFlashcardsQuiz(options = {}) {
     flipBtn.addEventListener('click', () => {
         if (isAnimating) return;
         cardEl.classList.toggle('flipped');
+        triggerFlipSpeech();
     });
 
     wrongBtn.addEventListener('click', () => {
