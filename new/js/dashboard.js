@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!fullSet || !fullSet.cards) {
                         const { data: remoteSet, error: detailError } = await supabase
                             .from('Sets')
-                            .select('lang_col1, lang_col2, cards')
+                            .select('lang_col1, lang_col2, settings, cards')
                             .eq('id', setId)
                             .single();
 

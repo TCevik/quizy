@@ -70,7 +70,7 @@ export async function syncSets(supabase, userId) {
 
                 const { data: updatedSets, error: updateError } = await supabase
                     .from('Sets')
-                    .select('id, title, description, folder, type, card_count, updated_at, created_at, user_id, lang_col1, lang_col2, settings')
+                    .select('id, title, description, folder, type, card_count, updated_at, created_at, user_id')
                     .eq('user_id', userId)
                     .gt('updated_at', maxUpdatedAt);
 
