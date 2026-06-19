@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         cards.forEach((card, index) => {
             const isStarred = !!card.starred;
             const starFill = isStarred ? "font-variation-settings: 'FILL' 1;" : "font-variation-settings: 'FILL' 0;";
-            const starColor = isStarred ? "color: var(--primary);" : "color: var(--text-muted);";
+            const starColor = isStarred ? "color: #ffca28;" : "color: var(--text-muted);";
             html += `
                 <div class="term-card glass-panel">
                     <div class="term-number">${index + 1}</div>
@@ -151,34 +151,46 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 card.starred = !card.starred;
                 
-                const dbPayload = {
-                    title: currentSet.title,
-                    description: currentSet.description,
-                    folder: currentSet.folder,
-                    type: currentSet.type,
-                    lang_col1: currentSet.lang_col1,
-                    lang_col2: currentSet.lang_col2,
-                    cards: currentSet.cards,
-                    card_count: currentSet.cards ? currentSet.cards.length : 0,
-                    updated_at: new Date().toISOString()
-                };
-
                 try {
-                    await syncSetToRemote(supabase, dbPayload, currentSet.id);
+                    await window.saveAndSyncCurrentSet();
                     const icon = btn.querySelector('.material-symbols-rounded');
                     if (card.starred) {
                         icon.style.fontVariationSettings = "'FILL' 1";
-                        icon.style.color = "var(--primary)";
+                        icon.style.color = "#ffca28";
                     } else {
                         icon.style.fontVariationSettings = "'FILL' 0";
                         icon.style.color = "var(--text-muted)";
                     }
                 } catch (updateError) {
+                    // Revert local change if error
+                    card.starred = !card.starred;
                     if (window.Toast) window.Toast.show('Fout bij bijwerken van ster: ' + updateError.message, 'error');
                 }
             });
         });
     }
+
+    window.saveAndSyncCurrentSet = async () => {
+        if (!currentSet) return;
+        const dbPayload = {
+            title: currentSet.title,
+            description: currentSet.description,
+            folder: currentSet.folder,
+            type: currentSet.type,
+            lang_col1: currentSet.lang_col1,
+            lang_col2: currentSet.lang_col2,
+            cards: currentSet.cards,
+            card_count: currentSet.cards ? currentSet.cards.length : 0,
+            updated_at: new Date().toISOString()
+        };
+        await syncSetToRemote(supabase, dbPayload, currentSet.id);
+    };
+
+    window.refreshTermsList = () => {
+        if (currentSet && currentSet.cards) {
+            renderTermsList(currentSet.cards);
+        }
+    };
 
     // Helper to escape HTML to prevent XSS
     // Setup Edit and Delete Interaction

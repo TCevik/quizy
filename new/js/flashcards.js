@@ -125,10 +125,16 @@ function openFlashcardsQuiz() {
             <div class="flashcard-wrapper" id="fc-card">
                 <div class="flashcard-inner">
                     <div class="flashcard-face flashcard-front">
+                        <button class="btn-flashcard-star">
+                            <span class="material-symbols-rounded">star</span>
+                        </button>
                         <div class="flashcard-label">Term</div>
                         <div class="flashcard-text" id="fc-front-text">Laden...</div>
                     </div>
                     <div class="flashcard-face flashcard-back">
+                        <button class="btn-flashcard-star">
+                            <span class="material-symbols-rounded">star</span>
+                        </button>
                         <div class="flashcard-label">Definitie</div>
                         <div class="flashcard-text" id="fc-back-text">Laden...</div>
                     </div>
@@ -182,6 +188,19 @@ function openFlashcardsQuiz() {
         frontTextEl.textContent = card.term;
         backTextEl.textContent = card.definition;
         
+        // Update star buttons
+        const isStarred = !!card.starred;
+        overlay.querySelectorAll('.btn-flashcard-star').forEach(btn => {
+            const icon = btn.querySelector('.material-symbols-rounded');
+            if (isStarred) {
+                btn.classList.add('starred');
+                icon.style.fontVariationSettings = "'FILL' 1";
+            } else {
+                btn.classList.remove('starred');
+                icon.style.fontVariationSettings = "'FILL' 0";
+            }
+        });
+
         // Update progress bar
         const progressPercentage = (learnedCardKeys.size / totalUniqueCards) * 100;
         progressTextEl.textContent = `Geleerd: ${learnedCardKeys.size} van ${totalUniqueCards} kaarten${isReviewPhase ? ' (Herhalingsfase)' : ''}`;
@@ -349,6 +368,50 @@ function openFlashcardsQuiz() {
     cardEl.addEventListener('click', () => {
         if (isAnimating) return;
         cardEl.classList.toggle('flipped');
+    });
+
+    const starBtns = overlay.querySelectorAll('.btn-flashcard-star');
+    starBtns.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const currentCard = activeQueue[currentIndex];
+            if (!currentCard) return;
+
+            currentCard.starred = !currentCard.starred;
+
+            const isStarred = !!currentCard.starred;
+            overlay.querySelectorAll('.btn-flashcard-star').forEach(b => {
+                const icon = b.querySelector('.material-symbols-rounded');
+                if (isStarred) {
+                    b.classList.add('starred');
+                    icon.style.fontVariationSettings = "'FILL' 1";
+                } else {
+                    b.classList.remove('starred');
+                    icon.style.fontVariationSettings = "'FILL' 0";
+                }
+            });
+
+            try {
+                await window.saveAndSyncCurrentSet();
+                if (window.refreshTermsList) {
+                    window.refreshTermsList();
+                }
+            } catch (err) {
+                currentCard.starred = !currentCard.starred;
+                const revertedStarred = !!currentCard.starred;
+                overlay.querySelectorAll('.btn-flashcard-star').forEach(b => {
+                    const icon = b.querySelector('.material-symbols-rounded');
+                    if (revertedStarred) {
+                        b.classList.add('starred');
+                        icon.style.fontVariationSettings = "'FILL' 1";
+                    } else {
+                        b.classList.remove('starred');
+                        icon.style.fontVariationSettings = "'FILL' 0";
+                    }
+                });
+                if (window.Toast) window.Toast.show('Fout bij bijwerken van ster: ' + err.message, 'error');
+            }
+        });
     });
 
     flipBtn.addEventListener('click', () => {
