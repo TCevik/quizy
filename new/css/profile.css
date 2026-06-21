@@ -144,65 +144,7 @@ body {
     margin: 0;
 }
 
-.file-upload-wrapper {
-    position: relative;
-    width: 100%;
-}
 
-.file-upload-input {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    z-index: 2;
-}
-
-.file-upload-trigger {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 14px 20px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px dashed rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.file-upload-wrapper:hover .file-upload-trigger {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--primary);
-    transform: translateY(-1px);
-}
-
-.file-upload-trigger span.material-symbols-rounded {
-    color: var(--primary);
-    font-size: 1.4em;
-}
-
-.file-upload-text {
-    color: var(--text-muted);
-    font-size: 0.95em;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.avatar-inputs-row {
-    display: flex;
-    gap: 16px;
-    align-items: flex-end;
-    width: 100%;
-}
-
-.flex-1 {
-    flex: 1;
-}
 
 .name-input-row {
     display: flex;
