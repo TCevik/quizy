@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let allSets = [];
+    let sharedSets = [];
     let currentFolderFilter = 'all';
     let searchQuery = '';
     let currentPage = 1;
@@ -95,13 +96,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             setModalComp.updateFolderOptions(folders);
         }
 
-        if (sets.length === 0) {
+        if (sets.length === 0 && sharedSets.length === 0) {
             folderFilterContainer.innerHTML = '';
             return;
         }
 
-        // Check if the current filter is still valid (exists in sets), otherwise reset to 'all'
-        if (currentFolderFilter !== 'all' && currentFolderFilter !== 'none' && !folders.includes(currentFolderFilter)) {
+        // Check if the current filter is still valid, otherwise reset to 'all'
+        if (currentFolderFilter === 'shared' && sharedSets.length === 0) {
+            currentFolderFilter = 'all';
+        } else if (currentFolderFilter !== 'all' && currentFolderFilter !== 'none' && currentFolderFilter !== 'shared' && !folders.includes(currentFolderFilter)) {
             currentFolderFilter = 'all';
         } else if (currentFolderFilter === 'none' && setsWithoutFolderCount === 0) {
             currentFolderFilter = 'all';
@@ -113,6 +116,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 Mappen
             </div>
             <div class="folder-chips">
+        `;
+
+        if (sharedSets.length > 0) {
+            html += `
+                <button class="folder-chip folder-chip--shared ${currentFolderFilter === 'shared' ? 'active' : ''}" data-folder="shared">
+                    <span class="material-symbols-rounded">group</span>
+                    <span>Gedeeld met mij</span>
+                    <span class="chip-count">${sharedSets.length}</span>
+                </button>
+                <span class="folder-chip-divider"></span>
+            `;
+        }
+
+        html += `
                 <button class="folder-chip ${currentFolderFilter === 'all' ? 'active' : ''}" data-folder="all">
                     <span class="material-symbols-rounded">folder_open</span>
                     <span>Alle sets</span>
@@ -160,13 +177,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderSets() {
         if (!dashboardContent) return;
 
-        let filteredSets = allSets;
-        if (currentFolderFilter !== 'all') {
-            if (currentFolderFilter === 'none') {
-                filteredSets = allSets.filter(s => !s.folder || s.folder.trim() === '');
-            } else {
-                filteredSets = allSets.filter(s => s.folder && s.folder.trim() === currentFolderFilter);
-            }
+        let filteredSets;
+        if (currentFolderFilter === 'shared') {
+            filteredSets = sharedSets;
+        } else if (currentFolderFilter === 'none') {
+            filteredSets = allSets.filter(s => !s.folder || s.folder.trim() === '');
+        } else if (currentFolderFilter !== 'all') {
+            filteredSets = allSets.filter(s => s.folder && s.folder.trim() === currentFolderFilter);
+        } else {
+            filteredSets = allSets;
         }
 
         if (searchQuery) {
@@ -232,9 +251,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span><span class="material-symbols-rounded" style="font-size:16px;">style</span> ${cardCountLabel}</span>
                         </div>
                         <div class="set-actions">
+                            ${set.user_id === user.id ? `
                             <button class="btn-icon-action edit-btn" title="Bewerken" data-id="${set.id}">
                                 <span class="material-symbols-rounded">edit</span>
-                            </button>
+                            </button>` : ''}
                             <button class="btn-icon-action delete-btn" title="Verwijderen" data-id="${set.id}">
                                 <span class="material-symbols-rounded">delete</span>
                             </button>
@@ -365,8 +385,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!dashboardContent) return;
 
         const localSets = await getLocalSets();
-        if (localSets && localSets.length > 0) {
-            allSets = localSets.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        const ownLocalSets = localSets.filter(s => s.user_id === user.id);
+        sharedSets = localSets.filter(s => s.user_id !== user.id).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+        if (ownLocalSets.length > 0 || sharedSets.length > 0) {
+            allSets = ownLocalSets.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
             renderFolderFilter(allSets);
             renderSets();
         } else {
@@ -375,9 +398,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const sets = await syncSets(supabase, user.id);
 
-        allSets = sets || [];
+        allSets = (sets || []).filter(s => s.user_id === user.id);
+        // Refresh shared sets from IndexedDB (syncSets may have cleaned up stale ones)
+        const allLocal = await getLocalSets();
+        sharedSets = allLocal.filter(s => s.user_id !== user.id).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
-        if (allSets.length === 0) {
+        if (allSets.length === 0 && sharedSets.length === 0) {
             if (folderFilterContainer) folderFilterContainer.innerHTML = '';
             dashboardContent.innerHTML = `
                 <div class="no-sets-box">

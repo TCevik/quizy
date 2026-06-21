@@ -48,7 +48,7 @@ export async function syncSets(supabase, userId) {
     let maxUpdatedAt = '1970-01-01T00:00:00.000Z';
     
     for (const set of localSets) {
-        if (set.updated_at && set.updated_at > maxUpdatedAt) {
+        if (set.user_id === userId && set.updated_at && set.updated_at > maxUpdatedAt) {
             maxUpdatedAt = set.updated_at;
         }
     }
@@ -63,8 +63,62 @@ export async function syncSets(supabase, userId) {
             if (!error && remoteSets) {
                 const remoteIds = new Set(remoteSets.map(s => s.id));
                 for (const localSet of localSets) {
-                    if (!remoteIds.has(localSet.id)) {
+                    if (localSet.user_id === userId && !remoteIds.has(localSet.id)) {
                         await deleteLocalSet(localSet.id);
+                    }
+                }
+
+                const sharedLocalSets = localSets.filter(s => s.user_id !== userId);
+                const sharedLocalIds = sharedLocalSets.map(s => s.id);
+
+                if (sharedLocalIds.length > 0) {
+                    const { data: remoteSharedMeta, error: sharedErr } = await supabase
+                        .from('Sets')
+                        .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id')
+                        .in('id', sharedLocalIds);
+
+                    if (!sharedErr && remoteSharedMeta) {
+                        const activeSharedIds = new Set(remoteSharedMeta.map(s => s.id));
+
+                        for (const id of sharedLocalIds) {
+                            if (!activeSharedIds.has(id)) {
+                                await deleteLocalSet(id);
+                            }
+                        }
+
+                        for (const remote of remoteSharedMeta) {
+                            if (remote.visibility !== 'public') {
+                                await deleteLocalSet(remote.id);
+                                continue;
+                            }
+                            const local = sharedLocalSets.find(s => s.id === remote.id);
+                            if (!local || remote.updated_at > (local.updated_at || '')) {
+                                if (local && local.cards) {
+                                    const { data: fullSet, error: fullErr } = await supabase
+                                        .from('Sets')
+                                        .select('*')
+                                        .eq('id', remote.id)
+                                        .single();
+                                    if (!fullErr && fullSet) {
+                                        await saveLocalSet({
+                                            id: fullSet.id,
+                                            user_id: fullSet.user_id,
+                                            title: fullSet.title,
+                                            description: fullSet.description,
+                                            folder: fullSet.folder,
+                                            type: fullSet.type,
+                                            card_count: fullSet.card_count,
+                                            visibility: fullSet.visibility,
+                                            created_at: fullSet.created_at,
+                                            updated_at: fullSet.updated_at,
+                                            cards: fullSet.cards
+                                        });
+                                    }
+                                } else {
+                                    await saveLocalSet(remote);
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -92,23 +146,50 @@ export async function getSetWithCards(supabase, setId, userId) {
     
     if (navigator.onLine) {
         try {
-            if (localSet && localSet.cards) {
-                const { data: setMeta, error: metaErr } = await supabase
-                    .from('Sets')
-                    .select('updated_at')
-                    .eq('id', setId)
-                    .single();
+            const { data: setMeta, error: metaErr } = await supabase
+                .from('Sets')
+                .select('user_id, visibility, updated_at')
+                .eq('id', setId)
+                .maybeSingle();
 
+            if (!metaErr && !setMeta) {
+                await deleteLocalSet(setId);
+                return null;
+            }
+
+            if (setMeta && setMeta.user_id !== userId && setMeta.visibility !== 'public') {
+                await deleteLocalSet(setId);
+                return null;
+            }
+
+            if (localSet && localSet.cards) {
                 if (!metaErr && setMeta && (!localSet.updated_at || setMeta.updated_at > localSet.updated_at)) {
                     const { data: fullSet, error } = await supabase
                         .from('Sets')
                         .select('*')
                         .eq('id', setId)
-                        .eq('user_id', userId)
                         .single();
                     if (!error && fullSet) {
-                        await saveLocalSet(fullSet);
-                        localSet = fullSet;
+                        if (fullSet.user_id !== userId) {
+                            const sanitized = {
+                                id: fullSet.id,
+                                user_id: fullSet.user_id,
+                                title: fullSet.title,
+                                description: fullSet.description,
+                                folder: fullSet.folder,
+                                type: fullSet.type,
+                                card_count: fullSet.card_count,
+                                visibility: fullSet.visibility,
+                                created_at: fullSet.created_at,
+                                updated_at: fullSet.updated_at,
+                                cards: fullSet.cards
+                            };
+                            await saveLocalSet(sanitized);
+                            localSet = sanitized;
+                        } else {
+                            await saveLocalSet(fullSet);
+                            localSet = fullSet;
+                        }
                     }
                 }
             } else {
@@ -116,11 +197,28 @@ export async function getSetWithCards(supabase, setId, userId) {
                     .from('Sets')
                     .select('*')
                     .eq('id', setId)
-                    .eq('user_id', userId)
                     .single();
                 if (!error && fullSet) {
-                    await saveLocalSet(fullSet);
-                    localSet = fullSet;
+                    if (fullSet.user_id !== userId) {
+                        const sanitized = {
+                            id: fullSet.id,
+                            user_id: fullSet.user_id,
+                            title: fullSet.title,
+                            description: fullSet.description,
+                            folder: fullSet.folder,
+                            type: fullSet.type,
+                            card_count: fullSet.card_count,
+                            visibility: fullSet.visibility,
+                            created_at: fullSet.created_at,
+                            updated_at: fullSet.updated_at,
+                            cards: fullSet.cards
+                        };
+                        await saveLocalSet(sanitized);
+                        localSet = sanitized;
+                    } else {
+                        await saveLocalSet(fullSet);
+                        localSet = fullSet;
+                    }
                 }
             }
         } catch (e) {

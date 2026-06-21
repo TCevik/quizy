@@ -157,3 +157,49 @@ class QuizyDeleteModal extends HTMLElement {
     }
 }
 customElements.define('quizy-delete-modal', QuizyDeleteModal);
+
+class QuizyWarningModal extends HTMLElement {
+    connectedCallback() {
+        this.className = 'modal-overlay';
+        this.innerHTML = `
+            <div class="modal-card glass-panel" style="max-width: 460px;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px; display: flex; align-items: center; gap: 12px;">
+                    <span class="material-symbols-rounded" style="color: #f59e0b; font-size: 26px;">warning</span>
+                    <h3 id="warning-modal-title" style="font-size: 1.2em; font-weight: 600; color: var(--text-light);"></h3>
+                </div>
+                <div class="modal-body" style="padding: 24px; gap: 8px; display: flex; flex-direction: column; gap: 12px;">
+                    <p id="warning-modal-message" style="color: var(--text-muted); font-size: 0.97em; line-height: 1.6; margin: 0;"></p>
+                    <p id="warning-modal-sub" style="color: #f59e0b; font-size: 0.88em; font-weight: 500; margin: 0; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 10px 14px;"></p>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; margin-top: 0;">
+                    <button id="btn-warning-cancel" class="btn-text">Annuleren</button>
+                    <button id="btn-warning-confirm" class="btn-gradient" style="background: #f59e0b; padding: 10px 20px;"></button>
+                </div>
+            </div>
+        `;
+
+        this.addEventListener('click', (e) => {
+            if (e.target === this || e.target.id === 'btn-warning-cancel') {
+                this.close();
+            }
+        });
+
+        this.querySelector('#btn-warning-confirm').addEventListener('click', () => {
+            this.dispatchEvent(new CustomEvent('confirm'));
+            this.close();
+        });
+    }
+
+    open({ title, message, sub, confirmText = 'Doorgaan' } = {}) {
+        if (title) this.querySelector('#warning-modal-title').textContent = title;
+        if (message) this.querySelector('#warning-modal-message').textContent = message;
+        if (sub) this.querySelector('#warning-modal-sub').textContent = sub;
+        this.querySelector('#btn-warning-confirm').textContent = confirmText;
+        this.classList.add('active');
+    }
+
+    close() {
+        this.classList.remove('active');
+    }
+}
+customElements.define('quizy-warning-modal', QuizyWarningModal);

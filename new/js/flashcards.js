@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openFlashcardsQuiz(options = {}) {
+    const isOwner = window.currentUser && window.currentSet && window.currentSet.user_id === window.currentUser.id;
     const savedSettings = (window.currentSet && window.currentSet.settings) || {};
     const hasStarred = window.currentSet && window.currentSet.cards && window.currentSet.cards.some(c => c.starred);
     let starOnly = ('starOnly' in options) ? !!options.starOnly : !!savedSettings.starOnly;
@@ -237,7 +238,7 @@ function openFlashcardsQuiz(options = {}) {
                         <button class="btn-flashcard-speak" title="Uitspreken">
                             <span class="material-symbols-rounded">volume_up</span>
                         </button>
-                        <button class="btn-flashcard-star">
+                        <button class="btn-flashcard-star" ${isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
                             <span class="material-symbols-rounded">star</span>
                         </button>
                         <div class="flashcard-label">Term</div>
@@ -247,7 +248,7 @@ function openFlashcardsQuiz(options = {}) {
                         <button class="btn-flashcard-speak" title="Uitspreken">
                             <span class="material-symbols-rounded">volume_up</span>
                         </button>
-                        <button class="btn-flashcard-star">
+                        <button class="btn-flashcard-star" ${isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
                             <span class="material-symbols-rounded">star</span>
                         </button>
                         <div class="flashcard-label">Definitie</div>
@@ -348,7 +349,7 @@ function openFlashcardsQuiz(options = {}) {
                         swapSides: newSwapSides,
                         autoSpeak: newAutoSpeak
                     };
-                    if (window.saveAndSyncCurrentSet) {
+                    if (isOwner && window.saveAndSyncCurrentSet) {
                         window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                     }
                 }
@@ -376,7 +377,7 @@ function openFlashcardsQuiz(options = {}) {
                     swapSides: newSwapSides,
                     autoSpeak: newAutoSpeak
                 };
-                if (window.saveAndSyncCurrentSet) {
+                if (isOwner && window.saveAndSyncCurrentSet) {
                     window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                 }
             }
@@ -727,6 +728,7 @@ function openFlashcardsQuiz(options = {}) {
     starBtns.forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
+            if (!isOwner) return;
             const currentCard = activeQueue[currentIndex];
             if (!currentCard) return;
 

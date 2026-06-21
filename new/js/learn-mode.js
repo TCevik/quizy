@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openLearnMode() {
+    const isOwner = window.currentUser && window.currentSet && window.currentSet.user_id === window.currentUser.id;
     if (!window.currentSet || !window.currentSet.cards || window.currentSet.cards.length === 0) {
         if (window.Toast) window.Toast.show('Deze set heeft geen kaarten om te leren.', 'error');
         return;
@@ -252,7 +253,7 @@ function openLearnMode() {
                     swapSides: settings.swapSides,
                     autoSpeak: settings.autoSpeak
                 };
-                if (window.saveAndSyncCurrentSet) {
+                if (isOwner && window.saveAndSyncCurrentSet) {
                     window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                 }
             }

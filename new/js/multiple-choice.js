@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openMultipleChoiceQuiz(options = {}) {
+    const isOwner = window.currentUser && window.currentSet && window.currentSet.user_id === window.currentUser.id;
     const savedSettings = (window.currentSet && window.currentSet.settings) || {};
     const hasStarred = window.currentSet && window.currentSet.cards && window.currentSet.cards.some(c => c.starred);
     let starOnly = ('starOnly' in options) ? !!options.starOnly : !!savedSettings.starOnly;
@@ -235,7 +236,7 @@ function openMultipleChoiceQuiz(options = {}) {
                 <button class="btn-mc-speak" title="Uitspreken">
                     <span class="material-symbols-rounded">volume_up</span>
                 </button>
-                <button class="btn-mc-star">
+                <button class="btn-mc-star" ${isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
                     <span class="material-symbols-rounded">star</span>
                 </button>
                 <div class="mc-question-label" id="mc-question-label">Vraag</div>
@@ -331,7 +332,7 @@ function openMultipleChoiceQuiz(options = {}) {
                         swapSides: newSwapSides,
                         autoSpeak: newAutoSpeak
                     };
-                    if (window.saveAndSyncCurrentSet) {
+                    if (isOwner && window.saveAndSyncCurrentSet) {
                         window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                     }
                 }
@@ -359,7 +360,7 @@ function openMultipleChoiceQuiz(options = {}) {
                     swapSides: newSwapSides,
                     autoSpeak: newAutoSpeak
                 };
-                if (window.saveAndSyncCurrentSet) {
+                if (isOwner && window.saveAndSyncCurrentSet) {
                     window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                 }
             }
@@ -631,6 +632,7 @@ function openMultipleChoiceQuiz(options = {}) {
     // Star interaction
     starBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
+        if (!isOwner) return;
         const currentCard = activeQueue[currentIndex];
         if (!currentCard) return;
 

@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'login.html';
         return;
     }
+    window.currentUser = user;
 
     // Get set ID from query parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         set = await getSetWithCards(supabase, setId, user.id);
 
-        if (!set && !currentSet) {
+        if (!set) {
             if (window.Toast) window.Toast.show('Set kon niet worden geladen.', 'error');
             document.querySelector('.set-wrapper').innerHTML = `
                 <div class="back-nav">
@@ -66,6 +67,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderSetDetails() {
         if (!currentSet) return;
+
+        const isOwner = currentSet.user_id === user.id;
+        const btnEditSet = document.getElementById('btn-edit-set');
+        const btnDeleteSet = document.getElementById('btn-delete-set');
+        const btnToggleVisibility = document.getElementById('btn-toggle-visibility');
+
+        if (btnEditSet) btnEditSet.style.display = isOwner ? '' : 'none';
+        if (btnDeleteSet) btnDeleteSet.style.display = isOwner ? '' : 'none';
+        if (btnToggleVisibility) btnToggleVisibility.style.display = isOwner ? '' : 'none';
 
         // Title & Description
         document.getElementById('set-title').textContent = currentSet.title || 'Naamloze set';
@@ -109,7 +119,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const visibility = currentSet.visibility || 'private';
         const visibilityBadge = document.getElementById('set-visibility-badge');
         const visibilityIcon = document.getElementById('visibility-icon');
-        const btnToggleVisibility = document.getElementById('btn-toggle-visibility');
         
         if (visibility === 'public') {
             if (visibilityBadge) {
@@ -147,11 +156,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        const isOwner = currentSet && currentSet.user_id === user.id;
         let html = '';
         cards.forEach((card, index) => {
             const isStarred = !!card.starred;
             const starFill = isStarred ? "font-variation-settings: 'FILL' 1;" : "font-variation-settings: 'FILL' 0;";
             const starColor = isStarred ? "color: #ffca28;" : "color: var(--text-muted);";
+            
+            const starBtnHtml = `
+                <button class="btn-star-card" data-index="${index}" ${isOwner ? '' : 'disabled style="cursor: default; pointer-events: none;"'}>
+                    <span class="material-symbols-rounded" style="${starFill} ${starColor} font-size: 22px;">star</span>
+                </button>
+            `;
+
             html += `
                 <div class="term-card glass-panel">
                     <div class="term-number">${index + 1}</div>
@@ -167,9 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span class="material-symbols-rounded" style="font-size: 18px;">volume_up</span>
                         </button>
                     </div>
-                    <button class="btn-star-card" data-index="${index}">
-                        <span class="material-symbols-rounded" style="${starFill} ${starColor} font-size: 22px;">star</span>
-                    </button>
+                    ${starBtnHtml}
                 </div>
             `;
         });
@@ -233,6 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.saveAndSyncCurrentSet = async () => {
         if (!currentSet) return;
+        if (currentSet.user_id !== user.id) return;
         const dbPayload = {
             title: currentSet.title,
             description: currentSet.description,
@@ -264,6 +280,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnEditSet && setModalComp) {
         btnEditSet.addEventListener('click', () => {
             if (!currentSet) return;
+            if (currentSet.user_id !== user.id) {
+                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                return;
+            }
             const mappedData = {
                 id: currentSet.id,
                 title: currentSet.title,
@@ -281,6 +301,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (setModalComp) {
         setModalComp.addEventListener('save', async (e) => {
+            if (currentSet && currentSet.user_id !== user.id) {
+                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                return;
+            }
             const { data: setData } = e.detail;
             const dbPayload = {
                 title: setData.title,
@@ -323,32 +347,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (btnDeleteSet && deleteModal) {
         btnDeleteSet.addEventListener('click', () => {
+            if (currentSet && currentSet.user_id !== user.id) {
+                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                return;
+            }
             deleteModal.open(setId);
         });
     }
 
     const btnToggleVisibility = document.getElementById('btn-toggle-visibility');
+    const visibilityWarningModal = document.getElementById('visibility-warning-modal');
+
+    async function applyVisibilityChange() {
+        const newVisibility = currentSet.visibility === 'public' ? 'private' : 'public';
+        currentSet.visibility = newVisibility;
+        if (window.Toast) window.Toast.show('Zichtbaarheid bijwerken...', 'info');
+        try {
+            await window.saveAndSyncCurrentSet();
+            renderSetDetails();
+            if (window.Toast) window.Toast.show(`Set is nu ${newVisibility === 'public' ? 'openbaar' : 'privé'}!`, 'success');
+        } catch (err) {
+            currentSet.visibility = newVisibility === 'public' ? 'private' : 'public';
+            if (window.Toast) window.Toast.show('Fout bij bijwerken: ' + err.message, 'error');
+        }
+    }
+
     if (btnToggleVisibility) {
         btnToggleVisibility.addEventListener('click', async () => {
             if (!currentSet) return;
-            const newVisibility = currentSet.visibility === 'public' ? 'private' : 'public';
-            currentSet.visibility = newVisibility;
-            
-            if (window.Toast) window.Toast.show('Zichtbaarheid bijwerken...', 'info');
-            try {
-                await window.saveAndSyncCurrentSet();
-                renderSetDetails();
-                if (window.Toast) window.Toast.show(`Set is nu ${newVisibility === 'public' ? 'openbaar' : 'privé'}!`, 'success');
-            } catch (err) {
-                // Revert
-                currentSet.visibility = newVisibility === 'public' ? 'private' : 'public';
-                if (window.Toast) window.Toast.show('Fout bij bijwerken: ' + err.message, 'error');
+            if (currentSet.user_id !== user.id) {
+                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                return;
             }
+
+            if (currentSet.visibility === 'public') {
+                if (visibilityWarningModal) {
+                    visibilityWarningModal.open({
+                        title: 'Set privé maken?',
+                        message: 'Als je deze set privé maakt, verdwijnt hij uit de "Gedeeld met mij" map van alle gebruikers die hem hebben opgeslagen. Ze moeten de set opnieuw toevoegen als je hem later weer openbaar maakt.',
+                        sub: '⚠ Andere gebruikers verliezen direct toegang tot deze set.',
+                        confirmText: 'Privé maken'
+                    });
+                } else {
+                    await applyVisibilityChange();
+                }
+            } else {
+                await applyVisibilityChange();
+            }
+        });
+    }
+
+    if (visibilityWarningModal) {
+        visibilityWarningModal.addEventListener('confirm', async () => {
+            await applyVisibilityChange();
         });
     }
 
     if (deleteModal) {
         deleteModal.addEventListener('confirm', async () => {
+            if (currentSet && currentSet.user_id !== user.id) {
+                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                return;
+            }
             const { error: deleteError } = await supabase.from('Sets').delete().eq('id', setId);
             if (deleteError) {
                 if (window.Toast) window.Toast.show('Fout bij verwijderen: ' + deleteError.message, 'error');

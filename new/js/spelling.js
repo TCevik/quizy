@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openSpellingQuiz(options = {}) {
+    const isOwner = window.currentUser && window.currentSet && window.currentSet.user_id === window.currentUser.id;
     const savedSettings = (window.currentSet && window.currentSet.settings) || {};
     const hasStarred = window.currentSet && window.currentSet.cards && window.currentSet.cards.some(c => c.starred);
     
@@ -282,7 +283,7 @@ function openSpellingQuiz(options = {}) {
                 <button class="btn-sp-speak" title="Uitspreken">
                     <span class="material-symbols-rounded">volume_up</span>
                 </button>
-                <button class="btn-sp-star">
+                <button class="btn-sp-star" ${isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
                     <span class="material-symbols-rounded">star</span>
                 </button>
                 <div class="sp-question-label" id="sp-question-label">Schrijf de vertaling</div>
@@ -405,7 +406,7 @@ function openSpellingQuiz(options = {}) {
                         skipPunctuation: newSkipPunctuation,
                         allowSlashParts: newAllowSlashParts
                     };
-                    if (window.saveAndSyncCurrentSet) {
+                    if (isOwner && window.saveAndSyncCurrentSet) {
                         window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                     }
                 }
@@ -444,7 +445,7 @@ function openSpellingQuiz(options = {}) {
                     skipPunctuation: newSkipPunctuation,
                     allowSlashParts: newAllowSlashParts
                 };
-                if (window.saveAndSyncCurrentSet) {
+                if (isOwner && window.saveAndSyncCurrentSet) {
                     window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                 }
             }
@@ -762,6 +763,7 @@ function openSpellingQuiz(options = {}) {
     // Star interaction
     starBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
+        if (!isOwner) return;
         const currentCard = activeQueue[currentIndex];
         if (!currentCard) return;
 
