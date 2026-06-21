@@ -342,6 +342,7 @@ function openFlashcardsQuiz(options = {}) {
                 settingsPanel.classList.remove('active');
                 if (window.currentSet) {
                     window.currentSet.settings = {
+                        ...(window.currentSet.settings || {}),
                         starOnly: newStarOnly,
                         randomize: newRandomize,
                         swapSides: newSwapSides,
@@ -369,6 +370,7 @@ function openFlashcardsQuiz(options = {}) {
         } else {
             if (window.currentSet) {
                 window.currentSet.settings = {
+                    ...(window.currentSet.settings || {}),
                     starOnly: newStarOnly,
                     randomize: newRandomize,
                     swapSides: newSwapSides,

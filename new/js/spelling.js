@@ -396,6 +396,7 @@ function openSpellingQuiz(options = {}) {
                 settingsPanel.classList.remove('active');
                 if (window.currentSet) {
                     window.currentSet.settings = {
+                        ...(window.currentSet.settings || {}),
                         starOnly: newStarOnly,
                         randomize: newRandomize,
                         swapSides: newSwapSides,
@@ -408,6 +409,7 @@ function openSpellingQuiz(options = {}) {
                         window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                     }
                 }
+                document.removeEventListener('click', clickOutsideHandler);
                 openSpellingQuiz({ 
                     starOnly: newStarOnly, 
                     randomize: newRandomize, 
@@ -433,6 +435,7 @@ function openSpellingQuiz(options = {}) {
         } else {
             if (window.currentSet) {
                 window.currentSet.settings = {
+                    ...(window.currentSet.settings || {}),
                     starOnly: newStarOnly,
                     randomize: newRandomize,
                     swapSides: newSwapSides,
@@ -633,6 +636,7 @@ function openSpellingQuiz(options = {}) {
             `;
             
             document.getElementById('sp-restart').addEventListener('click', () => {
+                document.removeEventListener('click', clickOutsideHandler);
                 openSpellingQuiz({ 
                     starOnly, 
                     randomize, 

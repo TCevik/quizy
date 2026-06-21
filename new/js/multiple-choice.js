@@ -325,6 +325,7 @@ function openMultipleChoiceQuiz(options = {}) {
                 settingsPanel.classList.remove('active');
                 if (window.currentSet) {
                     window.currentSet.settings = {
+                        ...(window.currentSet.settings || {}),
                         starOnly: newStarOnly,
                         randomize: newRandomize,
                         swapSides: newSwapSides,
@@ -334,6 +335,7 @@ function openMultipleChoiceQuiz(options = {}) {
                         window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                     }
                 }
+                document.removeEventListener('click', clickOutsideHandler);
                 openMultipleChoiceQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak });
                 cleanup();
             };
@@ -351,6 +353,7 @@ function openMultipleChoiceQuiz(options = {}) {
         } else {
             if (window.currentSet) {
                 window.currentSet.settings = {
+                    ...(window.currentSet.settings || {}),
                     starOnly: newStarOnly,
                     randomize: newRandomize,
                     swapSides: newSwapSides,
@@ -544,6 +547,7 @@ function openMultipleChoiceQuiz(options = {}) {
             `;
             
             document.getElementById('mc-restart').addEventListener('click', () => {
+                document.removeEventListener('click', clickOutsideHandler);
                 openMultipleChoiceQuiz({ starOnly, randomize, swapSides });
             });
             document.getElementById('mc-finish-close').addEventListener('click', () => {

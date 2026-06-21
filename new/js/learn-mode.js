@@ -42,15 +42,23 @@ function openLearnMode() {
     const originalCards = window.currentSet.cards;
     const hasStarred = originalCards.some(c => c.starred);
 
+    const savedSettings = (window.currentSet && window.currentSet.settings) || {};
     let settings = {
-        flashcards: true,
-        multipleChoice: true,
-        spelling: true,
-        starOnly: false,
-        randomize: false,
-        swapSides: false,
-        autoSpeak: false
+        flashcards: ('learn_flashcards' in savedSettings) ? !!savedSettings.learn_flashcards : true,
+        multipleChoice: ('learn_multipleChoice' in savedSettings) ? !!savedSettings.learn_multipleChoice : true,
+        spelling: ('learn_spelling' in savedSettings) ? !!savedSettings.learn_spelling : true,
+        starOnly: ('starOnly' in savedSettings) ? !!savedSettings.starOnly : false,
+        randomize: ('randomize' in savedSettings) ? !!savedSettings.randomize : false,
+        swapSides: ('swapSides' in savedSettings) ? !!savedSettings.swapSides : false,
+        autoSpeak: ('autoSpeak' in savedSettings) ? !!savedSettings.autoSpeak : false
     };
+
+    if (!hasStarred) {
+        settings.starOnly = false;
+        if (window.currentSet && window.currentSet.settings && window.currentSet.settings.starOnly) {
+            window.currentSet.settings.starOnly = false;
+        }
+    }
 
     let activeQueue = [...originalCards];
     let cardLevels = new Map();
@@ -81,7 +89,7 @@ function openLearnMode() {
                             <div class="learn-setting-row">
                                 <label class="learn-setting-label" style="${!hasStarred ? 'opacity: 0.5;' : ''}">Alleen sterwoorden</label>
                                 <label class="fc-switch" style="${!hasStarred ? 'pointer-events: none; opacity: 0.5;' : ''}">
-                                    <input type="checkbox" id="learn-star-only" ${!hasStarred ? 'disabled' : ''}>
+                                    <input type="checkbox" id="learn-star-only" ${settings.starOnly ? 'checked' : ''} ${!hasStarred ? 'disabled' : ''}>
                                     <span class="fc-slider"></span>
                                 </label>
                             </div>
@@ -92,7 +100,7 @@ function openLearnMode() {
                             <div class="learn-setting-row">
                                 <label class="learn-setting-label">Willekeurige volgorde</label>
                                 <label class="fc-switch">
-                                    <input type="checkbox" id="learn-randomize">
+                                    <input type="checkbox" id="learn-randomize" ${settings.randomize ? 'checked' : ''}>
                                     <span class="fc-slider"></span>
                                 </label>
                             </div>
@@ -103,7 +111,7 @@ function openLearnMode() {
                             <div class="learn-setting-row">
                                 <label class="learn-setting-label">Vraag/Antwoord omdraaien</label>
                                 <label class="fc-switch">
-                                    <input type="checkbox" id="learn-swap-sides">
+                                    <input type="checkbox" id="learn-swap-sides" ${settings.swapSides ? 'checked' : ''}>
                                     <span class="fc-slider"></span>
                                 </label>
                             </div>
@@ -114,7 +122,7 @@ function openLearnMode() {
                             <div class="learn-setting-row">
                                 <label class="learn-setting-label">Automatisch uitspreken</label>
                                 <label class="fc-switch">
-                                    <input type="checkbox" id="learn-auto-speak">
+                                    <input type="checkbox" id="learn-auto-speak" ${settings.autoSpeak ? 'checked' : ''}>
                                     <span class="fc-slider"></span>
                                 </label>
                             </div>
@@ -127,7 +135,7 @@ function openLearnMode() {
                             <div class="learn-setting-row">
                                 <label class="learn-setting-label">Flashcards</label>
                                 <label class="fc-switch">
-                                    <input type="checkbox" id="learn-toggle-fc" checked>
+                                    <input type="checkbox" id="learn-toggle-fc" ${settings.flashcards ? 'checked' : ''}>
                                     <span class="fc-slider"></span>
                                 </label>
                             </div>
@@ -138,7 +146,7 @@ function openLearnMode() {
                             <div class="learn-setting-row">
                                 <label class="learn-setting-label">Meerkeuze</label>
                                 <label class="fc-switch">
-                                    <input type="checkbox" id="learn-toggle-mc" checked>
+                                    <input type="checkbox" id="learn-toggle-mc" ${settings.multipleChoice ? 'checked' : ''}>
                                     <span class="fc-slider"></span>
                                 </label>
                             </div>
@@ -149,7 +157,7 @@ function openLearnMode() {
                             <div class="learn-setting-row">
                                 <label class="learn-setting-label">Spelling</label>
                                 <label class="fc-switch">
-                                    <input type="checkbox" id="learn-toggle-sp" checked>
+                                    <input type="checkbox" id="learn-toggle-sp" ${settings.spelling ? 'checked' : ''}>
                                     <span class="fc-slider"></span>
                                 </label>
                             </div>
@@ -232,6 +240,22 @@ function openLearnMode() {
             settings.randomize = document.getElementById('learn-randomize').checked;
             settings.swapSides = document.getElementById('learn-swap-sides').checked;
             settings.autoSpeak = document.getElementById('learn-auto-speak').checked;
+
+            if (window.currentSet) {
+                window.currentSet.settings = {
+                    ...(window.currentSet.settings || {}),
+                    learn_flashcards: settings.flashcards,
+                    learn_multipleChoice: settings.multipleChoice,
+                    learn_spelling: settings.spelling,
+                    starOnly: settings.starOnly,
+                    randomize: settings.randomize,
+                    swapSides: settings.swapSides,
+                    autoSpeak: settings.autoSpeak
+                };
+                if (window.saveAndSyncCurrentSet) {
+                    window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
+                }
+            }
 
             settingsPanel.classList.remove('active');
             
