@@ -32,23 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         userNameEl.textContent = 'Welkom, ' + name;
     }
 
-    // Display user's avatar if exists
-    const userAvatarImg = document.getElementById('user-avatar');
-    const userAvatarPlaceholder = document.getElementById('user-avatar-placeholder');
-    function updateAvatarDisplay(url) {
-        if (url && url.trim()) {
-            userAvatarImg.src = url.trim();
-            userAvatarImg.style.display = 'block';
-            userAvatarPlaceholder.style.display = 'none';
-        } else {
-            userAvatarImg.src = '';
-            userAvatarImg.style.display = 'none';
-            userAvatarPlaceholder.style.display = 'block';
-        }
-    }
 
-    const currentAvatarUrl = user.user_metadata?.avatar_url || '';
-    updateAvatarDisplay(currentAvatarUrl);
 
     // Pre-fill display name input
     const displayNameInput = document.getElementById('display-name');

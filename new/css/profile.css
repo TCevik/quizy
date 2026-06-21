@@ -167,25 +167,3 @@ body {
     justify-content: center;
     align-items: center;
 }
-
-.avatar-link-row {
-    display: flex;
-    gap: 16px;
-    align-items: flex-end;
-    width: 100%;
-}
-
-.avatar-link-row .input-group {
-    flex: 2;
-    margin-bottom: 0;
-}
-
-.avatar-link-row .submit-btn {
-    flex: 1;
-    height: 50px;
-    margin: 0;
-    border-radius: 14px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-}
