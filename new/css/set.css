@@ -112,7 +112,7 @@ body {
     flex-wrap: wrap;
 }
 
-.creator-info, .last-updated {
+.creator-info, .created-at, .last-updated {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -121,6 +121,7 @@ body {
 }
 
 .creator-info span.material-symbols-rounded,
+.created-at span.material-symbols-rounded,
 .last-updated span.material-symbols-rounded {
     font-size: 18px;
 }

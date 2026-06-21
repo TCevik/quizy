@@ -313,7 +313,7 @@ class QuizySetModal extends HTMLElement {
         const deleteBtn = row.querySelector('.btn-delete-row');
         deleteBtn.addEventListener('click', () => {
             const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
-            if (allRows.length > 3) {
+            if (allRows.length > 4) {
                 row.classList.add('removing');
                 row.addEventListener('animationend', () => {
                     row.remove();
@@ -322,30 +322,30 @@ class QuizySetModal extends HTMLElement {
                 this.updateDeleteButtonsState();
             }
         });
-
+ 
         this.termsContainer.appendChild(row);
         this.updateDeleteButtonsState();
         this.updatePlaceholdersAndHeaders();
-
+ 
         // Keep the add button at the exact same screen position so spam-clicking doesn't move it
         if (shouldScroll && this.modalBody && this.addRowBtn) {
             if (this.scrollAnimFrame) {
                 cancelAnimationFrame(this.scrollAnimFrame);
             }
-
+ 
             // Record the target Y position we want the button to stay at
             const targetY = this.addRowBtn.getBoundingClientRect().top;
             const start = Date.now();
-
+ 
             const animateScroll = () => {
                 const currentY = this.addRowBtn.getBoundingClientRect().top;
                 const deltaY = currentY - targetY;
-
+ 
                 // If button moved down (deltaY > 0), scroll down by exactly that amount
                 if (Math.abs(deltaY) > 0) {
                     this.modalBody.scrollTop += deltaY;
                 }
-
+ 
                 if (Date.now() - start < 350) {
                     this.scrollAnimFrame = requestAnimationFrame(animateScroll);
                 } else {
@@ -355,12 +355,12 @@ class QuizySetModal extends HTMLElement {
             this.scrollAnimFrame = requestAnimationFrame(animateScroll);
         }
     }
-
+ 
     updateDeleteButtonsState() {
         const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
         allRows.forEach(row => {
             const deleteBtn = row.querySelector('.btn-delete-row');
-            if (allRows.length <= 3) {
+            if (allRows.length <= 4) {
                 deleteBtn.style.opacity = '0.4';
                 deleteBtn.style.pointerEvents = 'none';
             } else {
@@ -536,8 +536,15 @@ class QuizySetModal extends HTMLElement {
             return;
         }
 
-        if (rows.length < 3) {
-            if (window.Toast) window.Toast.show('Een set moet minimaal 3 kaarten bevatten.', 'error');
+        const uniqueTerms = new Set(rows.map(r => r.term.trim().toLowerCase()));
+        if (uniqueTerms.size < 4) {
+            if (window.Toast) window.Toast.show('Een set moet minimaal 4 verschillende termen bevatten.', 'error');
+            return;
+        }
+
+        const uniqueDefs = new Set(rows.map(r => r.definition.trim().toLowerCase()));
+        if (uniqueDefs.size < 4) {
+            if (window.Toast) window.Toast.show('Een set moet minimaal 4 verschillende definities bevatten.', 'error');
             return;
         }
 
