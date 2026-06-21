@@ -1,5 +1,15 @@
 import { syncSets, syncSetToRemote, deleteLocalSet, getLocalSet, getLocalSets } from './storage.js';
 
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return unsafe;
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const supabase = await window.supabaseReady;
 
@@ -113,9 +123,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         folders.forEach(folder => {
             const count = sets.filter(s => s.folder && s.folder.trim() === folder).length;
             html += `
-                <button class="folder-chip ${currentFolderFilter === folder ? 'active' : ''}" data-folder="${folder}">
+                <button class="folder-chip ${currentFolderFilter === folder ? 'active' : ''}" data-folder="${escapeHtml(folder)}">
                     <span class="material-symbols-rounded">folder</span>
-                    <span>${folder}</span>
+                    <span>${escapeHtml(folder)}</span>
                     <span class="chip-count">${count}</span>
                 </button>
             `;
@@ -201,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 cardCountLabel = `${set.cards.length} kaarten`;
             }
             const folderLabel = set.folder && set.folder.trim() !== '' 
-                ? `<span class="set-folder-tag"><span class="material-symbols-rounded" style="font-size:14px;">folder</span> ${set.folder}</span>` 
+                ? `<span class="set-folder-tag"><span class="material-symbols-rounded" style="font-size:14px;">folder</span> ${escapeHtml(set.folder)}</span>` 
                 : '';
 
             html += `
@@ -209,12 +219,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div>
                         <div class="set-card-header">
                             <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <h3 class="set-title">${set.title || 'Naamloze set'}</h3>
+                                <h3 class="set-title">${escapeHtml(set.title) || 'Naamloze set'}</h3>
                                 ${folderLabel}
                             </div>
-                            <span class="set-badge">${set.type || 'woorden'}</span>
+                            <span class="set-badge">${escapeHtml(set.type) || 'woorden'}</span>
                         </div>
-                        <p class="set-desc">${set.description || 'Geen beschrijving'}</p>
+                        <p class="set-desc">${escapeHtml(set.description) || 'Geen beschrijving'}</p>
                     </div>
                     <div class="set-card-footer">
                         <div class="set-meta">

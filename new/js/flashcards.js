@@ -94,7 +94,7 @@ function openFlashcardsQuiz(options = {}) {
 
     // Helper to get unique key for a card
     function getCardKey(card) {
-        return card.id || `${card.term}_${card.definition}`;
+        return `idx_${window.currentSet.cards.indexOf(card)}`;
     }
 
     // Arranges repeated review cards so no identical cards are adjacent unless impossible
@@ -351,6 +351,7 @@ function openFlashcardsQuiz(options = {}) {
                         window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                     }
                 }
+                cleanupListeners();
                 openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak });
                 cleanup();
             };
@@ -418,8 +419,35 @@ function openFlashcardsQuiz(options = {}) {
     };
     document.addEventListener('click', clickOutsideHandler);
 
-    function closeFlashcards() {
+    const keydownHandler = (e) => {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.isContentEditable)) {
+            return;
+        }
+        if (settingsPanel.classList.contains('active')) {
+            return;
+        }
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (isAnimating) return;
+            cardEl.classList.toggle('flipped');
+            triggerFlipSpeech();
+        } else if (e.code === 'ArrowLeft') {
+            e.preventDefault();
+            submitAnswer(false);
+        } else if (e.code === 'ArrowRight') {
+            e.preventDefault();
+            submitAnswer(true);
+        }
+    };
+    document.addEventListener('keydown', keydownHandler);
+
+    function cleanupListeners() {
         document.removeEventListener('click', clickOutsideHandler);
+        document.removeEventListener('keydown', keydownHandler);
+    }
+
+    function closeFlashcards() {
+        cleanupListeners();
         overlay.classList.remove('active');
         overlay.style.display = 'none'; 
         if (mainWrapper) {
@@ -511,6 +539,7 @@ function openFlashcardsQuiz(options = {}) {
             `;
             
             document.getElementById('fc-restart').addEventListener('click', () => {
+                cleanupListeners();
                 openFlashcardsQuiz({ starOnly, randomize, swapSides });
             });
             document.getElementById('fc-finish-close').addEventListener('click', () => {

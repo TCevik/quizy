@@ -191,31 +191,6 @@ quizy-footer {
     color: var(--primary);
 }
 
-.page-wave-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background-color: var(--bg-dark);
-    z-index: 999999;
-    transform: translateY(calc(-100% - 120px));
-    transition: transform 0.75s cubic-bezier(0.65, 0, 0.35, 1);
-    pointer-events: none;
-}
-
-.page-wave-overlay svg {
-    position: absolute;
-    bottom: -119px;
-    left: 0;
-    width: 100%;
-    height: 120px;
-    transform: rotate(180deg);
-}
-
-.page-wave-overlay.wave-down {
-    transform: translateY(0);
-}
 
 /* Toast Notifications */
 #toast-container {
@@ -443,48 +418,4 @@ quizy-delete-modal:not(.active) {
     color: var(--primary);
     transform: scale(1.1);
 }
-
-/* Mobile Blocker for screens < 1200px */
-.mobile-blocker {
-    display: none;
-}
-
-@media (max-width: 1199.98px) {
-    .mobile-blocker {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background-color: var(--bg-dark);
-        color: var(--text-light);
-        z-index: 99999999;
-        text-align: center;
-        padding: 24px;
-        box-sizing: border-box;
-    }
-    
-    .mobile-blocker h1 {
-        font-size: 2.8rem;
-        margin-bottom: 16px;
-        color: var(--primary);
-        font-weight: 700;
-        letter-spacing: -1px;
-    }
-    
-    .mobile-blocker p {
-        font-size: 1.2rem;
-        color: var(--text-muted);
-        max-width: 500px;
-        line-height: 1.6;
-        margin: 0 auto;
-    }
-    
-    body > :not(.mobile-blocker) {
-        display: none !important;
-    }
-}
+

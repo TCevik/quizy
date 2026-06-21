@@ -58,6 +58,7 @@ function openLearnMode() {
     const batchSize = 5;
     let lastCardKey = null;
     const failedInCurrentBatch = new Set();
+    let nextQueueIndex = 0;
 
     overlay.innerHTML = `
         <div class="learn-container" style="position: relative;">
@@ -284,7 +285,7 @@ function openLearnMode() {
     });
 
     function getCardKey(card) {
-        return card.id || `${card.term}_${card.definition}`;
+        return `idx_${window.currentSet.cards.indexOf(card)}`;
     }
 
     function getStartingLevel() {
@@ -352,6 +353,7 @@ function openLearnMode() {
         activeBatch = [];
         lastCardKey = null;
         failedInCurrentBatch.clear();
+        nextQueueIndex = 0;
 
         fillActiveBatch();
         showNextQuestion();
@@ -365,15 +367,19 @@ function openLearnMode() {
             failedInCurrentBatch.clear();
 
             while (activeBatch.length < batchSize) {
-                const nextCard = activeQueue.find(c => {
+                let found = false;
+                for (let i = 0; i < activeQueue.length; i++) {
+                    const idx = (nextQueueIndex + i) % activeQueue.length;
+                    const c = activeQueue[idx];
                     const key = getCardKey(c);
-                    return normalizeCardLevel(cardLevels.get(key)) < getMaxLevel() && !activeBatch.some(bc => getCardKey(bc) === key);
-                });
-                if (nextCard) {
-                    activeBatch.push(nextCard);
-                } else {
-                    break;
+                    if (normalizeCardLevel(cardLevels.get(key)) < getMaxLevel() && !activeBatch.some(bc => getCardKey(bc) === key)) {
+                        activeBatch.push(c);
+                        nextQueueIndex = (idx + 1) % activeQueue.length;
+                        found = true;
+                        break;
+                    }
                 }
+                if (!found) break;
             }
         }
     }

@@ -101,7 +101,7 @@ function openSpellingQuiz(options = {}) {
 
     // Helper to get unique key for a card
     function getCardKey(card) {
-        return card.id || `${card.term}_${card.definition}`;
+        return `idx_${window.currentSet.cards.indexOf(card)}`;
     }
 
     // Arranges repeated review cards so no identical cards are adjacent unless impossible
