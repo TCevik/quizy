@@ -50,6 +50,17 @@ class QuizySetModal extends HTMLElement {
                             </div>
                         </div>
 
+                        <!-- Zichtbaarheid -->
+                        <div class="form-row-2col">
+                            <div class="form-group">
+                                <label for="set-visibility">Zichtbaarheid</label>
+                                <select id="set-visibility">
+                                    <option value="private">Privé (alleen voor jou)</option>
+                                    <option value="public">Openbaar (iedereen met de link)</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Mode Toggle (Woorden/Talen) -->
                         <div class="form-group">
                             <label>Type set</label>
@@ -120,6 +131,7 @@ class QuizySetModal extends HTMLElement {
         this.col1Header = this.querySelector('#col1-header');
         this.col2Header = this.querySelector('#col2-header');
         this.submitBtn = this.querySelector('#btn-submit-set');
+        this.visibilitySelect = this.querySelector('#set-visibility');
     }
 
     setupEventListeners() {
@@ -238,6 +250,8 @@ class QuizySetModal extends HTMLElement {
         this.segmentBtns.forEach(b => b.classList.remove('active'));
         if (this.segmentBtns[0]) this.segmentBtns[0].classList.add('active');
 
+        if (this.visibilitySelect) this.visibilitySelect.value = 'private';
+
         this.renderLanguageSelection('woorden');
 
         this.termsContainer.innerHTML = '';
@@ -250,6 +264,7 @@ class QuizySetModal extends HTMLElement {
     fillFormData(data) {
         if (this.querySelector('#set-title')) this.querySelector('#set-title').value = data.title || '';
         if (this.querySelector('#set-desc')) this.querySelector('#set-desc').value = data.description || '';
+        if (this.visibilitySelect && data.visibility) this.visibilitySelect.value = data.visibility;
 
         if (data.folder) {
             const hasOption = Array.from(this.folderSelect.options).some(opt => opt.value === data.folder);
@@ -561,6 +576,7 @@ class QuizySetModal extends HTMLElement {
             mode,
             lang1,
             lang2: lang2 || null,
+            visibility: this.visibilitySelect ? this.visibilitySelect.value : 'private',
             rows
         };
 

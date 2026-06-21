@@ -32,7 +32,10 @@
                 Terug naar dashboard
             </a>
             <div class="set-actions">
-                <button id="btn-edit-set" class="btn-icon-action edit-btn" title="Bewerken">
+                <button id="btn-toggle-visibility" class="btn-icon-action visibility-btn" title="Zichtbaarheid wijzigen">
+                    <span class="material-symbols-rounded" id="visibility-icon">lock</span>
+                </button>
+                <button id="btn-edit-set" class="btn-icon-action edit-btn" title="Bewerken" style="margin-left: 8px;">
                     <span class="material-symbols-rounded">edit</span>
                 </button>
                 <button id="btn-delete-set" class="btn-icon-action delete-btn" title="Verwijderen" style="margin-left: 8px;">
@@ -49,6 +52,7 @@
                     <span id="set-type-badge" class="set-badge">...</span>
                     <span id="set-count-badge" class="set-badge">... kaarten</span>
                     <span id="set-folder-badge" class="set-badge" style="display:none;"></span>
+                    <span id="set-visibility-badge" class="set-badge">...</span>
                 </div>
             </div>
             <p id="set-description" class="set-description">Bezig met laden van setbeschrijving...</p>

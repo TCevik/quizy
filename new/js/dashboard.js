@@ -332,6 +332,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         mode: setToEdit.type,
                         lang1: fullSet.lang_col1,
                         lang2: fullSet.lang_col2,
+                        visibility: fullSet.visibility || 'private',
                         rows: fullSet.cards
                     };
                     setModalComp.open('edit', mappedData);
@@ -417,6 +418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 type: setData.mode,
                 lang_col1: setData.lang1,
                 lang_col2: setData.lang2,
+                visibility: setData.visibility || 'private',
                 cards: setData.rows,
                 updated_at: new Date().toISOString()
             };

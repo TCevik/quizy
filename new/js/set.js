@@ -105,6 +105,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         }) : 'Onbekend';
         document.getElementById('set-updated').textContent = lastUpdated;
 
+        // Visibility Badge and Icon Toggle setup
+        const visibility = currentSet.visibility || 'private';
+        const visibilityBadge = document.getElementById('set-visibility-badge');
+        const visibilityIcon = document.getElementById('visibility-icon');
+        const btnToggleVisibility = document.getElementById('btn-toggle-visibility');
+        
+        if (visibility === 'public') {
+            if (visibilityBadge) {
+                visibilityBadge.textContent = 'Openbaar';
+                visibilityBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+                visibilityBadge.style.color = '#10b981';
+            }
+            if (visibilityIcon) visibilityIcon.textContent = 'public';
+            if (btnToggleVisibility) btnToggleVisibility.title = 'Maak privé';
+        } else {
+            if (visibilityBadge) {
+                visibilityBadge.textContent = 'Privé';
+                visibilityBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+                visibilityBadge.style.color = '#ef4444';
+            }
+            if (visibilityIcon) visibilityIcon.textContent = 'lock';
+            if (btnToggleVisibility) btnToggleVisibility.title = 'Maak openbaar';
+        }
+
         renderTermsList(currentSet.cards || []);
     }
 
@@ -217,6 +241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             lang_col1: currentSet.lang_col1,
             lang_col2: currentSet.lang_col2,
             cards: currentSet.cards,
+            visibility: currentSet.visibility || 'private',
             settings: currentSet.settings || null,
             updated_at: new Date().toISOString()
         };
@@ -247,6 +272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 mode: currentSet.type,
                 lang1: currentSet.lang_col1,
                 lang2: currentSet.lang_col2,
+                visibility: currentSet.visibility || 'private',
                 rows: currentSet.cards
             };
             setModalComp.open('edit', mappedData);
@@ -263,6 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 type: setData.mode,
                 lang_col1: setData.lang1,
                 lang_col2: setData.lang2,
+                visibility: setData.visibility || 'private',
                 cards: setData.rows,
                 settings: (currentSet && currentSet.settings) || null,
                 updated_at: new Date().toISOString()
@@ -297,6 +324,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnDeleteSet && deleteModal) {
         btnDeleteSet.addEventListener('click', () => {
             deleteModal.open(setId);
+        });
+    }
+
+    const btnToggleVisibility = document.getElementById('btn-toggle-visibility');
+    if (btnToggleVisibility) {
+        btnToggleVisibility.addEventListener('click', async () => {
+            if (!currentSet) return;
+            const newVisibility = currentSet.visibility === 'public' ? 'private' : 'public';
+            currentSet.visibility = newVisibility;
+            
+            if (window.Toast) window.Toast.show('Zichtbaarheid bijwerken...', 'info');
+            try {
+                await window.saveAndSyncCurrentSet();
+                renderSetDetails();
+                if (window.Toast) window.Toast.show(`Set is nu ${newVisibility === 'public' ? 'openbaar' : 'privé'}!`, 'success');
+            } catch (err) {
+                // Revert
+                currentSet.visibility = newVisibility === 'public' ? 'private' : 'public';
+                if (window.Toast) window.Toast.show('Fout bij bijwerken: ' + err.message, 'error');
+            }
         });
     }
 
