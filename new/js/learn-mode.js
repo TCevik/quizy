@@ -284,6 +284,21 @@ function openLearnMode() {
         }
     });
 
+    const clickOutsideHandler = (e) => {
+        if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
+            settingsPanel.classList.remove('active');
+            document.getElementById('learn-toggle-fc').checked = settings.flashcards;
+            document.getElementById('learn-toggle-mc').checked = settings.multipleChoice;
+            document.getElementById('learn-toggle-sp').checked = settings.spelling;
+            document.getElementById('learn-star-only').checked = settings.starOnly;
+            document.getElementById('learn-randomize').checked = settings.randomize;
+            document.getElementById('learn-swap-sides').checked = settings.swapSides;
+            document.getElementById('learn-auto-speak').checked = settings.autoSpeak;
+        }
+    };
+    document.addEventListener('click', clickOutsideHandler);
+
+
     function getCardKey(card) {
         return `idx_${window.currentSet.cards.indexOf(card)}`;
     }
@@ -448,8 +463,12 @@ function openLearnMode() {
     function renderFlashcard(card) {
         const questionText = settings.swapSides ? card.definition : card.term;
         const answerText = settings.swapSides ? card.term : card.definition;
-        const questionLabel = settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term');
-        const answerLabel = settings.swapSides ? (window.currentSet.lang_col1 || 'Term') : (window.currentSet.lang_col2 || 'Definitie');
+        const questionLabel = window.currentSet.mode === 'talen' 
+            ? (settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term'))
+            : (settings.swapSides ? 'Definitie' : 'Term');
+        const answerLabel = window.currentSet.mode === 'talen'
+            ? (settings.swapSides ? (window.currentSet.lang_col1 || 'Term') : (window.currentSet.lang_col2 || 'Definitie'))
+            : (settings.swapSides ? 'Term' : 'Definitie');
 
         cardArea.innerHTML = `
             <div class="learn-flashcard-wrapper" id="learn-card-wrapper">
@@ -513,7 +532,9 @@ function openLearnMode() {
     function renderMultipleChoice(card) {
         const questionText = settings.swapSides ? card.definition : card.term;
         const correctText = settings.swapSides ? card.term : card.definition;
-        const questionLabel = settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term');
+        const questionLabel = window.currentSet.mode === 'talen'
+            ? (settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term'))
+            : (settings.swapSides ? 'Definitie' : 'Term');
 
         const otherCards = originalCards.filter(c => getCardKey(c) !== getCardKey(card));
         const potentialDistractors = [...new Set(otherCards.map(c => settings.swapSides ? c.term : c.definition))].filter(t => t !== correctText);
@@ -602,7 +623,9 @@ function openLearnMode() {
     function renderSpelling(card) {
         const questionText = settings.swapSides ? card.definition : card.term;
         const correctAnswer = settings.swapSides ? card.term : card.definition;
-        const questionLabel = settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term');
+        const questionLabel = window.currentSet.mode === 'talen'
+            ? (settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term'))
+            : (settings.swapSides ? 'Definitie' : 'Term');
 
         cardArea.innerHTML = `
             <div class="learn-mc-question-card">
@@ -754,6 +777,7 @@ function openLearnMode() {
     }
 
     function closeLearn() {
+        document.removeEventListener('click', clickOutsideHandler);
         overlay.classList.remove('active');
         overlay.style.display = 'none';
         if (mainWrapper) {

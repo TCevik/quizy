@@ -215,7 +215,7 @@ function openMultipleChoiceQuiz(options = {}) {
             </div>
 
             <!-- Confirmation Modal -->
-            <div id="mc-confirm-modal" class="fc-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(11, 15, 25, 0.85); z-index: 1000; align-items: center; justify-content: center;">
+            <div id="mc-confirm-modal" class="mc-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(11, 15, 25, 0.85); z-index: 1000; align-items: center; justify-content: center;">
                 <div class="glass-panel" style="max-width: 420px; width: 90%; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(22, 22, 30, 0.95); box-shadow: 0 20px 40px rgba(0,0,0,0.6); overflow: hidden; display: flex; flex-direction: column;">
                     <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
                         <h3 style="font-size: 1.2em; font-weight: 600; color: var(--text-light); margin: 0; text-align: left;">Sessie herstarten?</h3>
