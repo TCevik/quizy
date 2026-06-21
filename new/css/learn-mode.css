@@ -335,3 +335,102 @@
         grid-template-columns: 1fr;
     }
 }
+
+.learn-settings-panel {
+    display: flex;
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 320px;
+    background: rgba(22, 22, 30, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 18px;
+    box-sizing: border-box;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    flex-direction: column;
+    gap: 16px;
+    max-height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    opacity: 0;
+    transform: scale(0);
+    transform-origin: calc(100% - 60px) 0px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease, visibility 0.3s;
+}
+
+.learn-settings-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.learn-settings-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 3px;
+}
+
+.learn-settings-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+}
+
+.learn-settings-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+.learn-settings-panel.active {
+    visibility: visible;
+    pointer-events: auto;
+    opacity: 1;
+    transform: scale(1);
+}
+
+.learn-settings-title {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.learn-setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.learn-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.learn-setting-label {
+    cursor: pointer;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.learn-setting-description {
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+.learn-settings-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.learn-settings-actions button {
+    flex: 1;
+}

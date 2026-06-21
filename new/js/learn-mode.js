@@ -40,24 +40,127 @@ function openLearnMode() {
     window.scrollTo(0, 0);
 
     const originalCards = window.currentSet.cards;
-    const totalCards = originalCards.length;
-    const cardLevels = new Map();
-    originalCards.forEach(card => {
-        cardLevels.set(getCardKey(card), 0);
-    });
+    const hasStarred = originalCards.some(c => c.starred);
 
+    let settings = {
+        flashcards: true,
+        multipleChoice: true,
+        spelling: true,
+        starOnly: false,
+        randomize: false,
+        swapSides: false,
+        autoSpeak: false
+    };
+
+    let activeQueue = [...originalCards];
+    let cardLevels = new Map();
     let activeBatch = [];
     const batchSize = 5;
     let lastCardKey = null;
     const failedInCurrentBatch = new Set();
 
     overlay.innerHTML = `
-        <div class="learn-container">
+        <div class="learn-container" style="position: relative;">
             <div class="learn-header">
                 <span class="learn-title">${escapeHtml(window.currentSet.title || 'Leermodus')}</span>
-                <button class="btn-close-flashcards" id="learn-close">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
+                <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                    <button class="btn-close-flashcards" id="learn-settings-btn" title="Instellingen" style="transform: none;">
+                        <span class="material-symbols-rounded">settings</span>
+                    </button>
+                    <button class="btn-close-flashcards" id="learn-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+
+                    <div id="learn-settings-panel" class="learn-settings-panel">
+                        <h3 class="learn-settings-title">
+                            <span class="material-symbols-rounded">settings</span> Instellingen
+                        </h3>
+                        
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label" style="${!hasStarred ? 'opacity: 0.5;' : ''}">Alleen sterwoorden</label>
+                                <label class="fc-switch" style="${!hasStarred ? 'pointer-events: none; opacity: 0.5;' : ''}">
+                                    <input type="checkbox" id="learn-star-only" ${!hasStarred ? 'disabled' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Oefen alleen de woorden die je met een ster hebt gemarkeerd.</span>
+                        </div>
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Willekeurige volgorde</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-randomize">
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Schud de vragen in een willekeurige volgorde vanaf de volgende vraag.</span>
+                        </div>
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Vraag/Antwoord omdraaien</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-swap-sides">
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Draai de term en definitie om tijdens het leren.</span>
+                        </div>
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Automatisch uitspreken</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-auto-speak">
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Spreek de vraag automatisch uit wanneer deze in beeld komt.</span>
+                        </div>
+
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;">
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Flashcards</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-toggle-fc" checked>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Leer de woorden met behulp van flashcards.</span>
+                        </div>
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Meerkeuze</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-toggle-mc" checked>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Oefen de herkenning van woorden met meerkeuzevragen.</span>
+                        </div>
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Spelling</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-toggle-sp" checked>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Schrijf de vertaling of definitie volledig zelf.</span>
+                        </div>
+
+                        <div class="learn-settings-actions">
+                            <button class="btn-control" id="learn-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
+                            <button class="btn-control" id="learn-settings-cancel">Annuleren</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="progress-container">
@@ -81,27 +184,190 @@ function openLearnMode() {
     const progressText = document.getElementById('learn-progress-text');
     const progressFill = document.getElementById('learn-progress-fill');
     const closeBtn = document.getElementById('learn-close');
+    const settingsBtn = document.getElementById('learn-settings-btn');
+    const settingsPanel = document.getElementById('learn-settings-panel');
+    const settingsSave = document.getElementById('learn-settings-save');
+    const settingsCancel = document.getElementById('learn-settings-cancel');
 
     closeBtn.addEventListener('click', closeLearn);
 
-    fillActiveBatch();
-    showNextQuestion();
+    settingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsPanel.classList.toggle('active');
+    });
+
+    settingsCancel.addEventListener('click', () => {
+        settingsPanel.classList.remove('active');
+        document.getElementById('learn-toggle-fc').checked = settings.flashcards;
+        document.getElementById('learn-toggle-mc').checked = settings.multipleChoice;
+        document.getElementById('learn-toggle-sp').checked = settings.spelling;
+        document.getElementById('learn-star-only').checked = settings.starOnly;
+        document.getElementById('learn-randomize').checked = settings.randomize;
+        document.getElementById('learn-swap-sides').checked = settings.swapSides;
+        document.getElementById('learn-auto-speak').checked = settings.autoSpeak;
+    });
+
+    settingsSave.addEventListener('click', () => {
+        const fc = document.getElementById('learn-toggle-fc').checked;
+        const mc = document.getElementById('learn-toggle-mc').checked;
+        const sp = document.getElementById('learn-toggle-sp').checked;
+        const star = document.getElementById('learn-star-only').checked;
+
+        if (!fc && !mc && !sp) {
+            if (window.Toast) window.Toast.show('Minimaal één leermethode moet actief zijn.', 'error');
+            return;
+        }
+
+        const methodsChanged = (fc !== settings.flashcards) || 
+                               (mc !== settings.multipleChoice) || 
+                               (sp !== settings.spelling) || 
+                               (star !== settings.starOnly);
+
+        const applySettings = (restart) => {
+            settings.flashcards = fc;
+            settings.multipleChoice = mc;
+            settings.spelling = sp;
+            settings.starOnly = star;
+            settings.randomize = document.getElementById('learn-randomize').checked;
+            settings.swapSides = document.getElementById('learn-swap-sides').checked;
+            settings.autoSpeak = document.getElementById('learn-auto-speak').checked;
+
+            settingsPanel.classList.remove('active');
+            
+            if (restart) {
+                initializeSession();
+            } else {
+                showNextQuestion();
+            }
+        };
+
+        if (methodsChanged) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.style.zIndex = '9999';
+            
+            modal.innerHTML = `
+                <div class="modal-card glass-panel" style="max-width: 420px;">
+                    <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
+                        <h3 style="font-size: 1.3em; font-weight: 600; color: var(--text-light);">Sessie herstarten?</h3>
+                    </div>
+                    <div class="modal-body" style="padding: 24px; gap: 8px;">
+                        <p style="color: var(--text-muted); font-size: 1em; line-height: 1.5; margin: 0;">Als je de leermethodes of de 'Alleen ster'-modus aanpast, wordt je huidige sessie opnieuw gestart.</p>
+                        <p style="color: var(--text-light); font-size: 0.9em; font-weight: 500; margin: 0; margin-top: 10px;">Weet je zeker dat je wilt doorgaan?</p>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; margin-top: 0;">
+                        <button id="learn-restart-cancel" class="btn-text">Annuleren</button>
+                        <button id="learn-restart-confirm" class="btn-gradient" style="padding: 10px 20px;">Doorgaan</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.querySelector('#learn-restart-cancel').addEventListener('click', () => {
+                modal.remove();
+            });
+            
+            modal.querySelector('#learn-restart-confirm').addEventListener('click', () => {
+                modal.remove();
+                applySettings(true);
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        } else {
+            applySettings(false);
+        }
+    });
 
     function getCardKey(card) {
         return card.id || `${card.term}_${card.definition}`;
     }
 
+    function getStartingLevel() {
+        if (settings.flashcards) return 0;
+        if (settings.multipleChoice) return 1;
+        return 2;
+    }
+
+    function getMaxLevel() {
+        if (settings.spelling) return 3;
+        if (settings.multipleChoice) return 2;
+        return 1;
+    }
+
+    function normalizeCardLevel(lvl) {
+        let current = lvl;
+        const start = getStartingLevel();
+        const max = getMaxLevel();
+
+        if (current < start) {
+            current = start;
+        }
+        if (current === 0 && !settings.flashcards) {
+            current = 1;
+        }
+        if (current === 1 && !settings.multipleChoice) {
+            current = 2;
+        }
+        if (current === 2 && !settings.spelling) {
+            current = 3;
+        }
+        if (current > max) {
+            current = max;
+        }
+        return current;
+    }
+
+    function advanceCardLevel(card, newRawLevel) {
+        const key = getCardKey(card);
+        cardLevels.set(key, newRawLevel);
+        const normalized = normalizeCardLevel(newRawLevel);
+        if (normalized >= getMaxLevel()) {
+            const idx = activeBatch.findIndex(c => getCardKey(c) === key);
+            if (idx !== -1) {
+                activeBatch.splice(idx, 1);
+            }
+        }
+    }
+
+    function initializeSession() {
+        activeQueue = settings.starOnly ? originalCards.filter(c => c.starred) : [...originalCards];
+        
+        if (settings.randomize) {
+            for (let i = activeQueue.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [activeQueue[i], activeQueue[j]] = [activeQueue[j], activeQueue[i]];
+            }
+        }
+
+        cardLevels.clear();
+        activeQueue.forEach(card => {
+            cardLevels.set(getCardKey(card), getStartingLevel());
+        });
+
+        activeBatch = [];
+        lastCardKey = null;
+        failedInCurrentBatch.clear();
+
+        fillActiveBatch();
+        showNextQuestion();
+    }
+
     function fillActiveBatch() {
         if (activeBatch.length === 0) {
             failedInCurrentBatch.forEach(key => {
-                cardLevels.set(key, 0);
+                cardLevels.set(key, getStartingLevel());
             });
             failedInCurrentBatch.clear();
 
             while (activeBatch.length < batchSize) {
-                const nextCard = originalCards.find(c => {
+                const nextCard = activeQueue.find(c => {
                     const key = getCardKey(c);
-                    return cardLevels.get(key) < 3 && !activeBatch.some(bc => getCardKey(bc) === key);
+                    return normalizeCardLevel(cardLevels.get(key)) < getMaxLevel() && !activeBatch.some(bc => getCardKey(bc) === key);
                 });
                 if (nextCard) {
                     activeBatch.push(nextCard);
@@ -113,18 +379,27 @@ function openLearnMode() {
     }
 
     function updateProgress() {
+        if (activeQueue.length === 0) {
+            progressText.textContent = 'Voortgang: 0%';
+            progressFill.style.width = '0%';
+            return;
+        }
+
         let totalLevels = 0;
-        cardLevels.forEach(lvl => {
-            totalLevels += lvl;
+        cardLevels.forEach((lvl, key) => {
+            const normalized = normalizeCardLevel(lvl);
+            totalLevels += (normalized - getStartingLevel());
         });
-        const maxLevels = totalCards * 3;
-        const percentage = Math.round((totalLevels / maxLevels) * 100);
+
+        const maxDiff = getMaxLevel() - getStartingLevel();
+        const maxLevels = activeQueue.length * maxDiff;
+        const percentage = maxLevels > 0 ? Math.round((totalLevels / maxLevels) * 100) : 100;
         progressText.textContent = `Voortgang: ${percentage}%`;
         progressFill.style.width = `${percentage}%`;
 
         batchDotsContainer.innerHTML = '';
         activeBatch.forEach(card => {
-            const lvl = cardLevels.get(getCardKey(card));
+            const lvl = normalizeCardLevel(cardLevels.get(getCardKey(card)));
             const dot = document.createElement('div');
             dot.className = `learn-batch-dot level-${lvl}`;
             batchDotsContainer.appendChild(dot);
@@ -153,7 +428,7 @@ function openLearnMode() {
         }
 
         const key = getCardKey(selectedCard);
-        const level = cardLevels.get(key);
+        const level = normalizeCardLevel(cardLevels.get(key));
 
         if (level === 0) {
             renderFlashcard(selectedCard);
@@ -165,6 +440,11 @@ function openLearnMode() {
     }
 
     function renderFlashcard(card) {
+        const questionText = settings.swapSides ? card.definition : card.term;
+        const answerText = settings.swapSides ? card.term : card.definition;
+        const questionLabel = settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term');
+        const answerLabel = settings.swapSides ? (window.currentSet.lang_col1 || 'Term') : (window.currentSet.lang_col2 || 'Definitie');
+
         cardArea.innerHTML = `
             <div class="learn-flashcard-wrapper" id="learn-card-wrapper">
                 <button class="learn-speak-btn" id="learn-speak">
@@ -172,13 +452,13 @@ function openLearnMode() {
                 </button>
                 <div class="learn-flashcard-inner">
                     <div class="learn-flashcard-face learn-flashcard-front">
-                        <div class="learn-card-label">${escapeHtml(window.currentSet.lang_col1 || 'Term')}</div>
-                        <div class="learn-card-text">${escapeHtml(card.term)}</div>
+                        <div class="learn-card-label">${escapeHtml(questionLabel)}</div>
+                        <div class="learn-card-text">${escapeHtml(questionText)}</div>
                         <div style="margin-top: 20px; font-size: 0.85em; color: var(--text-muted);">Klik om om te draaien</div>
                     </div>
                     <div class="learn-flashcard-face learn-flashcard-back">
-                        <div class="learn-card-label">${escapeHtml(window.currentSet.lang_col2 || 'Definitie')}</div>
-                        <div class="learn-card-text">${escapeHtml(card.definition)}</div>
+                        <div class="learn-card-label">${escapeHtml(answerLabel)}</div>
+                        <div class="learn-card-text">${escapeHtml(answerText)}</div>
                     </div>
                 </div>
             </div>
@@ -200,7 +480,7 @@ function openLearnMode() {
         const speakBtn = document.getElementById('learn-speak');
         speakBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const text = wrapper.classList.contains('flipped') ? card.definition : card.term;
+            const text = wrapper.classList.contains('flipped') ? answerText : questionText;
             const lang = wrapper.classList.contains('flipped') ? (window.currentSet.lang_col2 || window.currentSet.lang_col1) : window.currentSet.lang_col1;
             if (window.speakText) {
                 window.speakText(text, lang);
@@ -214,16 +494,23 @@ function openLearnMode() {
         });
 
         document.getElementById('learn-btn-yes').addEventListener('click', () => {
-            cardLevels.set(getCardKey(card), 1);
+            advanceCardLevel(card, 1);
             lastCardKey = getCardKey(card);
             showNextQuestion();
         });
+
+        if (settings.autoSpeak && window.speakText) {
+            window.speakText(questionText, window.currentSet.lang_col1);
+        }
     }
 
     function renderMultipleChoice(card) {
-        const correctText = card.definition;
+        const questionText = settings.swapSides ? card.definition : card.term;
+        const correctText = settings.swapSides ? card.term : card.definition;
+        const questionLabel = settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term');
+
         const otherCards = originalCards.filter(c => getCardKey(c) !== getCardKey(card));
-        const potentialDistractors = [...new Set(otherCards.map(c => c.definition))].filter(t => t !== correctText);
+        const potentialDistractors = [...new Set(otherCards.map(c => settings.swapSides ? c.term : c.definition))].filter(t => t !== correctText);
         
         for (let i = potentialDistractors.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -241,8 +528,8 @@ function openLearnMode() {
                 <button class="learn-speak-btn" id="learn-speak">
                     <span class="material-symbols-rounded">volume_up</span>
                 </button>
-                <div class="learn-card-label">${escapeHtml(window.currentSet.lang_col1 || 'Term')}</div>
-                <div class="learn-card-text">${escapeHtml(card.term)}</div>
+                <div class="learn-card-label">${escapeHtml(questionLabel)}</div>
+                <div class="learn-card-text">${escapeHtml(questionText)}</div>
             </div>
             <div class="learn-mc-options-grid" id="learn-mc-options"></div>
             <div class="learn-controls" style="display: none;" id="learn-mc-action">
@@ -256,7 +543,7 @@ function openLearnMode() {
         const speakBtn = document.getElementById('learn-speak');
         speakBtn.addEventListener('click', () => {
             if (window.speakText) {
-                window.speakText(card.term, window.currentSet.lang_col1);
+                window.speakText(questionText, window.currentSet.lang_col1);
             }
         });
 
@@ -284,7 +571,7 @@ function openLearnMode() {
                 });
 
                 if (optText === correctText) {
-                    cardLevels.set(getCardKey(card), 2);
+                    advanceCardLevel(card, 2);
                 } else {
                     btn.classList.add('incorrect');
                     cardLevels.set(getCardKey(card), 0);
@@ -300,16 +587,24 @@ function openLearnMode() {
             lastCardKey = getCardKey(card);
             showNextQuestion();
         });
+
+        if (settings.autoSpeak && window.speakText) {
+            window.speakText(questionText, window.currentSet.lang_col1);
+        }
     }
 
     function renderSpelling(card) {
+        const questionText = settings.swapSides ? card.definition : card.term;
+        const correctAnswer = settings.swapSides ? card.term : card.definition;
+        const questionLabel = settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term');
+
         cardArea.innerHTML = `
             <div class="learn-mc-question-card">
                 <button class="learn-speak-btn" id="learn-speak">
                     <span class="material-symbols-rounded">volume_up</span>
                 </button>
-                <div class="learn-card-label">${escapeHtml(window.currentSet.lang_col1 || 'Term')}</div>
-                <div class="learn-card-text">${escapeHtml(card.term)}</div>
+                <div class="learn-card-label">${escapeHtml(questionLabel)}</div>
+                <div class="learn-card-text">${escapeHtml(questionText)}</div>
             </div>
             <form id="learn-sp-form" class="learn-sp-form" autocomplete="off" onsubmit="return false;">
                 <div class="learn-sp-input-wrapper">
@@ -330,7 +625,7 @@ function openLearnMode() {
         const speakBtn = document.getElementById('learn-speak');
         speakBtn.addEventListener('click', () => {
             if (window.speakText) {
-                window.speakText(card.term, window.currentSet.lang_col1);
+                window.speakText(questionText, window.currentSet.lang_col1);
             }
         });
 
@@ -350,29 +645,25 @@ function openLearnMode() {
             }
 
             const inputVal = input.value.trim();
-            const correct = checkSpellingAnswer(inputVal, card.definition);
+            const correct = checkSpellingAnswer(inputVal, correctAnswer);
             answered = true;
             input.disabled = true;
             skipBtn.style.display = 'none';
             submitBtn.textContent = 'Volgende';
 
             if (correct) {
-                cardLevels.set(getCardKey(card), 3);
-                const idx = activeBatch.findIndex(c => getCardKey(c) === getCardKey(card));
-                if (idx !== -1) {
-                    activeBatch.splice(idx, 1);
-                }
+                advanceCardLevel(card, 3);
                 feedback.innerHTML = `
                     <div class="learn-sp-feedback-card correct">
                         <div class="learn-sp-feedback-status correct">
                             <span class="material-symbols-rounded">check_circle</span>
                             Helemaal goed!
                         </div>
-                        <div class="learn-sp-feedback-detail">${escapeHtml(card.definition)}</div>
+                        <div class="learn-sp-feedback-detail">${escapeHtml(correctAnswer)}</div>
                     </div>
                 `;
             } else {
-                cardLevels.set(getCardKey(card), 1);
+                cardLevels.set(getCardKey(card), normalizeCardLevel(1));
                 failedInCurrentBatch.add(getCardKey(card));
                 feedback.innerHTML = `
                     <div class="learn-sp-feedback-card incorrect">
@@ -381,7 +672,7 @@ function openLearnMode() {
                             Helaas, onjuist.
                         </div>
                         <div class="learn-sp-feedback-detail">Jouw antwoord: <span class="learn-sp-feedback-original">${escapeHtml(inputVal || '(leeg)')}</span></div>
-                        <div class="learn-sp-feedback-detail" style="font-weight: 600;">Correct antwoord: ${escapeHtml(card.definition)}</div>
+                        <div class="learn-sp-feedback-detail" style="font-weight: 600;">Correct antwoord: ${escapeHtml(correctAnswer)}</div>
                     </div>
                 `;
             }
@@ -393,6 +684,10 @@ function openLearnMode() {
             input.value = '';
             submitBtn.click();
         });
+
+        if (settings.autoSpeak && window.speakText) {
+            window.speakText(questionText, window.currentSet.lang_col1);
+        }
     }
 
     function checkSpellingAnswer(userInput, correctAnswer) {
@@ -446,13 +741,7 @@ function openLearnMode() {
         `;
 
         document.getElementById('learn-restart').addEventListener('click', () => {
-            originalCards.forEach(card => {
-                cardLevels.set(getCardKey(card), 0);
-            });
-            activeBatch = [];
-            lastCardKey = null;
-            fillActiveBatch();
-            showNextQuestion();
+            initializeSession();
         });
 
         document.getElementById('learn-finish-close').addEventListener('click', closeLearn);
@@ -480,4 +769,6 @@ function openLearnMode() {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
+
+    initializeSession();
 }
