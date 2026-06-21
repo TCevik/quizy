@@ -14,6 +14,7 @@
     <script src="js/toast.js" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/supabase-init.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8924607946192862"
      crossorigin="anonymous"></script>
@@ -104,6 +105,22 @@
             </div>
         </div>
     </main>
+
+    <!-- Modal voor herstellink met CAPTCHA -->
+    <div id="profileResetModal" class="modal" style="display: none;">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" id="closeProfileResetModal">&times;</span>
+            <h3>Herstellink versturen</h3>
+            <p>Bevestig dat je geen robot bent om de herstellink te versturen naar <strong id="resetEmailDisplay"></strong>.</p>
+            <form id="profileResetForm" autocomplete="off">
+                <div class="cf-turnstile" data-sitekey="0x4AAAAAADnaOROhBcRf-NwH" style="margin: 16px 0;"></div>
+                <button type="submit" class="btn-gradient submit-btn">
+                    <span>Link versturen</span>
+                    <span class="material-symbols-rounded">send</span>
+                </button>
+            </form>
+        </div>
+    </div>
 
     <quizy-footer></quizy-footer>
 

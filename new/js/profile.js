@@ -93,24 +93,63 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Password reset link functionality
     const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+    const profileResetModal = document.getElementById('profileResetModal');
+    const closeProfileResetModal = document.getElementById('closeProfileResetModal');
+    const profileResetForm = document.getElementById('profileResetForm');
+    const resetEmailDisplay = document.getElementById('resetEmailDisplay');
 
     function showMessage(text, isSuccess) {
         Toast.show(text, isSuccess ? 'success' : 'error');
     }
 
-    if (resetPasswordBtn) {
-        resetPasswordBtn.addEventListener('click', async (e) => {
+    function resetProfileTurnstile() {
+        if (window.turnstile && profileResetForm) {
+            profileResetForm.querySelectorAll('.cf-turnstile').forEach(div => {
+                try { window.turnstile.reset(div); } catch (e) {}
+            });
+        }
+    }
+
+    if (resetPasswordBtn && profileResetModal) {
+        resetPasswordBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            if (resetEmailDisplay) resetEmailDisplay.textContent = user.email;
+            profileResetModal.style.display = 'flex';
+        });
+    }
+
+    if (closeProfileResetModal && profileResetModal) {
+        closeProfileResetModal.addEventListener('click', () => {
+            profileResetModal.style.display = 'none';
+            resetProfileTurnstile();
+        });
+        window.addEventListener('click', (e) => {
+            if (e.target === profileResetModal) {
+                profileResetModal.style.display = 'none';
+                resetProfileTurnstile();
+            }
+        });
+    }
+
+    if (profileResetForm && supabase) {
+        profileResetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const captchaToken = profileResetForm.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
+
             showMessage('Bezig met verzenden van herstellink...', true);
 
             const { error: resetError } = await supabase.auth.resetPasswordForEmail(user.email, {
                 redirectTo: window.location.origin + '/reset-password.html',
+                captchaToken: captchaToken
             });
 
             if (resetError) {
                 showMessage(`Fout bij verzenden: ${resetError.message}`, false);
+                resetProfileTurnstile();
             } else {
-                showMessage('Er is direct een herstellink naar je e-mailadres gestuurd!', true);
+                showMessage('Er is een herstellink naar je e-mailadres gestuurd!', true);
+                profileResetModal.style.display = 'none';
+                resetProfileTurnstile();
             }
         });
     }
