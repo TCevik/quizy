@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- De hoofdpagina -->
+  <url>
+    <loc>https://quizy.tctam.nl/</loc>
+    <lastmod>2026-06-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <!-- Inlogpagina -->
+  <url>
+    <loc>https://quizy.tctam.nl/login.html</loc>
+    <lastmod>2026-06-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Dashboard (alleen voor ingelogde gebruikers, maar belangrijk om op te nemen) -->
+  <url>
+    <loc>https://quizy.tctam.nl/dashboard.html</loc>
+    <lastmod>2026-06-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <!-- Profielpagina -->
+  <url>
+    <loc>https://quizy.tctam.nl/profile.html</loc>
+    <lastmod>2026-06-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <!-- Pagina voor set details (deze is dynamisch, maar deze URL is de basis) -->
+  <url>
+    <loc>https://quizy.tctam.nl/set.html</loc>
+    <lastmod>2026-06-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>

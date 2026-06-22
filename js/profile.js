@@ -164,6 +164,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
 
+            if (!oldPassword) {
+                showMessage('Het oude wachtwoord is verplicht.', false);
+                return;
+            }
+
             if (!newPassword) {
                 showMessage('Nieuw wachtwoord is verplicht.', false);
                 return;
