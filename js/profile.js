@@ -202,9 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (updateError) {
                 const errMsg = updateError.message.toLowerCase();
-                if (errMsg.includes('current password required') || errMsg.includes('current_password')) {
-                    showMessage('Het oude wachtwoord is verplicht om je wachtwoord te wijzigen.', false);
-                } else if (errMsg.includes('invalid') || errMsg.includes('incorrect') || errMsg.includes('password')) {
+                if (errMsg.includes('invalid') || errMsg.includes('incorrect') || errMsg.includes('wrong') || errMsg.includes('current_password') || errMsg.includes('current password')) {
                     showMessage('Het oude wachtwoord is onjuist.', false);
                 } else if (errMsg.includes('at least 6 characters') || errMsg.includes('6 tekens')) {
                     showMessage('Het nieuwe wachtwoord moet minimaal 6 tekens lang zijn.', false);
