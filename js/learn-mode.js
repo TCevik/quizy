@@ -759,12 +759,22 @@ function openLearnMode() {
 
         let newAnswers = [];
         answers.forEach(ans => {
-            const parts = ans.split('/');
-            parts.forEach(p => {
-                newAnswers.push(p.trim());
+            const parts = ans.split('/').map(p => p.trim());
+            
+            const getSubsets = (array) => {
+                return array.reduce(
+                    (subsets, value) => subsets.concat(subsets.map(set => [...set, value])),
+                    [[]]
+                );
+            };
+            
+            const subsets = getSubsets(parts).filter(set => set.length > 0);
+            subsets.forEach(set => {
+                newAnswers.push(set.join('/'));
+                newAnswers.push(set.join(' / '));
             });
         });
-        answers = newAnswers;
+        answers = [...answers, ...newAnswers];
 
         let withParenAnswers = [];
         answers.forEach(ans => {
