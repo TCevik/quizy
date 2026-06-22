@@ -1,5 +1,5 @@
-const SUPABASE_URL = 'http://192.168.3.115:54321';
-const SUPABASE_ANON_KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+const SUPABASE_URL = 'https://aolruspeudebdwcszele.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_-YYXXYECMpEknYu1Om2f4w_eD1KA5nc';
 
 window.supabaseReady = new Promise((resolve) => {
     const script = document.createElement('script');
