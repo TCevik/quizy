@@ -189,30 +189,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             let updatePayload = { password: newPassword };
 
             if (oldPassword) {
-                // Verify the old password by attempting to sign in with it first
-                const { error: signInError } = await supabase.auth.signInWithPassword({
-                    email: user.email,
-                    password: oldPassword
-                });
-
-                if (signInError) {
-                    showMessage('Het oude wachtwoord is onjuist.', false);
-                    return;
-                }
-
                 updatePayload.current_password = oldPassword;
-                updatePayload.currentPassword = oldPassword;
             }
 
             // Update the password
             const { error: updateError } = await supabase.auth.updateUser(updatePayload);
 
             if (updateError) {
-                if (updateError.message.includes('Current password required')) {
+                const errMsg = updateError.message.toLowerCase();
+                if (errMsg.includes('current password required') || errMsg.includes('current_password')) {
                     showMessage('Het oude wachtwoord is verplicht om je wachtwoord te wijzigen.', false);
-                } else if (updateError.message.includes('invalid') || updateError.message.includes('Incorrect')) {
+                } else if (errMsg.includes('invalid') || errMsg.includes('incorrect') || errMsg.includes('password')) {
                     showMessage('Het oude wachtwoord is onjuist.', false);
-                } else if (updateError.message.toLowerCase().includes('at least 6 characters') || updateError.message.includes('6 tekens')) {
+                } else if (errMsg.includes('at least 6 characters') || errMsg.includes('6 tekens')) {
                     showMessage('Het nieuwe wachtwoord moet minimaal 6 tekens lang zijn.', false);
                 } else {
                     showMessage(`Fout bij het bijwerken: ${updateError.message}`, false);
