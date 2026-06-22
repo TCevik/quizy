@@ -433,6 +433,93 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Import van oude Quizy JSON export
+    const importOldBtn = document.getElementById('btn-import-old');
+    const importJsonInput = document.getElementById('import-json-input');
+
+    if (importOldBtn && importJsonInput) {
+        importOldBtn.addEventListener('click', () => importJsonInput.click());
+
+        importJsonInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            importOldBtn.disabled = true;
+            const origHTML = importOldBtn.innerHTML;
+            importOldBtn.innerHTML = '<span class="material-symbols-rounded" style="animation: spin 1s linear infinite;">sync</span> Importeren...';
+
+            try {
+                const text = await file.text();
+                const exportData = JSON.parse(text);
+
+                if (!exportData.sets || !Array.isArray(exportData.sets)) {
+                    if (window.Toast) window.Toast.show('Ongeldig bestandsformaat. Gebruik een Quizy exportbestand.', 'error');
+                    return;
+                }
+
+                const langCodeMap = {
+                    'nl-NL': 'Nederlands', 'en-US': 'Engels', 'fr-FR': 'Frans', 'de-DE': 'Duits', 'es-ES': 'Spaans'
+                };
+
+                let imported = 0;
+                let skipped = 0;
+
+                for (const set of exportData.sets) {
+                    const cards = (set.items || [])
+                        .filter(item => item.term && item.definition)
+                        .slice(0, 200)
+                        .map(item => ({ term: item.term, definition: item.definition }));
+
+                    if (cards.length < 4) { skipped++; continue; }
+
+                    const lang1 = langCodeMap[set.langLeft] || 'Nederlands';
+                    const lang2 = langCodeMap[set.langRight] || 'Engels';
+                    const mode = set.isLanguageLearning ? 'talen' : 'woorden';
+
+                    const dbPayload = {
+                        user_id: user.id,
+                        title: (set.title || 'Geïmporteerde set').substring(0, 100),
+                        description: (set.description || '').substring(0, 300) || null,
+                        folder: null,
+                        type: mode,
+                        lang_col1: lang1,
+                        lang_col2: mode === 'talen' ? lang2 : null,
+                        visibility: 'private',
+                        cards,
+                        card_count: cards.length,
+                        created_at: set.createdAt || new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+
+                    try {
+                        await syncSetToRemote(supabase, dbPayload);
+                        imported++;
+                    } catch (err) {
+                        console.error('Fout bij importeren set:', set.title, err);
+                        skipped++;
+                    }
+                }
+
+                if (window.Toast) {
+                    if (imported > 0) {
+                        window.Toast.show(`${imported} set(s) succesvol geïmporteerd!${skipped > 0 ? ` (${skipped} overgeslagen)` : ''}`, 'success');
+                    } else {
+                        window.Toast.show('Geen sets konden worden geïmporteerd.', 'error');
+                    }
+                }
+
+                if (imported > 0) loadSets();
+            } catch (err) {
+                console.error('Fout bij lezen exportbestand:', err);
+                if (window.Toast) window.Toast.show('Kan het bestand niet lezen. Zorg dat het een geldig JSON bestand is.', 'error');
+            } finally {
+                importOldBtn.disabled = false;
+                importOldBtn.innerHTML = origHTML;
+                importJsonInput.value = '';
+            }
+        });
+    }
+
     if (setModalComp) {
         setModalComp.addEventListener('save', async (e) => {
             const { mode: saveMode, data: setData } = e.detail;
@@ -471,3 +558,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initial load
     loadSets();
 });
+

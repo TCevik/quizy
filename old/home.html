@@ -63,8 +63,9 @@
                 <!-- Quiz sets sectie -->
                 <div class="section-title-bar">
                     <h3>Jouw Quiz-sets</h3>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button id="importCodeBtn" class="btn btn-secondary btn-sm"><i class="fa-solid fa-file-import"></i> Deelcode invoeren</button>
+                        <button id="exportAllSetsBtn" class="btn btn-secondary btn-sm" title="Exporteer alle sets als JSON voor de nieuwe Quizy versie"><i class="fa-solid fa-file-export"></i> Exporteren naar nieuw</button>
                         <button id="createNewSetBtn" class="btn btn-sm"><i class="fa-solid fa-plus"></i> Nieuwe set maken</button>
                     </div>
                 </div>
@@ -693,6 +694,73 @@
         // Mobile specific listeners
         const mobileFab = document.getElementById('mobileFab');
         if (mobileFab) mobileFab.addEventListener('click', openSetModalForNew);
+
+        // Export alle sets naar JSON voor de nieuwe Quizy versie
+        document.getElementById('exportAllSetsBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('exportAllSetsBtn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Exporteren...';
+
+            try {
+                const fId = await getOrCreateFolderId();
+                const response = await driveRequest(`${DRIVE_BASE}/files?spaces=appDataFolder&q=name contains '${SET_PREFIX}' and '${fId}' in parents and trashed=false&fields=files(id,name,createdTime)`);
+                const data = await response.json();
+
+                if (!data.files || data.files.length === 0) {
+                    alert('Je hebt nog geen sets om te exporteren.');
+                    return;
+                }
+
+                const exportSets = [];
+                await Promise.all(data.files.map(async (file) => {
+                    try {
+                        const content = await driveGetJSON(file.id);
+                        let setName = file.name;
+                        if (setName.startsWith(SET_PREFIX)) setName = setName.substring(SET_PREFIX.length);
+                        if (setName.endsWith('.json')) setName = setName.substring(0, setName.length - 5);
+
+                        exportSets.push({
+                            title: content.title || setName,
+                            description: content.description || '',
+                            isLanguageLearning: !!content.isLanguageLearning,
+                            langLeft: content.langLeft || 'nl-NL',
+                            langRight: content.langRight || 'en-US',
+                            createdAt: file.createdTime,
+                            items: (content.items || []).map(item => ({
+                                term: item.term || '',
+                                definition: item.definition || '',
+                                starred: !!item.starred
+                            }))
+                        });
+                    } catch (err) {
+                        console.error('Fout bij ophalen set:', err);
+                    }
+                }));
+
+                const exportData = {
+                    exportedAt: new Date().toISOString(),
+                    source: 'quizy-old',
+                    sets: exportSets
+                };
+
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `quizy-export-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                alert(`${exportSets.length} set(s) succesvol geëxporteerd! Importeer het bestand op de nieuwe Quizy via het dashboard.`);
+            } catch (err) {
+                console.error('Fout bij exporteren:', err);
+                alert('Er ging iets mis bij het exporteren.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        });
 
         // Start de controle bij het laden van de pagina
         populateLanguageSelects();
