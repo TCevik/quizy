@@ -274,8 +274,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup Edit and Delete Interaction
     const btnEditSet = document.getElementById('btn-edit-set');
     const btnDeleteSet = document.getElementById('btn-delete-set');
+    const btnShareSet = document.getElementById('btn-share-set');
     const setModalComp = document.getElementById('set-modal-comp');
     const deleteModal = document.getElementById('delete-confirm-modal');
+
+    if (btnShareSet) {
+        btnShareSet.addEventListener('click', async () => {
+            const url = window.location.href;
+            try {
+                await navigator.clipboard.writeText(url);
+                if (window.Toast) window.Toast.show('Link gekopieerd naar klembord!', 'success');
+            } catch (err) {
+                if (window.Toast) window.Toast.show('Fout bij kopiëren van link.', 'error');
+            }
+        });
+    }
 
     if (btnEditSet && setModalComp) {
         btnEditSet.addEventListener('click', () => {
