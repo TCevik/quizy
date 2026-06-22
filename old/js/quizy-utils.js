@@ -60,8 +60,7 @@ function initThemeToggle() {
 function logout() {
     localStorage.removeItem('google_access_token');
     localStorage.removeItem('google_token_expiry');
-    const basePath = window.location.pathname.startsWith('/quizy') ? '/quizy' : '';
-    window.location.href = basePath + '/index.html';
+    window.location.href = 'index.html';
 }
 
 // ── XSS-beveiliging ────────────────────────────────────────────────────────
@@ -850,8 +849,8 @@ function injectCommonLayout() {
     footerEl.innerHTML = `
         <div class="footer-content">
             <div class="footer-links">
-                <a href="/privacy">Privacybeleid</a>
-                <a href="/terms">Voorwaarden</a>
+                <a href="privacy">Privacybeleid</a>
+                <a href="terms">Voorwaarden</a>
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSenU2OuAafpBvayn0mgszuJmPA7dDdeHLP5ou0xpljfj0yRcg/viewform?usp=publish-editor" target="_blank" style="color: #ef4444; font-weight: 600;"><i class="fa-solid fa-bug"></i> Glitch/Bug melden</a>
             </div>
             <p class="footer-copy">&copy; 2026 TC_tam Quizy. Alle rechten voorbehouden.</p>

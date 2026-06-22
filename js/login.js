@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             Toast.show('Versturen...', 'info');
 
             const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-                redirectTo: window.location.origin + '/reset-password.html',
+                redirectTo: window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/reset-password.html',
                 captchaToken: captchaToken
             });
 
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             type: 'signup',
             email: email,
             options: {
-                emailRedirectTo: window.location.origin + '/dashboard.html',
+                emailRedirectTo: window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/dashboard.html',
                 captchaToken: captchaToken
             }
         });
