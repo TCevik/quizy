@@ -38,6 +38,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderSetDetails();
         }
 
+        // Fetch creator name live with join from Supabase (not stored locally)
+        if (navigator.onLine) {
+            supabase
+                .from('Sets')
+                .select('user_id, profiles(full_name)')
+                .eq('id', setId)
+                .single()
+                .then(({ data, error }) => {
+                    if (!error && data) {
+                        const creatorNameEl = document.getElementById('creator-name');
+                        if (creatorNameEl) {
+                            creatorNameEl.textContent = data.profiles?.full_name || 'Onbekend';
+                        }
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
         set = await getSetWithCards(supabase, setId, user.id);
 
         if (!set) {
