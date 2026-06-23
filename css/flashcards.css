@@ -354,6 +354,7 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    gap: 16px;
 }
 
 .fc-setting-label {
@@ -392,6 +393,7 @@
     display: inline-block;
     width: 44px;
     height: 24px;
+    flex-shrink: 0;
 }
 
 .fc-switch input {

@@ -51,7 +51,10 @@ function openLearnMode() {
         starOnly: ('starOnly' in savedSettings) ? !!savedSettings.starOnly : false,
         randomize: ('randomize' in savedSettings) ? !!savedSettings.randomize : false,
         swapSides: ('swapSides' in savedSettings) ? !!savedSettings.swapSides : false,
-        autoSpeak: ('autoSpeak' in savedSettings) ? !!savedSettings.autoSpeak : false
+        autoSpeak: ('autoSpeak' in savedSettings) ? !!savedSettings.autoSpeak : false,
+        ignoreParentheses: ('ignoreParentheses' in savedSettings) ? !!savedSettings.ignoreParentheses : true,
+        skipPunctuation: ('skipPunctuation' in savedSettings) ? !!savedSettings.skipPunctuation : true,
+        allowSlashParts: ('allowSlashParts' in savedSettings) ? !!savedSettings.allowSlashParts : true
     };
 
     if (!hasStarred) {
@@ -165,6 +168,41 @@ function openLearnMode() {
                             <span class="fc-setting-description">Schrijf de vertaling of definitie volledig zelf.</span>
                         </div>
 
+                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;">
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Tussen haakjes goedkeuren (Spelling)</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-ignore-parentheses" ${settings.ignoreParentheses ? 'checked' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Dingen tussen haakjes zijn optioneel. Bijv. "de (mooie) auto" keurt ook "de auto" goed.</span>
+                        </div>
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Leestekens & accenten skippen (Spelling)</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-skip-punctuation" ${settings.skipPunctuation ? 'checked' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Negeer leestekens, en vervang speciale letters zoals é of ì door e en i.</span>
+                        </div>
+
+                        <div class="learn-setting-item">
+                            <div class="learn-setting-row">
+                                <label class="learn-setting-label">Eén kant van / goedkeuren (Spelling)</label>
+                                <label class="fc-switch">
+                                    <input type="checkbox" id="learn-allow-slash-parts" ${settings.allowSlashParts ? 'checked' : ''}>
+                                    <span class="fc-slider"></span>
+                                </label>
+                            </div>
+                            <span class="fc-setting-description">Als het antwoord "hoi/hallo" is, is "hoi" óf "hallo" goed.</span>
+                        </div>
+
                         <div class="learn-settings-actions">
                             <button class="btn-control" id="learn-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
                             <button class="btn-control" id="learn-settings-cancel">Annuleren</button>
@@ -241,6 +279,9 @@ function openLearnMode() {
             settings.randomize = document.getElementById('learn-randomize').checked;
             settings.swapSides = document.getElementById('learn-swap-sides').checked;
             settings.autoSpeak = document.getElementById('learn-auto-speak').checked;
+            settings.ignoreParentheses = document.getElementById('learn-ignore-parentheses').checked;
+            settings.skipPunctuation = document.getElementById('learn-skip-punctuation').checked;
+            settings.allowSlashParts = document.getElementById('learn-allow-slash-parts').checked;
 
             if (window.currentSet) {
                 window.currentSet.settings = {
@@ -251,7 +292,10 @@ function openLearnMode() {
                     starOnly: settings.starOnly,
                     randomize: settings.randomize,
                     swapSides: settings.swapSides,
-                    autoSpeak: settings.autoSpeak
+                    autoSpeak: settings.autoSpeak,
+                    ignoreParentheses: settings.ignoreParentheses,
+                    skipPunctuation: settings.skipPunctuation,
+                    allowSlashParts: settings.allowSlashParts
                 };
                 if (isOwner && window.saveAndSyncCurrentSet) {
                     window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
@@ -319,6 +363,9 @@ function openLearnMode() {
             document.getElementById('learn-randomize').checked = settings.randomize;
             document.getElementById('learn-swap-sides').checked = settings.swapSides;
             document.getElementById('learn-auto-speak').checked = settings.autoSpeak;
+            document.getElementById('learn-ignore-parentheses').checked = settings.ignoreParentheses;
+            document.getElementById('learn-skip-punctuation').checked = settings.skipPunctuation;
+            document.getElementById('learn-allow-slash-parts').checked = settings.allowSlashParts;
         }
     };
     document.addEventListener('click', clickOutsideHandler);
@@ -745,50 +792,11 @@ function openLearnMode() {
     }
 
     function checkSpellingAnswer(userInput, correctAnswer) {
-        function normalizeString(str) {
-            if (!str) return '';
-            let s = str.toLowerCase();
-            s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            s = s.replace(/[^a-z0-9\s]/g, "");
-            s = s.replace(/\s+/g, ' ').trim();
-            return s;
-        }
-
-        const normalizedInput = normalizeString(userInput);
-        let answers = [correctAnswer];
-
-        let newAnswers = [];
-        answers.forEach(ans => {
-            const parts = ans.split('/').map(p => p.trim());
-            
-            const getSubsets = (array) => {
-                return array.reduce(
-                    (subsets, value) => subsets.concat(subsets.map(set => [...set, value])),
-                    [[]]
-                );
-            };
-            
-            const subsets = getSubsets(parts).filter(set => set.length > 0);
-            subsets.forEach(set => {
-                newAnswers.push(set.join('/'));
-                newAnswers.push(set.join(' / '));
-            });
+        return window.checkSpellingAnswer(userInput, correctAnswer, {
+            skipPunctuation: settings.skipPunctuation,
+            allowSlashParts: settings.allowSlashParts,
+            ignoreParentheses: settings.ignoreParentheses
         });
-        answers = [...answers, ...newAnswers];
-
-        let withParenAnswers = [];
-        answers.forEach(ans => {
-            const withParenText = ans.replace(/[()]/g, '');
-            withParenAnswers.push(withParenText);
-            const withoutParenText = ans.replace(/\([^)]*\)/g, '');
-            withParenAnswers.push(withoutParenText);
-        });
-        answers = [...answers, ...withParenAnswers];
-
-        const normalizedAcceptable = answers.map(ans => normalizeString(ans));
-        const uniqueAcceptable = [...new Set(normalizedAcceptable)].filter(Boolean);
-
-        return uniqueAcceptable.includes(normalizedInput);
     }
 
     function showCelebration() {

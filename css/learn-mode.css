@@ -411,6 +411,7 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    gap: 16px;
 }
 
 .learn-setting-label {
