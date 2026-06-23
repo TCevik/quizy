@@ -20,12 +20,6 @@ body {
     align-items: start;
 }
 
-@media (max-width: 900px) {
-    .dashboard-layout {
-        grid-template-columns: 1fr;
-    }
-}
-
 .dashboard-sidebar {
     position: sticky;
     top: calc(var(--header-height) + 24px);

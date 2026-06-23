@@ -330,12 +330,6 @@
     transform: scale(1.1);
 }
 
-@media (max-width: 600px) {
-    .learn-mc-options-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 .learn-settings-panel {
     display: flex;
     visibility: hidden;
