@@ -297,6 +297,21 @@ body {
     width: fit-content;
 }
 
+.set-author-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(99, 179, 237, 0.12);
+    color: #63b3ed;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75em;
+    font-weight: 500;
+    margin-top: 6px;
+    border: 1px solid rgba(99, 179, 237, 0.15);
+    width: fit-content;
+}
+
 .folder-chips-title span.material-symbols-rounded {
     font-size: 18px;
 }

@@ -54,8 +54,8 @@ class QuizySetModal extends HTMLElement {
                                 <div class="form-group">
                                     <label for="set-visibility">Zichtbaarheid</label>
                                     <select id="set-visibility">
-                                        <option value="private">Privé (alleen voor jou)</option>
                                         <option value="public">Openbaar (iedereen met de link)</option>
+                                        <option value="private">Privé (alleen voor jou)</option>
                                     </select>
                                 </div>
 
@@ -261,7 +261,7 @@ class QuizySetModal extends HTMLElement {
         this.segmentBtns.forEach(b => b.classList.remove('active'));
         if (this.segmentBtns[0]) this.segmentBtns[0].classList.add('active');
 
-        if (this.visibilitySelect) this.visibilitySelect.value = 'private';
+        if (this.visibilitySelect) this.visibilitySelect.value = 'public';
 
         this.renderLanguageSelection('woorden');
 

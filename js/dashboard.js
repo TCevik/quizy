@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let allSets = [];
     let sharedSets = [];
+    let publicSearchResults = [];
     let currentFolderFilter = 'all';
     let searchQuery = '';
     let currentPage = 1;
@@ -65,11 +66,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     const folderFilterContainer = document.getElementById('folder-filter-container');
     const searchInput = document.getElementById('search-input');
 
+    let searchTimeout;
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             searchQuery = e.target.value.toLowerCase().trim();
             currentPage = 1;
-            renderSets();
+            
+            clearTimeout(searchTimeout);
+            if (searchQuery.length >= 2) {
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const { data: remotePublicSets, error } = await supabase
+                            .from('Sets')
+                            .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id')
+                            .eq('visibility', 'public')
+                            .ilike('title', `%${searchQuery}%`)
+                            .limit(50);
+                        
+                        if (!error && remotePublicSets) {
+                            publicSearchResults = remotePublicSets;
+                            renderSets();
+                        }
+                    } catch (err) {
+                        console.error('Fout bij zoeken naar openbare sets:', err);
+                    }
+                }, 300);
+            } else {
+                publicSearchResults = [];
+                renderSets();
+            }
         });
     }
 
@@ -186,18 +211,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!dashboardContent) return;
 
         let filteredSets;
-        if (currentFolderFilter === 'shared') {
-            filteredSets = sharedSets;
-        } else if (currentFolderFilter === 'none') {
-            filteredSets = allSets.filter(s => !s.folder || s.folder.trim() === '');
-        } else if (currentFolderFilter !== 'all') {
-            filteredSets = allSets.filter(s => s.folder && s.folder.trim() === currentFolderFilter);
-        } else {
-            filteredSets = allSets;
-        }
-
         if (searchQuery) {
-            filteredSets = filteredSets.filter(s => s.title && s.title.toLowerCase().includes(searchQuery));
+            const combined = [...allSets, ...sharedSets, ...publicSearchResults];
+            const uniqueSets = [];
+            const seenIds = new Set();
+            for (const set of combined) {
+                if (!seenIds.has(set.id)) {
+                    seenIds.add(set.id);
+                    uniqueSets.push(set);
+                }
+            }
+            filteredSets = uniqueSets.filter(s => s.title && s.title.toLowerCase().includes(searchQuery));
+        } else {
+            if (currentFolderFilter === 'shared') {
+                filteredSets = sharedSets;
+            } else if (currentFolderFilter === 'none') {
+                filteredSets = allSets.filter(s => !s.folder || s.folder.trim() === '');
+            } else if (currentFolderFilter !== 'all') {
+                filteredSets = allSets.filter(s => s.folder && s.folder.trim() === currentFolderFilter);
+            } else {
+                filteredSets = allSets;
+            }
         }
 
         if (filteredSets.length === 0) {
@@ -241,13 +275,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? `<span class="set-folder-tag"><span class="material-symbols-rounded" style="font-size:14px;">folder</span> ${escapeHtml(set.folder)}</span>` 
                 : '';
 
+            const isOwnSet = set.user_id === user.id;
+            const authorLabel = !isOwnSet 
+                ? `<span class="set-author-tag"><span class="material-symbols-rounded" style="font-size:14px;">person</span> Van andere gebruiker</span>` 
+                : '';
+
+            const isLocal = set.user_id === user.id || sharedSets.some(s => s.id === set.id);
+
             html += `
                 <div class="set-card glass-panel" data-id="${set.id}">
                     <div>
                         <div class="set-card-header">
                             <div style="display: flex; flex-direction: column; gap: 4px;">
                                 <h3 class="set-title">${escapeHtml(set.title) || 'Naamloze set'}</h3>
-                                ${folderLabel}
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                    ${folderLabel}
+                                    ${authorLabel}
+                                </div>
                             </div>
                             <span class="set-badge">${escapeHtml(set.type) || 'woorden'}</span>
                         </div>
@@ -263,9 +307,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <button class="btn-icon-action edit-btn" title="Bewerken" data-id="${set.id}">
                                 <span class="material-symbols-rounded">edit</span>
                             </button>` : ''}
+                            ${isLocal ? `
                             <button class="btn-icon-action delete-btn" title="Verwijderen" data-id="${set.id}">
                                 <span class="material-symbols-rounded">delete</span>
-                            </button>
+                            </button>` : ''}
                         </div>
                     </div>
                 </div>
