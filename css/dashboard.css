@@ -496,5 +496,30 @@ body {
     color: var(--primary);
 }
 
+.header-sets-usage {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.sets-usage-label {
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.sets-usage-value {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: var(--text-light);
+    background: linear-gradient(135deg, var(--text-light), var(--primary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 
 

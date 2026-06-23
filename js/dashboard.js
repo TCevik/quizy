@@ -32,6 +32,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         userEmailEl.textContent = user.email;
     }
 
+    let maxSets = 0;
+
+    async function fetchMaxSets() {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('max_sets')
+                .eq('id', user.id)
+                .single();
+            if (!error && data) {
+                maxSets = data.max_sets;
+            }
+        } catch (err) {
+            console.error('Fout bij ophalen max_sets:', err);
+        }
+    }
+
+    function updateSetsUsageDisplay() {
+        const usageValEl = document.getElementById('sets-usage-value');
+        if (usageValEl) {
+            usageValEl.textContent = `${allSets.length} / ${maxSets || '∞'}`;
+        }
+    }
+
     // Set modal component interaction
     const setModalComp = document.getElementById('set-modal-comp');
     const createSetBtn = document.getElementById('btn-create-set');
@@ -511,6 +535,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             allSets = ownLocalSets.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
             renderFolderFilter(allSets);
             renderSets();
+            updateSetsUsageDisplay();
         } else {
             dashboardContent.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">Sets laden...</div>';
         }
@@ -523,6 +548,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         sharedSets = allLocal.filter(s => s.user_id !== user.id).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
         if (allSets.length === 0 && sharedSets.length === 0) {
+            updateSetsUsageDisplay();
             if (folderFilterContainer) folderFilterContainer.innerHTML = '';
             dashboardContent.innerHTML = `
                 <div class="no-sets-box">
@@ -544,6 +570,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         renderFolderFilter(allSets);
         renderSets();
+        updateSetsUsageDisplay();
     }
 
     if (createSetBtn && setModalComp) {
@@ -588,6 +615,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Initial load
-    loadSets();
+    fetchMaxSets().then(() => {
+        loadSets();
+    });
 });
 
