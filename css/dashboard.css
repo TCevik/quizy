@@ -370,6 +370,14 @@ body {
     color: var(--primary);
 }
 
+.folder-chip:hover .rename-folder-btn,
+.folder-chip.active .rename-folder-btn {
+    display: inline-flex !important;
+}
+.rename-folder-btn:hover {
+    color: var(--primary) !important;
+}
+
 .folder-chip--shared {
     color: #63b3ed;
 }

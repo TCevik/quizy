@@ -1,4 +1,4 @@
-import { syncSets, syncSetToRemote, deleteLocalSet, getLocalSet, getLocalSets } from './storage.js';
+import { syncSets, syncSetToRemote, deleteLocalSet, getLocalSet, getLocalSets, saveLocalSet } from './storage.js';
 
 function escapeHtml(unsafe) {
     if (typeof unsafe !== 'string') return unsafe;
@@ -51,6 +51,52 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await deleteLocalSet(setIdToDelete);
                     if (window.Toast) window.Toast.show('Set succesvol verwijderd!', 'success');
                     loadSets();
+                }
+            }
+        });
+    }
+
+    // Rename Folder Modal Elements
+    const renameModal = document.getElementById('rename-folder-modal');
+
+    if (renameModal) {
+        renameModal.addEventListener('confirm', async (e) => {
+            const { oldName, newName } = e.detail;
+            if (oldName && newName && oldName.trim() !== '' && newName.trim() !== '') {
+                try {
+                    if (window.Toast) window.Toast.show('Mapnaam bijwerken...', 'info');
+
+                    // 1. Bulk update on remote database (Supabase)
+                    const { error: updateError } = await supabase
+                        .from('Sets')
+                        .update({ folder: newName, updated_at: new Date().toISOString() })
+                        .eq('user_id', user.id)
+                        .eq('folder', oldName);
+
+                    if (updateError) {
+                        if (window.Toast) window.Toast.show('Fout bij remote bijwerken: ' + updateError.message, 'error');
+                        return;
+                    }
+
+                    // 2. Update locally in IndexedDB
+                    const localSets = await getLocalSets();
+                    for (const s of localSets) {
+                        if (s.user_id === user.id && s.folder && s.folder.trim() === oldName) {
+                            s.folder = newName;
+                            s.updated_at = new Date().toISOString();
+                            await saveLocalSet(s);
+                        }
+                    }
+
+                    // 3. Update current folder filter if it was active
+                    if (currentFolderFilter === oldName) {
+                        currentFolderFilter = newName;
+                    }
+
+                    if (window.Toast) window.Toast.show('Mapnaam succesvol aangepast!', 'success');
+                    loadSets();
+                } catch (err) {
+                    if (window.Toast) window.Toast.show('Fout bij hernoemen map: ' + err.message, 'error');
                 }
             }
         });
@@ -170,11 +216,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             const count = sets.filter(s => s.folder && s.folder.trim() === folder).length;
             html += `
                 <button class="folder-chip ${currentFolderFilter === folder ? 'active' : ''}" data-folder="${escapeHtml(folder)}">
-                    <div>
-                        <span class="material-symbols-rounded">folder</span>
-                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">${escapeHtml(folder)}</span>
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                            <span class="material-symbols-rounded">folder</span>
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${escapeHtml(folder)}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span class="rename-folder-btn" title="Map hernoemen" data-folder="${escapeHtml(folder)}" style="display: none; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: color 0.2s;">
+                                <span class="material-symbols-rounded" style="font-size: 16px;">edit</span>
+                            </span>
+                            <span class="chip-count">${count}</span>
+                        </div>
                     </div>
-                    <span class="chip-count">${count}</span>
                 </button>
             `;
         });
@@ -196,12 +249,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Attach event listeners
         folderFilterContainer.querySelectorAll('.folder-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
+            chip.addEventListener('click', (e) => {
+                if (e.target.closest('.rename-folder-btn')) {
+                    return;
+                }
                 currentFolderFilter = chip.getAttribute('data-folder');
                 folderFilterContainer.querySelectorAll('.folder-chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
                 currentPage = 1;
                 renderSets();
+            });
+        });
+
+        folderFilterContainer.querySelectorAll('.rename-folder-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const folderName = btn.getAttribute('data-folder');
+                if (renameModal) {
+                    renameModal.open(folderName);
+                }
             });
         });
     }

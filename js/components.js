@@ -203,3 +203,65 @@ class QuizyWarningModal extends HTMLElement {
     }
 }
 customElements.define('quizy-warning-modal', QuizyWarningModal);
+
+class QuizyRenameModal extends HTMLElement {
+    connectedCallback() {
+        this.className = 'modal-overlay';
+        this.innerHTML = `
+            <div class="modal-card glass-panel" style="max-width: 420px;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
+                    <h3 style="font-size: 1.3em; font-weight: 600; color: var(--text-light);">Mapnaam aanpassen</h3>
+                </div>
+                <div class="modal-body" style="padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+                    <p style="color: var(--text-muted); font-size: 0.95em; line-height: 1.5; margin: 0;">Voer een nieuwe naam in voor deze map. Alle sets in deze map veranderen mee.</p>
+                    <input type="text" id="rename-folder-input" placeholder="Nieuwe mapnaam..." style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-light); outline: none; font-size: 0.95em;">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; margin-top: 0;">
+                    <button id="btn-rename-cancel" class="btn-text">Annuleren</button>
+                    <button id="btn-rename-confirm" class="btn-gradient" style="padding: 10px 20px;">Opslaan</button>
+                </div>
+            </div>
+        `;
+
+        const input = this.querySelector('#rename-folder-input');
+
+        this.addEventListener('click', (e) => {
+            if (e.target === this || e.target.id === 'btn-rename-cancel') {
+                this.close();
+            }
+        });
+
+        const handleConfirm = () => {
+            const newName = input.value.trim();
+            if (newName) {
+                this.dispatchEvent(new CustomEvent('confirm', { detail: { oldName: this._oldName, newName } }));
+                this.close();
+            } else {
+                if (window.Toast) window.Toast.show('Vul een geldige naam in', 'error');
+            }
+        };
+
+        this.querySelector('#btn-rename-confirm').addEventListener('click', handleConfirm);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleConfirm();
+            }
+        });
+    }
+
+    open(oldName) {
+        this._oldName = oldName;
+        const input = this.querySelector('#rename-folder-input');
+        if (input) {
+            input.value = oldName || '';
+            setTimeout(() => input.focus(), 50);
+        }
+        this.classList.add('active');
+    }
+
+    close() {
+        this._oldName = null;
+        this.classList.remove('active');
+    }
+}
+customElements.define('quizy-rename-modal', QuizyRenameModal);
