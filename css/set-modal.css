@@ -279,34 +279,33 @@
     grid-template-columns: 1fr 1fr 44px;
     gap: 16px;
     align-items: center;
-    animation: rowEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: rowEnter 0.2s ease-out forwards;
     transform-origin: top center;
-    /* Prevent phantom layout jump before animation starts */
-    max-height: 0;
-    margin-bottom: -12px;
     opacity: 0;
-    overflow: hidden;
 }
 
 .term-row.removing {
-    animation: rowExit 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: rowExit 0.2s ease-in forwards;
     pointer-events: none;
-    overflow: hidden;
 }
 
 .term-row input {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff !important;
     padding: 10px 14px;
     font-size: 0.95em;
     transition: all 0.2s ease;
 }
 
+.term-row input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
 .term-row input:focus {
-    border-color: var(--primary);
-    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--primary) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
     outline: none;
 }
 
@@ -378,34 +377,22 @@
 @keyframes rowEnter {
     0% {
         opacity: 0;
-        transform: scale(0.95) translateY(-10px);
-        max-height: 0;
-        margin-bottom: -12px;
-        overflow: hidden;
+        transform: translateY(-8px);
     }
     100% {
         opacity: 1;
-        transform: scale(1) translateY(0);
-        max-height: 100px;
-        margin-bottom: 0;
+        transform: translateY(0);
     }
 }
 
 @keyframes rowExit {
     0% {
         opacity: 1;
-        transform: scale(1) translateY(0);
-        max-height: 100px;
-        margin-bottom: 0;
+        transform: translateY(0);
     }
     100% {
         opacity: 0;
-        transform: scale(0.95) translateY(-10px);
-        max-height: 0;
-        margin-bottom: -12px;
-        padding-top: 0;
-        padding-bottom: 0;
-        border: none;
+        transform: translateY(-8px);
     }
 }
 
