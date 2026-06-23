@@ -159,6 +159,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isOwner = currentSet && currentSet.user_id === user.id;
         let html = '';
         cards.forEach((card, index) => {
+            const originalIndex = currentSet && currentSet.cards ? currentSet.cards.indexOf(card) : index;
+            const displayIndex = originalIndex !== -1 ? originalIndex + 1 : index + 1;
+
             const isStarred = !!card.starred;
             const starFill = isStarred ? "font-variation-settings: 'FILL' 1;" : "font-variation-settings: 'FILL' 0;";
             const starColor = isStarred ? "color: #ffca28;" : "color: var(--text-muted);";
@@ -171,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             html += `
                 <div class="term-card glass-panel">
-                    <div class="term-number">${index + 1}</div>
+                    <div class="term-number">${displayIndex}</div>
                     <div class="term-side" style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
                         <span>${escapeHtml(card.term)}</span>
                         <button class="btn-speak btn-speak-term" data-index="${index}" title="Uitspreken">
