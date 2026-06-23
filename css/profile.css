@@ -25,10 +25,12 @@ body {
 }
 
 .dashboard-header {
-    text-align: left;
+    background: linear-gradient(135deg, rgba(var(--bg-light-rgb), 0.05), rgba(var(--bg-light-rgb), 0.01));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 32px;
     margin-bottom: 36px;
-    border-bottom: 1px solid rgba(var(--bg-light-rgb), 0.1);
-    padding-bottom: 24px;
+    text-align: left;
 }
 
 .profile-header-card {
@@ -122,6 +124,11 @@ body {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    padding: 32px;
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
 }
 
 .profile-section-header {

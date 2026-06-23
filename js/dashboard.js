@@ -121,18 +121,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sharedSets.length > 0) {
             html += `
                 <button class="folder-chip folder-chip--shared ${currentFolderFilter === 'shared' ? 'active' : ''}" data-folder="shared">
-                    <span class="material-symbols-rounded">group</span>
-                    <span>Gedeeld met mij</span>
+                    <div>
+                        <span class="material-symbols-rounded">group</span>
+                        <span>Gedeeld met mij</span>
+                    </div>
                     <span class="chip-count">${sharedSets.length}</span>
                 </button>
-                <span class="folder-chip-divider"></span>
+                <div class="folder-chip-divider"></div>
             `;
         }
 
         html += `
                 <button class="folder-chip ${currentFolderFilter === 'all' ? 'active' : ''}" data-folder="all">
-                    <span class="material-symbols-rounded">folder_open</span>
-                    <span>Alle sets</span>
+                    <div>
+                        <span class="material-symbols-rounded">folder_open</span>
+                        <span>Alle sets</span>
+                    </div>
                     <span class="chip-count">${sets.length}</span>
                 </button>
         `;
@@ -141,8 +145,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const count = sets.filter(s => s.folder && s.folder.trim() === folder).length;
             html += `
                 <button class="folder-chip ${currentFolderFilter === folder ? 'active' : ''}" data-folder="${escapeHtml(folder)}">
-                    <span class="material-symbols-rounded">folder</span>
-                    <span>${escapeHtml(folder)}</span>
+                    <div>
+                        <span class="material-symbols-rounded">folder</span>
+                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">${escapeHtml(folder)}</span>
+                    </div>
                     <span class="chip-count">${count}</span>
                 </button>
             `;
@@ -151,8 +157,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (setsWithoutFolderCount > 0) {
             html += `
                 <button class="folder-chip ${currentFolderFilter === 'none' ? 'active' : ''}" data-folder="none">
-                    <span class="material-symbols-rounded">folder_off</span>
-                    <span>Geen map</span>
+                    <div>
+                        <span class="material-symbols-rounded">folder_off</span>
+                        <span>Geen map</span>
+                    </div>
                     <span class="chip-count">${setsWithoutFolderCount}</span>
                 </button>
             `;

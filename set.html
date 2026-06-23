@@ -25,31 +25,33 @@
     <quizy-header class="header"></quizy-header>
 
     <main class="set-wrapper">
-        <!-- Back navigation -->
-        <div class="back-nav" style="display: flex; justify-content: space-between; align-items: center;">
-            <a href="dashboard.html" class="btn-back">
-                <span class="material-symbols-rounded">arrow_back</span>
-                Terug naar dashboard
-            </a>
-            <div class="set-actions">
-                <button id="btn-share-set" class="btn-icon-action share-btn" title="Link kopiëren">
-                    <span class="material-symbols-rounded">share</span>
-                </button>
-                <button id="btn-toggle-visibility" class="btn-icon-action visibility-btn" title="Zichtbaarheid wijzigen" style="margin-left: 8px;">
-                    <span class="material-symbols-rounded" id="visibility-icon">lock</span>
-                </button>
-                <button id="btn-edit-set" class="btn-icon-action edit-btn" title="Bewerken" style="margin-left: 8px;">
-                    <span class="material-symbols-rounded">edit</span>
-                </button>
-                <button id="btn-delete-set" class="btn-icon-action delete-btn" title="Verwijderen" style="margin-left: 8px;">
-                    <span class="material-symbols-rounded">delete</span>
-                </button>
+        <div class="set-hero glass-panel">
+            <div class="hero-bg-wrapper">
+                <div class="hero-bg-glow"></div>
             </div>
-        </div>
+            
+            <div class="hero-top-bar">
+                <a href="dashboard.html" class="btn-back">
+                    <span class="material-symbols-rounded">arrow_back</span>
+                    Dashboard
+                </a>
+                <div class="set-actions">
+                    <button id="btn-share-set" class="btn-icon-action share-btn" title="Link kopiëren">
+                        <span class="material-symbols-rounded">share</span>
+                    </button>
+                    <button id="btn-toggle-visibility" class="btn-icon-action visibility-btn" title="Zichtbaarheid wijzigen">
+                        <span class="material-symbols-rounded" id="visibility-icon">lock</span>
+                    </button>
+                    <button id="btn-edit-set" class="btn-icon-action edit-btn" title="Bewerken">
+                        <span class="material-symbols-rounded">edit</span>
+                    </button>
+                    <button id="btn-delete-set" class="btn-icon-action delete-btn" title="Verwijderen">
+                        <span class="material-symbols-rounded">delete</span>
+                    </button>
+                </div>
+            </div>
 
-        <!-- Set Header Detail Info -->
-        <div class="set-detail-header glass-panel">
-            <div class="set-info-top">
+            <div class="set-main-info">
                 <h1 id="set-title">Laden...</h1>
                 <div class="set-badges">
                     <span id="set-type-badge" class="set-badge">...</span>
@@ -57,58 +59,58 @@
                     <span id="set-folder-badge" class="set-badge" style="display:none;"></span>
                     <span id="set-visibility-badge" class="set-badge">...</span>
                 </div>
+                <p id="set-description" class="set-description">Bezig met laden van setbeschrijving...</p>
+                <div class="set-meta">
+                    <div class="meta-item">
+                        <span class="material-symbols-rounded">calendar_today</span>
+                        <span id="set-created">Laden...</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="material-symbols-rounded">update</span>
+                        <span id="set-updated">Laden...</span>
+                    </div>
+                </div>
             </div>
-            <p id="set-description" class="set-description">Bezig met laden van setbeschrijving...</p>
-            
-            <div class="set-info-footer">
-                <div class="created-at">
-                    <span class="material-symbols-rounded">calendar_today</span>
-                    <span>Aangemaakt: <span id="set-created">Laden...</span></span>
-                </div>
-                <div class="last-updated">
-                    <span class="material-symbols-rounded">update</span>
-                    <span>Laatst gewijzigd: <span id="set-updated">Laden...</span></span>
-                </div>
-                <div class="learn-wrapper" style="position: relative; display: inline-block; margin-left: auto;">
-                    <button id="btn-learn" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-light); padding: 8px 20px; border-radius: 100px; font-weight: 600; font-size: 0.9em; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
-                        <span class="material-symbols-rounded" style="font-size: 18px;">school</span>
+
+            <div class="learn-hero-action">
+                <div class="learn-wrapper">
+                    <button id="btn-learn" class="btn-primary-glow">
+                        <span class="material-symbols-rounded">school</span>
                         Start met leren
                     </button>
-                    <div id="learn-bubble-menu" style="position: absolute; top: calc(100% + 8px); right: 0; transform: scale(0.8); transform-origin: top right; display: flex; flex-direction: column; gap: 8px; width: auto; max-height: 0px; overflow: hidden; opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; z-index: 10; padding: 0;">
-                        <a id="btn-flashcards" href="#" class="btn-icon-action" style="width: auto; height: auto; padding: 10px 20px; border-radius: 100px; font-size: 0.9em; font-weight: 600; text-decoration: none; color: var(--text-light); display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); white-space: nowrap; transition: all 0.2s ease;">
-                            <span class="material-symbols-rounded" style="font-size: 18px; color: var(--blue);">style</span>
-                            Flashcards
+                    <div id="learn-bubble-menu" class="learn-menu-glass">
+                        <a id="btn-flashcards" href="#" class="learn-option">
+                            <div class="learn-icon-box" style="color: var(--blue);"><span class="material-symbols-rounded">style</span></div>
+                            <div class="learn-text">Flashcards</div>
                         </a>
-                        <a id="btn-multiple-choice" href="#" class="btn-icon-action" style="width: auto; height: auto; padding: 10px 20px; border-radius: 100px; font-size: 0.9em; font-weight: 600; text-decoration: none; color: var(--text-light); display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); white-space: nowrap; transition: all 0.2s ease;">
-                            <span class="material-symbols-rounded" style="font-size: 18px; color: var(--orange);">quiz</span>
-                            Meerkeuze
+                        <a id="btn-multiple-choice" href="#" class="learn-option">
+                            <div class="learn-icon-box" style="color: var(--orange);"><span class="material-symbols-rounded">quiz</span></div>
+                            <div class="learn-text">Meerkeuze</div>
                         </a>
-                        <a id="btn-spelling" href="#" class="btn-icon-action" style="width: auto; height: auto; padding: 10px 20px; border-radius: 100px; font-size: 0.9em; font-weight: 600; text-decoration: none; color: var(--text-light); display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); white-space: nowrap; transition: all 0.2s ease;">
-                            <span class="material-symbols-rounded" style="font-size: 18px; color: #10b981;">edit_document</span>
-                            Spelling
+                        <a id="btn-spelling" href="#" class="learn-option">
+                            <div class="learn-icon-box" style="color: #10b981;"><span class="material-symbols-rounded">edit_document</span></div>
+                            <div class="learn-text">Spelling</div>
                         </a>
-                        <a id="btn-learn-mode" href="#" class="btn-icon-action" style="width: auto; height: auto; padding: 10px 20px; border-radius: 100px; font-size: 0.9em; font-weight: 600; text-decoration: none; color: var(--text-light); display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); white-space: nowrap; transition: all 0.2s ease;">
-                            <span class="material-symbols-rounded" style="font-size: 18px; color: #a78bfa;">school</span>
-                            Leermodus
+                        <a id="btn-learn-mode" href="#" class="learn-option">
+                            <div class="learn-icon-box" style="color: #a78bfa;"><span class="material-symbols-rounded">school</span></div>
+                            <div class="learn-text">Leermodus</div>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Terms Search & List -->
         <div class="terms-section">
             <div class="terms-header">
-                <h2>Kaarten in deze set (<span id="terms-count">0</span>)</h2>
+                <h2>Kaarten (<span id="terms-count">0</span>)</h2>
                 <div class="search-box glass-panel">
                     <span class="material-symbols-rounded search-icon">search</span>
                     <input type="text" id="search-input" placeholder="Zoek in deze set...">
                 </div>
             </div>
 
-            <div id="terms-list" class="terms-list">
-                <!-- Cards will be dynamically inserted here -->
-                <div style="text-align:center; padding: 40px; color: var(--text-muted);">Laden van kaarten...</div>
+            <div id="terms-list" class="terms-list-grid">
+                <div style="text-align:center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">Laden van kaarten...</div>
             </div>
         </div>
     </main>

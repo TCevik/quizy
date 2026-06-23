@@ -354,7 +354,8 @@
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
     flex-direction: column;
     gap: 16px;
-    max-height: 600px;
+    max-height: calc(100vh - 320px);
+    max-height: min(600px, calc(100dvh - 320px));
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;

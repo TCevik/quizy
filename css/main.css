@@ -18,7 +18,7 @@
     --border-light: #f1f5f9;
 
     /* Header Dimensions */
-    --header-height: 100px;
+    --header-height: 75px;
 
     /* Theme Colors */
     --blue: #60a5fa;
@@ -63,7 +63,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 24px;
+    padding: 12px 24px;
     height: var(--header-height);
 }
 

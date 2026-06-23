@@ -23,33 +23,41 @@
 <body>
     <quizy-header class="header"></quizy-header>
 
-    <main class="dashboard-wrapper">
-        <div class="dashboard-header">
-            <div>
-                <h2>Welkom bij Quizy</h2>
-                <p>Ingelogd als: <span id="user-email" class="user-email-text">Laden...</span></p>
+    <main class="dashboard-layout">
+        <!-- Sidebar for folders -->
+        <aside class="dashboard-sidebar">
+            <div id="folder-filter-container" class="folder-filter-container"></div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <section class="dashboard-main">
+            <!-- Welcome Header -->
+            <div class="dashboard-header glass-panel">
+                <div class="header-welcome-text">
+                    <h2>Welkom bij Quizy</h2>
+                    <p>Ingelogd als: <span id="user-email" class="user-email-text">Laden...</span></p>
+                </div>
             </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+
+            <input type="file" id="import-json-input" accept=".json" style="display: none;">
+            
+            <!-- Toolbar: Search + Create -->
+            <div class="dashboard-toolbar">
+                <div class="search-container">
+                    <span class="material-symbols-rounded search-icon">search</span>
+                    <input type="text" id="search-input" placeholder="Zoek sets op titel..." autocomplete="off">
+                </div>
                 <button id="btn-create-set" class="btn-gradient">
                     <span class="material-symbols-rounded">add</span>
                     Nieuwe set
                 </button>
             </div>
-        </div>
-        <input type="file" id="import-json-input" accept=".json" style="display: none;">
-        
-        <!-- Folder Filter Container -->
-        <div id="folder-filter-container" class="folder-filter-container"></div>
 
-        <!-- Search Bar -->
-        <div class="search-container">
-            <span class="material-symbols-rounded search-icon">search</span>
-            <input type="text" id="search-input" placeholder="Zoek sets op titel..." autocomplete="off">
-        </div>
-
-        <div class="dashboard-content">
-            
-        </div>
+            <!-- Sets Grid -->
+            <div class="dashboard-content">
+                
+            </div>
+        </section>
     </main>
 
     <!-- Create/Edit Set Modal Component -->

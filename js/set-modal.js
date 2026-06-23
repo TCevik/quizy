@@ -20,95 +20,104 @@ class QuizySetModal extends HTMLElement {
     render() {
         this.innerHTML = `
             <div id="create-set-modal" class="modal-overlay">
-                <div class="modal-card glass-panel">
+                <div class="modal-card glass-panel modal-card-wide">
                     <div class="modal-header">
                         <h3 id="modal-title-text">Nieuwe set maken</h3>
                         <button id="modal-close" class="modal-close-btn">
                             <span class="material-symbols-rounded">close</span>
                         </button>
                     </div>
-                    <form id="create-set-form" class="modal-body" autocomplete="off">
-                        <!-- Title & Description -->
-                        <div class="form-group">
-                            <label for="set-title">Titel</label>
-                            <input type="text" id="set-title" placeholder="Bijv. Franse onregelmatige werkwoorden" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label for="set-desc">Beschrijving <span class="label-optional">(optioneel)</span></label>
-                            <textarea id="set-desc" placeholder="Bijv. Hoofdstuk 3 - Woordenschat en grammatica" autocomplete="off"></textarea>
-                        </div>
+                    <form id="create-set-form" class="modal-form" autocomplete="off">
+                        <div class="modal-body split-layout">
+                            <!-- Sidebar: Settings -->
+                            <div class="split-sidebar">
+                                <h4 class="section-title">Instellingen</h4>
+                                
+                                <div class="form-group">
+                                    <label for="set-title">Titel</label>
+                                    <input type="text" id="set-title" placeholder="Bijv. Franse onregelmatige werkwoorden" autocomplete="off">
+                                </div>
+                                <div class="form-group">
+                                    <label for="set-desc">Beschrijving <span class="label-optional">(optioneel)</span></label>
+                                    <textarea id="set-desc" placeholder="Bijv. Hoofdstuk 3 - Woordenschat en grammatica" autocomplete="off"></textarea>
+                                </div>
 
-                        <!-- Folder Row -->
-                        <div class="form-row-2col">
-                            <div class="form-group">
-                                <label for="set-folder">Map</label>
-                                <select id="set-folder">
-                                    <option value="">Geen map</option>
-                                    <option value="__new__">+ Nieuwe map maken...</option>
-                                </select>
-                                <input type="text" id="new-folder-input" class="hidden-input" placeholder="Naam van nieuwe map" autocomplete="off">
-                            </div>
-                        </div>
+                                <div class="form-group">
+                                    <label for="set-folder">Map</label>
+                                    <select id="set-folder">
+                                        <option value="">Geen map</option>
+                                        <option value="__new__">+ Nieuwe map maken...</option>
+                                    </select>
+                                    <input type="text" id="new-folder-input" class="hidden-input" placeholder="Naam van nieuwe map" autocomplete="off">
+                                </div>
 
-                        <!-- Zichtbaarheid -->
-                        <div class="form-row-2col">
-                            <div class="form-group">
-                                <label for="set-visibility">Zichtbaarheid</label>
-                                <select id="set-visibility">
-                                    <option value="private">Privé (alleen voor jou)</option>
-                                    <option value="public">Openbaar (iedereen met de link)</option>
-                                </select>
-                            </div>
-                        </div>
+                                <div class="form-group">
+                                    <label for="set-visibility">Zichtbaarheid</label>
+                                    <select id="set-visibility">
+                                        <option value="private">Privé (alleen voor jou)</option>
+                                        <option value="public">Openbaar (iedereen met de link)</option>
+                                    </select>
+                                </div>
 
-                        <!-- Mode Toggle (Woorden/Talen) -->
-                        <div class="form-group">
-                            <label>Type set</label>
-                            <div class="segmented-control">
-                                <button type="button" class="segment-btn active" data-mode="woorden">Woorden (1 taal)</button>
-                                <button type="button" class="segment-btn" data-mode="talen">Talen (vertalingen)</button>
-                            </div>
-                        </div>
+                                <div class="form-group" style="margin-top: 8px;">
+                                    <label>Type set</label>
+                                    <div class="segmented-control">
+                                        <button type="button" class="segment-btn active" data-mode="woorden">Woorden (1 taal)</button>
+                                        <button type="button" class="segment-btn" data-mode="talen">Talen (vertalingen)</button>
+                                    </div>
+                                </div>
 
-                        <!-- Language Selection(s) -->
-                        <div id="language-selection-container" class="form-group">
-                            <!-- Dynamic languages selects go here -->
-                        </div>
+                                <div id="language-selection-container" class="form-group" style="margin-bottom: 24px;">
+                                    <!-- Dynamic languages selects go here -->
+                                </div>
+                            </div>
 
-                        <!-- Import Container -->
-                        <div id="import-container" class="form-group hidden-input" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 16px; margin-top: 10px;">
-                            <label for="import-text" style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Lijst importeren (formaat: term [tab] definitie per regel)</span>
-                                <button type="button" id="btn-close-import" class="modal-close-btn" style="padding: 2px;">
-                                    <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
-                                </button>
-                            </label>
-                            <textarea id="import-text" placeholder="Bijv.:&#10;apple&#9;appel&#10;peer&#9;peer" style="min-height: 120px; font-family: monospace; font-size: 0.9em;" autocomplete="off"></textarea>
-                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
-                                <button type="button" id="btn-do-import" class="btn-gradient" style="padding: 8px 16px; font-size: 0.9em;">Voeg toe aan lijst</button>
-                            </div>
-                        </div>
+                            <!-- Main: Cards -->
+                            <div class="split-main">
+                                <div class="main-header-row">
+                                    <h4 class="section-title main-title">Lijst met kaarten</h4>
+                                    <button type="button" id="btn-import-terms" class="btn-secondary btn-small">
+                                        <span class="material-symbols-rounded">download</span>
+                                        Importeren
+                                    </button>
+                                </div>
 
-                        <!-- Terms/Definitions Input Table -->
-                        <div class="terms-section">
-                            <div class="terms-header-row">
-                                <span id="col1-header" class="col-header">Term</span>
-                                <span id="col2-header" class="col-header">Definitie</span>
-                                <span class="col-header-action"></span>
+                                <!-- Import Container -->
+                                <div id="import-container" class="form-group hidden-input" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+                                    <label for="import-text" style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>Lijst importeren (formaat: term [tab] definitie per regel)</span>
+                                        <button type="button" id="btn-close-import" class="modal-close-btn" style="padding: 2px;">
+                                            <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
+                                        </button>
+                                    </label>
+                                    <textarea id="import-text" placeholder="Bijv.:&#10;apple&#9;appel&#10;peer&#9;peer" style="min-height: 120px; font-family: monospace; font-size: 0.9em;" autocomplete="off"></textarea>
+                                    <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                                        <button type="button" id="btn-do-import" class="btn-gradient" style="padding: 8px 16px; font-size: 0.9em;">Voeg toe aan lijst</button>
+                                    </div>
+                                </div>
+
+                                <!-- Terms/Definitions Input Table -->
+                                <div class="terms-section">
+                                    <div class="terms-header-row">
+                                        <span id="col1-header" class="col-header">Term</span>
+                                        <span id="col2-header" class="col-header">Definitie</span>
+                                        <span class="col-header-action"></span>
+                                    </div>
+                                    <div id="terms-rows-container" class="terms-rows-container">
+                                        <!-- Dynamic rows go here -->
+                                    </div>
+                                    <button type="button" id="btn-add-row" class="btn-secondary" style="margin-top: 16px; align-self: center;">
+                                        <span class="material-symbols-rounded">add</span>
+                                        Rij toevoegen
+                                    </button>
+                                </div>
                             </div>
-                            <div id="terms-rows-container" class="terms-rows-container">
-                                <!-- Dynamic rows go here -->
-                            </div>
-                            <button type="button" id="btn-add-row" class="btn-secondary">
-                                <span class="material-symbols-rounded">add</span>
-                                Rij toevoegen
-                            </button>
                         </div>
 
                         <!-- Footer Buttons -->
                         <div class="modal-footer">
                             <button type="button" id="modal-cancel" class="btn-text">Annuleren</button>
-                            <button type="submit" id="btn-submit-set" class="btn-gradient">Set aanmaken</button>
+                            <button type="submit" id="btn-submit-set" class="btn-gradient">Set opslaan</button>
                         </div>
                     </form>
                 </div>
@@ -126,6 +135,8 @@ class QuizySetModal extends HTMLElement {
         this.langContainer = this.querySelector('#language-selection-container');
         this.termsContainer = this.querySelector('#terms-rows-container');
         this.modalBody = this.querySelector('.modal-body');
+        this.splitMain = this.querySelector('.split-main');
+        this.splitSidebar = this.querySelector('.split-sidebar');
         this.addRowBtn = this.querySelector('#btn-add-row');
         this.form = this.querySelector('#create-set-form');
         this.col1Header = this.querySelector('#col1-header');
@@ -258,7 +269,8 @@ class QuizySetModal extends HTMLElement {
         for (let i = 0; i < 5; i++) {
             this.addTermRow('', '', false);
         }
-        if (this.modalBody) this.modalBody.scrollTop = 0;
+        if (this.splitMain) this.splitMain.scrollTop = 0;
+        if (this.splitSidebar) this.splitSidebar.scrollTop = 0;
     }
 
     fillFormData(data) {
@@ -303,7 +315,8 @@ class QuizySetModal extends HTMLElement {
             }
         }
         this.updatePlaceholdersAndHeaders();
-        if (this.modalBody) this.modalBody.scrollTop = 0;
+        if (this.splitMain) this.splitMain.scrollTop = 0;
+        if (this.splitSidebar) this.splitSidebar.scrollTop = 0;
     }
 
     addTermRow(term = '', definition = '', shouldScroll = true, showToastOnLimit = true) {
@@ -343,7 +356,7 @@ class QuizySetModal extends HTMLElement {
         this.updatePlaceholdersAndHeaders();
  
         // Keep the add button at the exact same screen position so spam-clicking doesn't move it
-        if (shouldScroll && this.modalBody && this.addRowBtn) {
+        if (shouldScroll && this.splitMain && this.addRowBtn) {
             if (this.scrollAnimFrame) {
                 cancelAnimationFrame(this.scrollAnimFrame);
             }
@@ -358,7 +371,7 @@ class QuizySetModal extends HTMLElement {
  
                 // If button moved down (deltaY > 0), scroll down by exactly that amount
                 if (Math.abs(deltaY) > 0) {
-                    this.modalBody.scrollTop += deltaY;
+                    this.splitMain.scrollTop += deltaY;
                 }
  
                 if (Date.now() - start < 350) {
@@ -388,23 +401,16 @@ class QuizySetModal extends HTMLElement {
     renderLanguageSelection(mode) {
         if (mode === 'woorden') {
             this.langContainer.innerHTML = `
-                <div class="terms-grid-alignment">
-                    <div class="form-group grid-span-2">
-                        <label for="set-language-1">Taal</label>
-                        <select id="set-language-1">
-                            ${this.languages.map(l => `<option value="${l.name}">${l.name}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="form-group" style="justify-content: flex-end;">
-                        <button type="button" id="btn-import-terms" class="btn-secondary" title="Woorden importeren" style="height: 42px; width: 44px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                            <span class="material-symbols-rounded">download</span>
-                        </button>
-                    </div>
+                <div class="form-group">
+                    <label for="set-language-1">Taal</label>
+                    <select id="set-language-1">
+                        ${this.languages.map(l => `<option value="${l.name}">${l.name}</option>`).join('')}
+                    </select>
                 </div>
             `;
         } else {
             this.langContainer.innerHTML = `
-                <div class="terms-grid-alignment">
+                <div class="form-row-2col" style="gap: 12px;">
                     <div class="form-group">
                         <label for="set-language-1">Taal kolom 1</label>
                         <select id="set-language-1">
@@ -416,11 +422,6 @@ class QuizySetModal extends HTMLElement {
                         <select id="set-language-2">
                             ${this.languages.map((l, idx) => `<option value="${l.name}" ${idx === 0 ? 'selected' : ''}>${l.name}</option>`).join('')}
                         </select>
-                    </div>
-                    <div class="form-group" style="justify-content: flex-end;">
-                        <button type="button" id="btn-import-terms" class="btn-secondary" title="Woorden importeren" style="height: 42px; width: 44px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                            <span class="material-symbols-rounded">download</span>
-                        </button>
                     </div>
                 </div>
             `;

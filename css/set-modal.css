@@ -408,3 +408,129 @@
         border: none;
     }
 }
+
+/* Overlay override to make it full page */
+#create-set-modal.modal-overlay {
+    padding-top: var(--header-height); 
+    background: var(--bg-dark);
+    align-items: stretch;
+    justify-content: center;
+    padding-bottom: 0;
+    z-index: 10000;
+}
+
+/* Wide Modal overrides - Full Page Mode */
+.modal-card.modal-card-wide {
+    max-width: 1200px;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    margin: 0 auto;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.modal-form .modal-footer {
+    padding-bottom: 24px;
+    flex-shrink: 0;
+}
+
+/* Split Layout */
+.modal-body.split-layout {
+    display: flex;
+    flex-direction: row;
+    padding: 0;
+    gap: 0;
+    flex: 1;
+    overflow: hidden; /* Prevent body scrolling, allow children to scroll */
+    max-height: none;
+}
+
+.split-sidebar {
+    width: 340px;
+    flex-shrink: 0;
+    background: transparent;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.split-main {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Section styling */
+.section-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-light);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    opacity: 0.8;
+    margin-bottom: -8px; 
+}
+
+.main-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+}
+
+.main-header-row .section-title {
+    margin: 0;
+    opacity: 1;
+    font-size: 1.2em;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.btn-small {
+    padding: 8px 12px;
+    font-size: 0.85em;
+    height: auto;
+}
+
+.btn-small .material-symbols-rounded {
+    font-size: 18px;
+}
+
+/* Scrollbars for split panels */
+.split-sidebar::-webkit-scrollbar,
+.split-main::-webkit-scrollbar {
+    width: 6px;
+}
+
+.split-sidebar::-webkit-scrollbar-track,
+.split-main::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.split-sidebar::-webkit-scrollbar-thumb,
+.split-main::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+.split-sidebar::-webkit-scrollbar-thumb:hover,
+.split-main::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
