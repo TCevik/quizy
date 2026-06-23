@@ -236,6 +236,7 @@ class QuizySetModal extends HTMLElement {
     open(mode = 'create', setData = null) {
         this.currentMode = mode;
         this.modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
         this.resetForm();
 
         if (mode === 'edit' && setData) {
@@ -252,6 +253,7 @@ class QuizySetModal extends HTMLElement {
 
     close() {
         this.modal.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
     resetForm() {

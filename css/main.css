@@ -47,6 +47,9 @@ body {
     color: var(--bg-dark);
     line-height: 1.5;
     margin-top: var(--header-height);
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--header-height));
 }
 
 .header {
@@ -142,6 +145,7 @@ quizy-footer {
     color: var(--text-muted);
     padding: 40px 24px;
     border-top: 1px solid rgba(var(--bg-light-rgb), 0.05);
+    margin-top: auto;
 }
 
 .footer-container {
