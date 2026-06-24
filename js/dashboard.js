@@ -565,9 +565,9 @@ const init = async () => {
             localStorage.setItem('quizy_last_sync_timestamp', now.toString());
         }
 
-        allSets = (sets || []).filter(s => s.user_id === user.id);
+        allSets = (sets || []).filter(s => s.user_id === user.id).sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
         // syncSets returns all local sets (incl. shared), no need to re-read IDB
-        sharedSets = (sets || []).filter(s => s.user_id !== user.id).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        sharedSets = (sets || []).filter(s => s.user_id !== user.id).sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
 
         if (allSets.length === 0 && sharedSets.length === 0) {
             updateSetsUsageDisplay();
