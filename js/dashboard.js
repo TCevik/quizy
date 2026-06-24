@@ -3,11 +3,11 @@ import { syncSets, syncSetToRemote, deleteLocalSet, getLocalSet, getLocalSets, s
 function escapeHtml(unsafe) {
     if (typeof unsafe !== 'string') return unsafe;
     return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchInput.addEventListener('input', (e) => {
             searchQuery = e.target.value.toLowerCase().trim();
             currentPage = 1;
-            
+
             clearTimeout(searchTimeout);
             if (searchQuery.length >= 2) {
                 searchTimeout = setTimeout(async () => {
@@ -151,8 +151,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id')
                             .eq('visibility', 'public')
                             .ilike('title', `%${searchQuery}%`)
+                            .order('updated_at', { ascending: false })
                             .limit(50);
-                        
                         if (!error && remotePublicSets) {
                             publicSearchResults = remotePublicSets;
                             renderSets();
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const folders = [];
         let setsWithoutFolderCount = 0;
-        
+
         sets.forEach(set => {
             if (set.folder && set.folder.trim() !== '') {
                 const trimmed = set.folder.trim();
@@ -354,20 +354,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 hour: '2-digit',
                 minute: '2-digit'
             }) : 'Onbekend';
-            
+
             let cardCountLabel = 'Onbekend aantal kaarten';
             if (set.card_count !== undefined && set.card_count !== null) {
                 cardCountLabel = `${set.card_count} kaarten`;
             } else if (set.cards && Array.isArray(set.cards)) {
                 cardCountLabel = `${set.cards.length} kaarten`;
             }
-            const folderLabel = set.folder && set.folder.trim() !== '' 
-                ? `<span class="set-folder-tag"><span class="material-symbols-rounded" style="font-size:14px;">folder</span> ${escapeHtml(set.folder)}</span>` 
+            const folderLabel = set.folder && set.folder.trim() !== ''
+                ? `<span class="set-folder-tag"><span class="material-symbols-rounded" style="font-size:14px;">folder</span> ${escapeHtml(set.folder)}</span>`
                 : '';
 
             const isOwnSet = set.user_id === user.id;
-            const authorLabel = !isOwnSet 
-                ? `<span class="set-author-tag"><span class="material-symbols-rounded" style="font-size:14px;">person</span> Van andere gebruiker</span>` 
+            const authorLabel = !isOwnSet
+                ? `<span class="set-author-tag"><span class="material-symbols-rounded" style="font-size:14px;">person</span> Van andere gebruiker</span>`
                 : '';
 
             const isLocal = set.user_id === user.id || sharedSets.some(s => s.id === set.id);
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const setToEdit = allSets.find(s => s.id === setId);
                 if (setToEdit && setModalComp) {
                     if (window.Toast) window.Toast.show('Set laden...', 'info');
-                    
+
                     let fullSet = await getLocalSet(setId);
                     if (!fullSet || !fullSet.cards) {
                         const { data: remoteSet, error: detailError } = await supabase
