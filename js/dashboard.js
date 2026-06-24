@@ -539,7 +539,7 @@ const init = async () => {
     }
 
     // Function to load and display sets
-    async function loadSets() {
+    async function loadSets({ force = false } = {}) {
         if (!dashboardContent) return;
 
         const localSets = await getLocalSets();
@@ -555,7 +555,15 @@ const init = async () => {
             dashboardContent.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">Sets laden...</div>';
         }
 
-        const sets = await syncSets(supabase, user.id);
+        const now = Date.now();
+        const lastSync = parseInt(localStorage.getItem('quizy_last_sync_timestamp') || '0', 10);
+        const shouldSync = force || (now - lastSync > 5 * 60 * 1000) || (ownLocalSets.length === 0 && sharedSets.length === 0);
+
+        let sets = localSets;
+        if (shouldSync) {
+            sets = await syncSets(supabase, user.id);
+            localStorage.setItem('quizy_last_sync_timestamp', now.toString());
+        }
 
         allSets = (sets || []).filter(s => s.user_id === user.id);
         // syncSets returns all local sets (incl. shared), no need to re-read IDB
@@ -595,6 +603,22 @@ const init = async () => {
         createSetBtn.addEventListener('click', () => {
             if (checkMaxSetsLimit()) {
                 setModalComp.open('create');
+            }
+        });
+    }
+
+    const syncSetsBtn = document.getElementById('btn-sync-sets');
+    if (syncSetsBtn) {
+        syncSetsBtn.addEventListener('click', async () => {
+            syncSetsBtn.classList.add('spinning');
+            try {
+                await loadSets({ force: true });
+                Toast.show('Synchronisatie voltooid!', 'success');
+            } catch (err) {
+                console.error(err);
+                Toast.show('Synchronisatie mislukt: ' + err.message, 'error');
+            } finally {
+                syncSetsBtn.classList.remove('spinning');
             }
         });
     }

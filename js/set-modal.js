@@ -312,7 +312,7 @@ class QuizySetModal extends HTMLElement {
 
         this.termsContainer.innerHTML = '';
         if (data.rows && data.rows.length > 0) {
-            data.rows.slice(0, 200).forEach(r => this.addTermRow(r.term, r.definition, false, false));
+            data.rows.slice(0, 200).forEach(r => this.addTermRow(r.term, r.definition, false, false, r.id, r.starred));
         } else {
             for (let i = 0; i < 5; i++) {
                 this.addTermRow('', '', false, false);
@@ -323,7 +323,7 @@ class QuizySetModal extends HTMLElement {
         if (this.splitSidebar) this.splitSidebar.scrollTop = 0;
     }
 
-    addTermRow(term = '', definition = '', shouldScroll = true, showToastOnLimit = true) {
+    addTermRow(term = '', definition = '', shouldScroll = true, showToastOnLimit = true, cardId = null, starred = false) {
         const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
         if (allRows.length >= 200) {
             if (showToastOnLimit) {
@@ -334,6 +334,12 @@ class QuizySetModal extends HTMLElement {
 
         const row = document.createElement('div');
         row.className = 'term-row';
+        if (cardId !== null && cardId !== undefined) {
+            row.dataset.id = cardId;
+        }
+        if (starred) {
+            row.dataset.starred = 'true';
+        }
         row.innerHTML = `
             <input type="text" class="term-input" value="${term}" autocomplete="off">
             <input type="text" class="def-input" value="${definition}" autocomplete="off">
@@ -539,7 +545,14 @@ class QuizySetModal extends HTMLElement {
                 maxDefOver = Math.max(maxDefOver, definition.length - 300);
             }
             if (term && definition) {
-                rows.push({ term, definition });
+                const card = { term, definition };
+                if (row.dataset.id) {
+                    card.id = isNaN(row.dataset.id) ? row.dataset.id : Number(row.dataset.id);
+                }
+                if (row.dataset.starred === 'true') {
+                    card.starred = true;
+                }
+                rows.push(card);
             } else if (term || definition) {
                 hasIncompleteRow = true;
             }

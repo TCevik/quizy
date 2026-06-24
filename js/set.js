@@ -249,13 +249,28 @@ const init = async () => {
                     const card = currentSet.cards[idx];
                     
                     card.starred = !card.starred;
+                    let settingsChanged = false;
+                    const hasStarred = currentSet.cards.some(c => c.starred);
+                    if (!hasStarred && currentSet.settings && currentSet.settings.starOnly) {
+                        currentSet.settings.starOnly = false;
+                        settingsChanged = true;
+                    }
                     
                     try {
-                        const hasStarred = currentSet.cards.some(c => c.starred);
-                        if (!hasStarred && currentSet.settings && currentSet.settings.starOnly) {
-                            currentSet.settings.starOnly = false;
+                        await saveLocalSet(currentSet);
+                        
+                        if (navigator.onLine) {
+                            if (settingsChanged) {
+                                await state.saveAndSyncCurrentSet({ immediate: true });
+                            } else if (card.id) {
+                                const { error: starError } = await supabase
+                                    .from('Cards')
+                                    .update({ starred: card.starred })
+                                    .eq('id', card.id);
+                                if (starError) throw starError;
+                            }
                         }
-                        await state.saveAndSyncCurrentSet();
+
                         const icon = btnStarCard.querySelector('.material-symbols-rounded');
                         if (card.starred) {
                             icon.style.fontVariationSettings = "'FILL' 1";
@@ -267,6 +282,10 @@ const init = async () => {
                     } catch (updateError) {
                         // Revert local change if error
                         card.starred = !card.starred;
+                        if (settingsChanged && currentSet.settings) {
+                            currentSet.settings.starOnly = true;
+                        }
+                        await saveLocalSet(currentSet);
                         Toast.show('Fout bij bijwerken van ster: ' + updateError.message, 'error');
                     }
                 }
@@ -302,8 +321,7 @@ const init = async () => {
                     settings: currentSet.settings || null,
                     updated_at: currentSet.updated_at
                 };
-                const { error } = await supabase.from('Sets').update(dbPayload).eq('id', currentSet.id);
-                if (error) throw error;
+                await syncSetToRemote(supabase, dbPayload, currentSet.id);
                 _remoteSyncTimer = null;
                 _originalUpdatedAt = null;
             } catch (e) {
