@@ -275,35 +275,53 @@ const init = async () => {
     }
 
     let _remoteSyncTimer = null;
+    let _originalUpdatedAt = null;
 
     state.saveAndSyncCurrentSet = async ({ immediate = false } = {}) => {
         if (!currentSet || currentSet.user_id !== user.id) return;
+
+        if (_remoteSyncTimer === null) {
+            _originalUpdatedAt = currentSet.updated_at;
+        }
 
         // Always save locally immediately
         currentSet.updated_at = new Date().toISOString();
         await saveLocalSet(currentSet);
 
         const doRemoteSync = async () => {
-            const dbPayload = {
-                title: currentSet.title,
-                description: currentSet.description,
-                folder: currentSet.folder,
-                type: currentSet.type,
-                lang_col1: currentSet.lang_col1,
-                lang_col2: currentSet.lang_col2,
-                cards: currentSet.cards,
-                visibility: currentSet.visibility || 'private',
-                settings: currentSet.settings || null,
-                updated_at: currentSet.updated_at
-            };
-            const { error } = await supabase.from('Sets').update(dbPayload).eq('id', currentSet.id);
-            if (error) throw error;
+            try {
+                const dbPayload = {
+                    title: currentSet.title,
+                    description: currentSet.description,
+                    folder: currentSet.folder,
+                    type: currentSet.type,
+                    lang_col1: currentSet.lang_col1,
+                    lang_col2: currentSet.lang_col2,
+                    cards: currentSet.cards,
+                    visibility: currentSet.visibility || 'private',
+                    settings: currentSet.settings || null,
+                    updated_at: currentSet.updated_at
+                };
+                const { error } = await supabase.from('Sets').update(dbPayload).eq('id', currentSet.id);
+                if (error) throw error;
+                _remoteSyncTimer = null;
+                _originalUpdatedAt = null;
+            } catch (e) {
+                if (_originalUpdatedAt !== null) {
+                    currentSet.updated_at = _originalUpdatedAt;
+                    await saveLocalSet(currentSet);
+                }
+                _remoteSyncTimer = null;
+                _originalUpdatedAt = null;
+                throw e;
+            }
         };
 
-        clearTimeout(_remoteSyncTimer);
         if (immediate) {
+            clearTimeout(_remoteSyncTimer);
             await doRemoteSync();
         } else {
+            clearTimeout(_remoteSyncTimer);
             _remoteSyncTimer = setTimeout(() => {
                 doRemoteSync().catch(e => console.error('Remote sync error:', e));
             }, 800);

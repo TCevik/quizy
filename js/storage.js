@@ -51,13 +51,21 @@ export async function saveLocalSets(sets) {
     const db = await getDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
     for (const set of sets) {
-        tx.store.put(set);
+        const existing = await tx.store.get(normalizeId(set.id));
+        if (existing && existing.cards && !set.cards) {
+            set.cards = existing.cards;
+        }
+        await tx.store.put(set);
     }
     await tx.done;
 }
 
 export async function saveLocalSet(set) {
     const db = await getDB();
+    const existing = await db.get(STORE_NAME, normalizeId(set.id));
+    if (existing && existing.cards && !set.cards) {
+        set.cards = existing.cards;
+    }
     await db.put(STORE_NAME, set);
 }
 
@@ -68,14 +76,7 @@ export async function deleteLocalSet(id) {
 
 export async function syncSets(supabase, userId) {
     const localSets = await getLocalSets();
-    let maxUpdatedAt = '1970-01-01T00:00:00.000Z';
     
-    for (const set of localSets) {
-        if (set.user_id === userId && set.updated_at && set.updated_at > maxUpdatedAt) {
-            maxUpdatedAt = set.updated_at;
-        }
-    }
-
     if (navigator.onLine) {
         try {
             const { data: remoteSets, error } = await supabase
@@ -139,14 +140,23 @@ export async function syncSets(supabase, userId) {
                     }
                 }
 
-                const { data: updatedSets, error: updateError } = await supabase
-                    .from('Sets')
-                    .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id')
-                    .eq('user_id', userId)
-                    .gt('updated_at', maxUpdatedAt);
+                const setsNeedingUpdate = [];
+                for (const remote of remoteSets) {
+                    const local = localSets.find(s => s.id === remote.id);
+                    if (!local || remote.updated_at > (local.updated_at || '')) {
+                        setsNeedingUpdate.push(remote.id);
+                    }
+                }
 
-                if (!updateError && updatedSets && updatedSets.length > 0) {
-                    await saveLocalSets(updatedSets);
+                if (setsNeedingUpdate.length > 0) {
+                    const { data: updatedSets, error: updateError } = await supabase
+                        .from('Sets')
+                        .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id')
+                        .in('id', setsNeedingUpdate);
+
+                    if (!updateError && updatedSets && updatedSets.length > 0) {
+                        await saveLocalSets(updatedSets);
+                    }
                 }
             }
         } catch (e) {
