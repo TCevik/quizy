@@ -162,7 +162,7 @@ const init = async () => {
                     try {
                         const { data: remotePublicSets, error } = await supabase
                             .from('Sets')
-                            .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id')
+                            .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id, lang_col1, lang_col2')
                             .eq('visibility', 'public')
                             .ilike('title', `%${searchQuery}%`)
                             .order('updated_at', { ascending: false })

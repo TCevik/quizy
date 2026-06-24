@@ -23,7 +23,9 @@ function sanitizeSharedSet(fullSet) {
         visibility: fullSet.visibility,
         created_at: fullSet.created_at,
         updated_at: fullSet.updated_at,
-        cards: fullSet.cards
+        cards: fullSet.cards,
+        lang_col1: fullSet.lang_col1,
+        lang_col2: fullSet.lang_col2
     };
 }
 
@@ -98,7 +100,7 @@ export async function syncSets(supabase, userId) {
                 if (sharedLocalIds.length > 0) {
                     const { data: remoteSharedMeta, error: sharedErr } = await supabase
                         .from('Sets')
-                        .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id')
+                        .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id, lang_col1, lang_col2')
                         .in('id', sharedLocalIds);
 
                     if (!sharedErr && remoteSharedMeta) {
@@ -163,7 +165,7 @@ export async function syncSets(supabase, userId) {
                 if (setsNeedingUpdate.length > 0) {
                     const { data: updatedSets, error: updateError } = await supabase
                         .from('Sets')
-                        .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id')
+                        .select('id, title, description, folder, type, card_count, visibility, updated_at, created_at, user_id, lang_col1, lang_col2')
                         .in('id', setsNeedingUpdate);
 
                     if (!updateError && updatedSets && updatedSets.length > 0) {
