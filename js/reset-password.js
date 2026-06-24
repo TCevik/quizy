@@ -1,4 +1,4 @@
-import { supabaseReady } from './supabase-init.js';
+import { supabaseReady, getFriendlyErrorMessage } from './supabase-init.js';
 import Toast from './toast.js';
 
 const initReset = async () => {
@@ -18,6 +18,23 @@ const initReset = async () => {
 
     const resetPasswordForm = document.getElementById('resetPasswordForm');
 
+    function toggleButtonLoading(button, isLoading, normalText, normalIcon, loadingText) {
+        if (!button) return;
+        const textSpan = button.querySelector('span:not(.material-symbols-rounded)') || button.querySelector('span');
+        const iconSpan = button.querySelector('.material-symbols-rounded');
+        
+        button.disabled = isLoading;
+        if (isLoading) {
+            button.classList.add('loading');
+            if (textSpan) textSpan.textContent = loadingText;
+            if (iconSpan) iconSpan.textContent = 'progress_activity';
+        } else {
+            button.classList.remove('loading');
+            if (textSpan) textSpan.textContent = normalText;
+            if (iconSpan) iconSpan.textContent = normalIcon;
+        }
+    }
+
     if (resetPasswordForm) {
         resetPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -33,12 +50,14 @@ const initReset = async () => {
                 return;
             }
 
-            Toast.show('Wachtwoord bijwerken...', 'info');
+            const submitBtn = resetPasswordForm.querySelector('button[type="submit"]');
+            toggleButtonLoading(submitBtn, true, 'Wachtwoord opslaan', 'check_circle', 'Wachtwoord bijwerken...');
 
             const { error } = await supabase.auth.updateUser({ password });
 
             if (error) {
-                Toast.show(`Fout bij bijwerken: ${error.message}`, 'error');
+                toggleButtonLoading(submitBtn, false, 'Wachtwoord opslaan', 'check_circle', 'Wachtwoord bijwerken...');
+                Toast.show(`Fout bij bijwerken: ${getFriendlyErrorMessage(error)}`, 'error');
             } else {
                 Toast.show('Wachtwoord succesvol bijgewerkt! Je wordt doorgestuurd...', 'success');
                 
@@ -57,3 +76,4 @@ if (document.readyState === 'loading') {
 } else {
     initReset();
 }
+

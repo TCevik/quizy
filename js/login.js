@@ -1,12 +1,10 @@
-import { supabaseReady } from './supabase-init.js';
+import { supabaseReady, getFriendlyErrorMessage } from './supabase-init.js';
 import Toast from './toast.js';
 
 const initLogin = async () => {
     const loginForm = document.getElementById('loginForm');
     
     const supabase = await supabaseReady;
-
-    // Redundant getUser check removed
 
     let isLoginMode = true;
     const toggleAuthBtn = document.getElementById('toggleAuthBtn');
@@ -21,6 +19,23 @@ const initLogin = async () => {
 
     const nameInput = document.getElementById('name');
     const confirmPasswordInput = document.getElementById('confirm-password');
+
+    function toggleButtonLoading(button, isLoading, normalText, normalIcon, loadingText) {
+        if (!button) return;
+        const textSpan = button.querySelector('span:not(.material-symbols-rounded)') || button.querySelector('span');
+        const iconSpan = button.querySelector('.material-symbols-rounded');
+        
+        button.disabled = isLoading;
+        if (isLoading) {
+            button.classList.add('loading');
+            if (textSpan) textSpan.textContent = loadingText;
+            if (iconSpan) iconSpan.textContent = 'progress_activity';
+        } else {
+            button.classList.remove('loading');
+            if (textSpan) textSpan.textContent = normalText;
+            if (iconSpan) iconSpan.textContent = normalIcon;
+        }
+    }
 
     if (toggleAuthBtn) {
         toggleAuthBtn.addEventListener('click', (e) => {
@@ -70,6 +85,13 @@ const initLogin = async () => {
 
             const captchaToken = loginForm.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
 
+            const submitBtn = document.getElementById('submitBtn');
+            const submitTextStr = isLoginMode ? 'Inloggen' : 'Registreren';
+            const submitIconStr = isLoginMode ? 'arrow_forward' : 'person_add';
+            const loadingTextStr = isLoginMode ? 'Inloggen...' : 'Registreren...';
+            
+            toggleButtonLoading(submitBtn, true, submitTextStr, submitIconStr, loadingTextStr);
+
             if (isLoginMode) {
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
@@ -80,10 +102,11 @@ const initLogin = async () => {
                 });
 
                 if (error) {
+                    toggleButtonLoading(submitBtn, false, submitTextStr, submitIconStr, loadingTextStr);
                     if (error.message.includes('Email not confirmed') || error.message.toLowerCase().includes('confirm')) {
                         await resendConfirmationEmail(email, null);
                     } else {
-                        Toast.show(`Inloggen mislukt: ${error.message}`, 'error');
+                        Toast.show(`Inloggen mislukt: ${getFriendlyErrorMessage(error)}`, 'error');
                     }
                     resetAllTurnstiles();
                 } else {
@@ -95,27 +118,32 @@ const initLogin = async () => {
 
                 if (!name) {
                     Toast.show('Weergavenaam is verplicht.', 'error');
+                    toggleButtonLoading(submitBtn, false, submitTextStr, submitIconStr, loadingTextStr);
                     return;
                 }
 
                 if (name.length > 20) {
                     const over = name.length - 20;
                     Toast.show(`Weergavenaam is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 20).`, 'error');
+                    toggleButtonLoading(submitBtn, false, submitTextStr, submitIconStr, loadingTextStr);
                     return;
                 }
 
                 if (password.length < 6) {
                     Toast.show('Wachtwoord moet minimaal 6 tekens lang zijn.', 'error');
+                    toggleButtonLoading(submitBtn, false, submitTextStr, submitIconStr, loadingTextStr);
                     return;
                 }
 
                 if (!confirmPassword) {
                     Toast.show('Bevestig het wachtwoord.', 'error');
+                    toggleButtonLoading(submitBtn, false, submitTextStr, submitIconStr, loadingTextStr);
                     return;
                 }
 
                 if (password !== confirmPassword) {
                     Toast.show('Wachtwoorden komen niet overeen.', 'error');
+                    toggleButtonLoading(submitBtn, false, submitTextStr, submitIconStr, loadingTextStr);
                     return;
                 }
 
@@ -131,8 +159,10 @@ const initLogin = async () => {
                     }
                 });
 
+                toggleButtonLoading(submitBtn, false, submitTextStr, submitIconStr, loadingTextStr);
+
                 if (error) {
-                    Toast.show(`Registratie mislukt: ${error.message}`, 'error');
+                    Toast.show(`Registratie mislukt: ${getFriendlyErrorMessage(error)}`, 'error');
                     resetAllTurnstiles();
                 } else {
                     // Check if user is auto-confirmed or if email confirmation is enabled
@@ -167,13 +197,6 @@ const initLogin = async () => {
         closeResetModal.addEventListener('click', () => {
             resetModal.style.display = 'none';
         });
-
-        // Close on clicking outside modal content
-        window.addEventListener('click', (e) => {
-            if (e.target === resetModal) {
-                resetModal.style.display = 'none';
-            }
-        });
     }
 
     if (resetForm && supabase) {
@@ -186,15 +209,18 @@ const initLogin = async () => {
             }
             const captchaToken = resetForm.querySelector('[name="cf-turnstile-response"]')?.value || undefined;
 
-            Toast.show('Versturen...', 'info');
+            const submitBtn = resetForm.querySelector('button[type="submit"]');
+            toggleButtonLoading(submitBtn, true, 'Link versturen', 'send', 'Versturen...');
 
             const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
                 redirectTo: window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/reset-password.html',
                 captchaToken: captchaToken
             });
 
+            toggleButtonLoading(submitBtn, false, 'Link versturen', 'send', 'Versturen...');
+
             if (error) {
-                Toast.show(`Fout: ${error.message}`, 'error');
+                Toast.show(`Fout: ${getFriendlyErrorMessage(error)}`, 'error');
                 resetAllTurnstiles();
             } else {
                 Toast.show('Er is een herstellink naar je e-mailadres gestuurd!', 'success');
@@ -213,13 +239,6 @@ const initLogin = async () => {
     if (closeResendModal && resendModal) {
         closeResendModal.addEventListener('click', () => {
             resendModal.style.display = 'none';
-        });
-
-        // Close on clicking outside modal content
-        window.addEventListener('click', (e) => {
-            if (e.target === resendModal) {
-                resendModal.style.display = 'none';
-            }
         });
     }
 
@@ -251,7 +270,7 @@ const initLogin = async () => {
         });
 
         if (error) {
-            Toast.show(`Fout: ${error.message}`, 'error');
+            Toast.show(`Fout: ${getFriendlyErrorMessage(error)}`, 'error');
             resetAllTurnstiles();
         } else {
             Toast.show('Je e-mailadres is nog niet bevestigd. Er is direct een nieuwe verificatiemail naar je verstuurd!', 'success');
@@ -269,7 +288,10 @@ const initLogin = async () => {
                 Toast.show('E-mailadres is verplicht.', 'error');
                 return;
             }
+            const submitBtn = resendForm.querySelector('button[type="submit"]');
+            toggleButtonLoading(submitBtn, true, 'Mail versturen', 'send', 'Versturen...');
             await resendConfirmationEmail(email);
+            toggleButtonLoading(submitBtn, false, 'Mail versturen', 'send', 'Versturen...');
         });
     }
 };
@@ -278,4 +300,4 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initLogin);
 } else {
     initLogin();
-}
+}

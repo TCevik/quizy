@@ -275,3 +275,19 @@ body {
     border: 1px solid rgba(239, 68, 68, 0.3);
     color: #f87171;
 }
+
+/* Spinner & loading button styles */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.submit-btn.loading {
+    opacity: 0.8;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.submit-btn.loading .material-symbols-rounded {
+    animation: spin 1s linear infinite;
+}
