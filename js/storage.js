@@ -129,14 +129,19 @@ export async function syncSets(supabase, userId) {
                         if (idsNeedingFullFetch.length > 0) {
                             const { data: fullSets, error: fullErr } = await supabase
                                 .from('Sets')
-                                .select('*, Cards(*)')
+                                .select('*')
                                 .in('id', idsNeedingFullFetch);
+
                             if (!fullErr && fullSets) {
-                                for (const fullSet of fullSets) {
-                                    if (fullSet.Cards) {
-                                        fullSet.cards = fullSet.Cards;
-                                        delete fullSet.Cards;
+                                const activeSharedIds = new Set(remoteSharedMeta.map(s => s.id));
+
+                                for (const id of sharedLocalIds) {
+                                    if (!activeSharedIds.has(id)) {
+                                        await deleteLocalSet(id);
                                     }
+                                }
+
+                                for (const fullSet of fullSets) {
                                     if (fullSet.cards) {
                                         fullSet.cards.sort((a, b) => (a.position || 0) - (b.position || 0));
                                     }
@@ -205,14 +210,10 @@ export async function getSetWithCards(supabase, setId, userId) {
         if (needsFetch) {
             const { data: fullSet, error } = await supabase
                 .from('Sets')
-                .select('*, Cards(*)')
+                .select('*')
                 .eq('id', setId)
                 .single();
             if (!error && fullSet) {
-                if (fullSet.Cards) {
-                    fullSet.cards = fullSet.Cards;
-                    delete fullSet.Cards;
-                }
                 if (fullSet.cards) {
                     fullSet.cards.sort((a, b) => (a.position || 0) - (b.position || 0));
                 }
@@ -229,92 +230,19 @@ export async function getSetWithCards(supabase, setId, userId) {
 }
 
 export async function syncSetToRemote(supabase, dbPayload, setId = null) {
-    const cards = dbPayload.cards || [];
-    const setPayload = { ...dbPayload };
-    delete setPayload.cards;
-
     if (setId) {
-        const { error: updateError } = await supabase.from('Sets').update(setPayload).eq('id', setId);
+        const { error: updateError } = await supabase.from('Sets').update(dbPayload).eq('id', setId);
         if (updateError) throw updateError;
-        
-        const { data: currentCards, error: getCardsError } = await supabase
-            .from('Cards')
-            .select('id')
-            .eq('set_id', setId);
-        
-        if (getCardsError) throw getCardsError;
-
-        const newCardIds = new Set(cards.map(c => c.id).filter(id => id !== undefined && id !== null));
-        const deleteIds = currentCards.map(c => c.id).filter(id => !newCardIds.has(id));
-        if (deleteIds.length > 0) {
-            const { error: deleteError } = await supabase.from('Cards').delete().in('id', deleteIds);
-            if (deleteError) throw deleteError;
-        }
-
-        if (cards.length > 0) {
-            const upsertPayload = cards.map((card, index) => {
-                const row = {
-                    set_id: setId,
-                    term: card.term,
-                    definition: card.definition,
-                    starred: !!card.starred,
-                    position: index
-                };
-                if (card.id) {
-                    row.id = card.id;
-                }
-                return row;
-            });
-            const { data: upsertedData, error: upsertError } = await supabase
-                .from('Cards')
-                .upsert(upsertPayload)
-                .select('id, term, definition, starred, position');
-            
-            if (upsertError) throw upsertError;
-
-            if (upsertedData) {
-                upsertedData.sort((a, b) => a.position - b.position);
-                dbPayload.cards = upsertedData;
-            }
-        } else {
-            dbPayload.cards = [];
-        }
 
         dbPayload.id = setId;
         const existingSet = await getLocalSet(setId);
         const mergedPayload = existingSet ? { ...existingSet, ...dbPayload } : dbPayload;
         await saveLocalSet(mergedPayload);
     } else {
-        const { data, error: insertError } = await supabase.from('Sets').insert([setPayload]).select('id, created_at, updated_at').single();
+        const { data, error: insertError } = await supabase.from('Sets').insert([dbPayload]).select('id, created_at, updated_at').single();
         if (insertError) throw insertError;
-        
-        const newSetId = data.id;
 
-        if (cards.length > 0) {
-            const cardsPayload = cards.map((card, index) => ({
-                set_id: newSetId,
-                term: card.term,
-                definition: card.definition,
-                starred: !!card.starred,
-                position: index
-            }));
-
-            const { data: insertedCards, error: cardsInsertError } = await supabase
-                .from('Cards')
-                .insert(cardsPayload)
-                .select('id, term, definition, starred, position');
-
-            if (cardsInsertError) throw cardsInsertError;
-
-            if (insertedCards) {
-                insertedCards.sort((a, b) => a.position - b.position);
-                dbPayload.cards = insertedCards;
-            }
-        } else {
-            dbPayload.cards = [];
-        }
-
-        dbPayload.id = newSetId;
+        dbPayload.id = data.id;
         dbPayload.created_at = data.created_at;
         dbPayload.updated_at = data.updated_at;
         await saveLocalSet(dbPayload);

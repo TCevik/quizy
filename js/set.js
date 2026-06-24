@@ -260,15 +260,7 @@ const init = async () => {
                         await saveLocalSet(currentSet);
                         
                         if (navigator.onLine) {
-                            if (settingsChanged) {
-                                await state.saveAndSyncCurrentSet({ immediate: true });
-                            } else if (card.id) {
-                                const { error: starError } = await supabase
-                                    .from('Cards')
-                                    .update({ starred: card.starred })
-                                    .eq('id', card.id);
-                                if (starError) throw starError;
-                            }
+                            await state.saveAndSyncCurrentSet({ immediate: true });
                         }
 
                         const icon = btnStarCard.querySelector('.material-symbols-rounded');
