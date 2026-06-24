@@ -28,6 +28,47 @@ function openFlashcardsQuiz(options = {}) {
     let randomize = ('randomize' in options) ? !!options.randomize : ('randomize' in savedSettings ? !!savedSettings.randomize : true);
     let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
     let autoSpeak = ('autoSpeak' in options) ? !!options.autoSpeak : !!savedSettings.autoSpeak;
+    let timePressure = ('timePressure' in options) ? !!options.timePressure : !!savedSettings.timePressure;
+
+    let timerInterval = null;
+
+    function startTimer() {
+        if (!timePressure) return;
+        clearInterval(timerInterval);
+        const timerContainer = overlay?.querySelector('.quizy-timer-bar-container');
+        const timerFill = overlay?.querySelector('.quizy-timer-bar-fill');
+        if (timerContainer) timerContainer.style.display = 'block';
+        if (timerFill) {
+            timerFill.style.width = '100%';
+            timerFill.style.background = 'linear-gradient(90deg, #ff9800, #ff5722)';
+        }
+        const startTime = Date.now();
+        timerInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            let timeLeft = 7000 - elapsed;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(timerInterval);
+                if (timerFill) timerFill.style.width = '0%';
+                handleTimeout();
+            } else {
+                const percentage = (timeLeft / 7000) * 100;
+                if (timerFill) timerFill.style.width = `${percentage}%`;
+            }
+        }, 50);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    function handleTimeout() {
+        if (cardEl && !cardEl.classList.contains('flipped')) {
+            cardEl.classList.add('flipped');
+            triggerFlipSpeech();
+            stopTimer();
+        }
+    }
 
     if (!state.currentSet || !state.currentSet.cards || state.currentSet.cards.length === 0) {
         Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
@@ -50,11 +91,7 @@ function openFlashcardsQuiz(options = {}) {
         overlay = document.createElement('div');
         overlay.id = 'flashcards-overlay';
         overlay.className = 'flashcards-overlay';
-        if (mainWrapper) {
-            mainWrapper.appendChild(overlay);
-        } else {
-            document.body.appendChild(overlay);
-        }
+        document.body.appendChild(overlay);
     }
 
     
@@ -170,10 +207,11 @@ function openFlashcardsQuiz(options = {}) {
                 </div>
             </div>
 
-            <!-- Custom Confirmation Modal Component -->
-            <quizy-confirm-modal id="fc-confirm-modal"></quizy-confirm-modal>
+            <!-- Timer Bar -->
+            <div class="quizy-timer-bar-container" style="display: ${timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
+                <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
+            </div>
 
-            
             <div class="flashcard-wrapper" id="fc-card">
                 <div class="flashcard-inner">
                     <div class="flashcard-face flashcard-front">
@@ -219,6 +257,9 @@ function openFlashcardsQuiz(options = {}) {
                 </div>
             </div>
         </div>
+
+        <!-- Custom Confirmation Modal Component -->
+        <quizy-confirm-modal id="fc-confirm-modal"></quizy-confirm-modal>
     `;
 
     
@@ -247,7 +288,7 @@ function openFlashcardsQuiz(options = {}) {
         } else {
             const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
             settingsPanel.open(
-                { starOnly, randomize, swapSides, autoSpeak },
+                { starOnly, randomize, swapSides, autoSpeak, timePressure },
                 hasStarred,
                 state.currentSet.mode === 'talen',
                 state.currentSet.lang1,
@@ -257,7 +298,7 @@ function openFlashcardsQuiz(options = {}) {
     });
 
     settingsPanel.addEventListener('save', (e) => {
-        const { starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak } = e.detail;
+        const { starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak, timePressure: newTimePressure } = e.detail;
 
         const applySettings = () => {
             settingsPanel.close();
@@ -267,14 +308,15 @@ function openFlashcardsQuiz(options = {}) {
                     starOnly: newStarOnly,
                     randomize: newRandomize,
                     swapSides: newSwapSides,
-                    autoSpeak: newAutoSpeak
+                    autoSpeak: newAutoSpeak,
+                    timePressure: newTimePressure
                 };
                 if (isOwner && state.saveAndSyncCurrentSet) {
                     state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                 }
             }
             cleanupListeners();
-            openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak });
+            openFlashcardsQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak, timePressure: newTimePressure });
         };
 
         if (newStarOnly !== starOnly) {
@@ -292,7 +334,8 @@ function openFlashcardsQuiz(options = {}) {
                     starOnly: newStarOnly,
                     randomize: newRandomize,
                     swapSides: newSwapSides,
-                    autoSpeak: newAutoSpeak
+                    autoSpeak: newAutoSpeak,
+                    timePressure: newTimePressure
                 };
                 if (isOwner && state.saveAndSyncCurrentSet) {
                     state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
@@ -323,6 +366,19 @@ function openFlashcardsQuiz(options = {}) {
                 autoSpeak = newAutoSpeak;
                 Toast.show(autoSpeak ? 'Automatisch uitspreken ingeschakeld.' : 'Automatisch uitspreken uitgeschakeld.', 'success');
             }
+            if (newTimePressure !== timePressure) {
+                timePressure = newTimePressure;
+                const timerContainer = overlay.querySelector('.quizy-timer-bar-container');
+                if (timerContainer) {
+                    timerContainer.style.display = timePressure ? 'block' : 'none';
+                }
+                if (timePressure) {
+                    startTimer();
+                } else {
+                    stopTimer();
+                }
+                Toast.show(timePressure ? 'Tijdsdruk ingeschakeld.' : 'Tijdsdruk uitgeschakeld.', 'success');
+            }
             settingsPanel.close();
         }
     });
@@ -346,6 +402,9 @@ function openFlashcardsQuiz(options = {}) {
             if (isAnimating) return;
             cardEl.classList.toggle('flipped');
             triggerFlipSpeech();
+            if (cardEl.classList.contains('flipped')) {
+                stopTimer();
+            }
         } else if (e.code === 'ArrowLeft') {
             e.preventDefault();
             submitAnswer(false);
@@ -357,6 +416,7 @@ function openFlashcardsQuiz(options = {}) {
     document.addEventListener('keydown', keydownHandler);
 
     function cleanupListeners() {
+        stopTimer();
         document.removeEventListener('click', clickOutsideHandler);
         document.removeEventListener('keydown', keydownHandler);
     }
@@ -428,6 +488,7 @@ function openFlashcardsQuiz(options = {}) {
         
         setTimeout(() => {
             cardEl.classList.remove('no-transition');
+            startTimer();
         }, 50);
 
         if (autoSpeak) {
@@ -603,6 +664,9 @@ function openFlashcardsQuiz(options = {}) {
         if (isAnimating) return;
         cardEl.classList.toggle('flipped');
         triggerFlipSpeech();
+        if (cardEl.classList.contains('flipped')) {
+            stopTimer();
+        }
     });
 
     const frontSpeakBtn = cardEl.querySelector('.flashcard-front .btn-flashcard-speak');
@@ -702,13 +766,18 @@ function openFlashcardsQuiz(options = {}) {
         if (isAnimating) return;
         cardEl.classList.toggle('flipped');
         triggerFlipSpeech();
+        if (cardEl.classList.contains('flipped')) {
+            stopTimer();
+        }
     });
 
     wrongBtn.addEventListener('click', () => {
+        stopTimer();
         submitAnswer(false);
     });
 
     correctBtn.addEventListener('click', () => {
+        stopTimer();
         submitAnswer(true);
     });
 

@@ -543,6 +543,19 @@ class QuizySettingsPanel extends HTMLElement {
                     <span class="setting-description">${autoSpeakDesc}</span>
                 </div>
 
+                ${mode !== 'learn' ? `
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-time-pressure" class="setting-label">Tijdsdruk (7s timer)</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-time-pressure" ${s.timePressure ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Je krijgt 7 seconden per vraag. Daarna wordt het antwoord automatisch fout gerekend of de kaart omgedraaid.</span>
+                </div>
+                ` : ''}
+
                 ${extraSettingsHTML}
 
                 <div class="settings-actions">
@@ -565,6 +578,10 @@ class QuizySettingsPanel extends HTMLElement {
                     swapSides: this.querySelector('#setting-swap-sides')?.checked || false,
                     autoSpeak: this.querySelector('#setting-auto-speak')?.checked || false,
                 };
+
+                if (mode !== 'learn') {
+                    detail.timePressure = this.querySelector('#setting-time-pressure')?.checked || false;
+                }
 
                 if (mode === 'spelling' || mode === 'learn') {
                     detail.ignoreParentheses = this.querySelector('#setting-ignore-parentheses')?.checked || false;

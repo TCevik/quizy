@@ -30,11 +30,49 @@ function openSpellingQuiz(options = {}) {
     let randomize = ('randomize' in options) ? !!options.randomize : ('randomize' in savedSettings ? !!savedSettings.randomize : true);
     let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
     let autoSpeak = ('autoSpeak' in options) ? !!options.autoSpeak : !!savedSettings.autoSpeak;
+    let timePressure = ('timePressure' in options) ? !!options.timePressure : !!savedSettings.timePressure;
     
     
     let ignoreParentheses = ('ignoreParentheses' in options) ? !!options.ignoreParentheses : ('ignoreParentheses' in savedSettings ? !!savedSettings.ignoreParentheses : true);
     let skipPunctuation = ('skipPunctuation' in options) ? !!options.skipPunctuation : ('skipPunctuation' in savedSettings ? !!savedSettings.skipPunctuation : true);
     let allowSlashParts = ('allowSlashParts' in options) ? !!options.allowSlashParts : ('allowSlashParts' in savedSettings ? !!savedSettings.allowSlashParts : true);
+
+    let timerInterval = null;
+
+    function startTimer() {
+        if (!timePressure) return;
+        clearInterval(timerInterval);
+        const timerContainer = overlay?.querySelector('.quizy-timer-bar-container');
+        const timerFill = overlay?.querySelector('.quizy-timer-bar-fill');
+        if (timerContainer) timerContainer.style.display = 'block';
+        if (timerFill) {
+            timerFill.style.width = '100%';
+            timerFill.style.background = 'linear-gradient(90deg, #ff9800, #ff5722)';
+        }
+        const startTime = Date.now();
+        timerInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            let timeLeft = 7000 - elapsed;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(timerInterval);
+                if (timerFill) timerFill.style.width = '0%';
+                handleTimeout();
+            } else {
+                const percentage = (timeLeft / 7000) * 100;
+                if (timerFill) timerFill.style.width = `${percentage}%`;
+            }
+        }, 50);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    function handleTimeout() {
+        stopTimer();
+        handleSkip();
+    }
 
     if (!state.currentSet || !state.currentSet.cards || state.currentSet.cards.length === 0) {
         Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
@@ -57,11 +95,7 @@ function openSpellingQuiz(options = {}) {
         overlay = document.createElement('div');
         overlay.id = 'sp-overlay';
         overlay.className = 'sp-overlay';
-        if (mainWrapper) {
-            mainWrapper.appendChild(overlay);
-        } else {
-            document.body.appendChild(overlay);
-        }
+        document.body.appendChild(overlay);
     }
 
     
@@ -177,8 +211,10 @@ function openSpellingQuiz(options = {}) {
                 </div>
             </div>
 
-            <!-- Custom Confirmation Modal Component -->
-            <quizy-confirm-modal id="sp-confirm-modal"></quizy-confirm-modal>
+            <!-- Timer Bar -->
+            <div class="quizy-timer-bar-container" style="display: ${timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
+                <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
+            </div>
 
             
             <div class="sp-question-card" id="sp-question">
@@ -221,6 +257,9 @@ function openSpellingQuiz(options = {}) {
                 </div>
             </div>
         </div>
+
+        <!-- Custom Confirmation Modal Component -->
+        <quizy-confirm-modal id="sp-confirm-modal"></quizy-confirm-modal>
     `;
 
     
@@ -252,7 +291,7 @@ function openSpellingQuiz(options = {}) {
         } else {
             const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
             settingsPanel.open(
-                { starOnly, randomize, swapSides, autoSpeak, ignoreParentheses, skipPunctuation, allowSlashParts },
+                { starOnly, randomize, swapSides, autoSpeak, ignoreParentheses, skipPunctuation, allowSlashParts, timePressure },
                 hasStarred,
                 state.currentSet.mode === 'talen',
                 state.currentSet.lang1,
@@ -269,7 +308,8 @@ function openSpellingQuiz(options = {}) {
             autoSpeak: newAutoSpeak,
             ignoreParentheses: newIgnoreParentheses,
             skipPunctuation: newSkipPunctuation,
-            allowSlashParts: newAllowSlashParts
+            allowSlashParts: newAllowSlashParts,
+            timePressure: newTimePressure
         } = e.detail;
 
         const applySettings = () => {
@@ -283,7 +323,8 @@ function openSpellingQuiz(options = {}) {
                     autoSpeak: newAutoSpeak,
                     ignoreParentheses: newIgnoreParentheses,
                     skipPunctuation: newSkipPunctuation,
-                    allowSlashParts: newAllowSlashParts
+                    allowSlashParts: newAllowSlashParts,
+                    timePressure: newTimePressure
                 };
                 if (isOwner && state.saveAndSyncCurrentSet) {
                     state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
@@ -297,7 +338,8 @@ function openSpellingQuiz(options = {}) {
                 autoSpeak: newAutoSpeak,
                 ignoreParentheses: newIgnoreParentheses,
                 skipPunctuation: newSkipPunctuation,
-                allowSlashParts: newAllowSlashParts
+                allowSlashParts: newAllowSlashParts,
+                timePressure: newTimePressure
             });
         };
 
@@ -319,7 +361,8 @@ function openSpellingQuiz(options = {}) {
                     autoSpeak: newAutoSpeak,
                     ignoreParentheses: newIgnoreParentheses,
                     skipPunctuation: newSkipPunctuation,
-                    allowSlashParts: newAllowSlashParts
+                    allowSlashParts: newAllowSlashParts,
+                    timePressure: newTimePressure
                 };
                 if (isOwner && state.saveAndSyncCurrentSet) {
                     state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
@@ -348,6 +391,20 @@ function openSpellingQuiz(options = {}) {
             skipPunctuation = newSkipPunctuation;
             allowSlashParts = newAllowSlashParts;
             
+            if (newTimePressure !== timePressure) {
+                timePressure = newTimePressure;
+                const timerContainer = overlay.querySelector('.quizy-timer-bar-container');
+                if (timerContainer) {
+                    timerContainer.style.display = timePressure ? 'block' : 'none';
+                }
+                if (timePressure) {
+                    startTimer();
+                } else {
+                    stopTimer();
+                }
+                Toast.show(timePressure ? 'Tijdsdruk ingeschakeld.' : 'Tijdsdruk uitgeschakeld.', 'success');
+            }
+            
             updateQuestion();
             settingsPanel.close();
         }
@@ -361,6 +418,7 @@ function openSpellingQuiz(options = {}) {
     document.addEventListener('click', clickOutsideHandler);
 
     function closeSpelling() {
+        stopTimer();
         document.removeEventListener('click', clickOutsideHandler);
         overlay.classList.remove('active');
         overlay.style.display = 'none'; 
@@ -389,6 +447,7 @@ function openSpellingQuiz(options = {}) {
         userInputEl.value = '';
         userInputEl.disabled = false;
         userInputEl.focus();
+        startTimer();
         
         submitBtn.textContent = 'Controleren';
         skipBtn.style.display = 'inline-flex';
@@ -477,7 +536,7 @@ function openSpellingQuiz(options = {}) {
 
     function handleFormSubmit() {
         if (answered) {
-            
+            stopTimer();
             if (checkFinished()) {
                 return;
             }
@@ -505,6 +564,7 @@ function openSpellingQuiz(options = {}) {
             return;
         }
 
+        stopTimer();
         const inputVal = userInputEl.value.trim();
         const card = activeQueue[currentIndex];
         const correctAnswer = swapSides ? card.term : card.definition;
@@ -574,7 +634,7 @@ function openSpellingQuiz(options = {}) {
 
     function handleSkip() {
         if (answered) return;
-        
+        stopTimer();
         userInputEl.value = '';
         handleFormSubmit();
     }

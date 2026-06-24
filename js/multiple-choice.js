@@ -28,6 +28,44 @@ function openMultipleChoiceQuiz(options = {}) {
     let randomize = ('randomize' in options) ? !!options.randomize : ('randomize' in savedSettings ? !!savedSettings.randomize : true);
     let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
     let autoSpeak = ('autoSpeak' in options) ? !!options.autoSpeak : !!savedSettings.autoSpeak;
+    let timePressure = ('timePressure' in options) ? !!options.timePressure : !!savedSettings.timePressure;
+
+    let timerInterval = null;
+
+    function startTimer() {
+        if (!timePressure) return;
+        clearInterval(timerInterval);
+        const timerContainer = overlay?.querySelector('.quizy-timer-bar-container');
+        const timerFill = overlay?.querySelector('.quizy-timer-bar-fill');
+        if (timerContainer) timerContainer.style.display = 'block';
+        if (timerFill) {
+            timerFill.style.width = '100%';
+            timerFill.style.background = 'linear-gradient(90deg, #ff9800, #ff5722)';
+        }
+        const startTime = Date.now();
+        timerInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            let timeLeft = 7000 - elapsed;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(timerInterval);
+                if (timerFill) timerFill.style.width = '0%';
+                handleTimeout();
+            } else {
+                const percentage = (timeLeft / 7000) * 100;
+                if (timerFill) timerFill.style.width = `${percentage}%`;
+            }
+        }, 50);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    function handleTimeout() {
+        stopTimer();
+        selectOption(null, null);
+    }
 
     if (!state.currentSet || !state.currentSet.cards || state.currentSet.cards.length === 0) {
         Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
@@ -50,11 +88,7 @@ function openMultipleChoiceQuiz(options = {}) {
         overlay = document.createElement('div');
         overlay.id = 'mc-overlay';
         overlay.className = 'mc-overlay';
-        if (mainWrapper) {
-            mainWrapper.appendChild(overlay);
-        } else {
-            document.body.appendChild(overlay);
-        }
+        document.body.appendChild(overlay);
     }
 
     
@@ -170,8 +204,10 @@ function openMultipleChoiceQuiz(options = {}) {
                 </div>
             </div>
 
-            <!-- Custom Confirmation Modal Component -->
-            <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>
+            <!-- Timer Bar -->
+            <div class="quizy-timer-bar-container" style="display: ${timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
+                <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
+            </div>
 
             
             <div class="mc-question-card" id="mc-question">
@@ -203,6 +239,9 @@ function openMultipleChoiceQuiz(options = {}) {
                 </div>
             </div>
         </div>
+
+        <!-- Custom Confirmation Modal Component -->
+        <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>
     `;
 
     
@@ -230,7 +269,7 @@ function openMultipleChoiceQuiz(options = {}) {
         } else {
             const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
             settingsPanel.open(
-                { starOnly, randomize, swapSides, autoSpeak },
+                { starOnly, randomize, swapSides, autoSpeak, timePressure },
                 hasStarred,
                 state.currentSet.mode === 'talen',
                 state.currentSet.lang1,
@@ -240,7 +279,7 @@ function openMultipleChoiceQuiz(options = {}) {
     });
 
     settingsPanel.addEventListener('save', (e) => {
-        const { starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak } = e.detail;
+        const { starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak, timePressure: newTimePressure } = e.detail;
 
         const applySettings = () => {
             settingsPanel.close();
@@ -250,14 +289,15 @@ function openMultipleChoiceQuiz(options = {}) {
                     starOnly: newStarOnly,
                     randomize: newRandomize,
                     swapSides: newSwapSides,
-                    autoSpeak: newAutoSpeak
+                    autoSpeak: newAutoSpeak,
+                    timePressure: newTimePressure
                 };
                 if (isOwner && state.saveAndSyncCurrentSet) {
                     state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                 }
             }
             document.removeEventListener('click', clickOutsideHandler);
-            openMultipleChoiceQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak });
+            openMultipleChoiceQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak, timePressure: newTimePressure });
         };
 
         if (newStarOnly !== starOnly) {
@@ -275,7 +315,8 @@ function openMultipleChoiceQuiz(options = {}) {
                     starOnly: newStarOnly,
                     randomize: newRandomize,
                     swapSides: newSwapSides,
-                    autoSpeak: newAutoSpeak
+                    autoSpeak: newAutoSpeak,
+                    timePressure: newTimePressure
                 };
                 if (isOwner && state.saveAndSyncCurrentSet) {
                     state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
@@ -306,6 +347,19 @@ function openMultipleChoiceQuiz(options = {}) {
                 autoSpeak = newAutoSpeak;
                 Toast.show(autoSpeak ? 'Automatisch uitspreken ingeschakeld.' : 'Automatisch uitspreken uitgeschakeld.', 'success');
             }
+            if (newTimePressure !== timePressure) {
+                timePressure = newTimePressure;
+                const timerContainer = overlay.querySelector('.quizy-timer-bar-container');
+                if (timerContainer) {
+                    timerContainer.style.display = timePressure ? 'block' : 'none';
+                }
+                if (timePressure) {
+                    startTimer();
+                } else {
+                    stopTimer();
+                }
+                Toast.show(timePressure ? 'Tijdsdruk ingeschakeld.' : 'Tijdsdruk uitgeschakeld.', 'success');
+            }
             settingsPanel.close();
         }
     });
@@ -318,6 +372,7 @@ function openMultipleChoiceQuiz(options = {}) {
     document.addEventListener('click', clickOutsideHandler);
 
     function closeMC() {
+        stopTimer();
         document.removeEventListener('click', clickOutsideHandler);
         overlay.classList.remove('active');
         overlay.style.display = 'none'; 
@@ -360,6 +415,7 @@ function openMultipleChoiceQuiz(options = {}) {
         nextBtn.style.display = 'none';
         
         const card = activeQueue[currentIndex];
+        startTimer();
         if (!card) return;
 
         if (swapSides) {
@@ -420,6 +476,7 @@ function openMultipleChoiceQuiz(options = {}) {
     function selectOption(selectedBtn, selectedText) {
         if (answered) return;
         answered = true;
+        stopTimer();
 
         const correctText = currentOptionsData.correctAnswer;
         const correct = (selectedText === correctText);
@@ -434,7 +491,9 @@ function openMultipleChoiceQuiz(options = {}) {
         });
 
         if (!correct) {
-            selectedBtn.classList.add('incorrect');
+            if (selectedBtn) {
+                selectedBtn.classList.add('incorrect');
+            }
             submitAnswer(false);
         } else {
             submitAnswer(true);
@@ -510,6 +569,7 @@ function openMultipleChoiceQuiz(options = {}) {
     }
 
     function handleNext() {
+        stopTimer();
         if (checkFinished()) {
             return;
         }

@@ -1,18 +1,22 @@
 
 .mc-overlay {
     display: none; 
-    width: 100%;
-    min-height: calc(100vh - 200px);
-    background: transparent;
-    padding: 0px 0 40px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-dark);
+    z-index: 1500;
+    overflow-y: auto;
+    padding: 40px 0;
     box-sizing: border-box;
 }
 
 .mc-overlay.active {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    padding-top: 20px;
+    align-items: center;
 }
 
 .mc-container {
