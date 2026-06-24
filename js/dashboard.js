@@ -252,15 +252,9 @@ const init = async () => {
             setModalComp.updateFolderOptions(folders);
         }
 
-        if (sets.length === 0 && sharedSets.length === 0) {
-            folderFilterContainer.innerHTML = '';
-            return;
-        }
 
         
-        if (currentFolderFilter === 'shared' && sharedSets.length === 0) {
-            currentFolderFilter = 'all';
-        } else if (currentFolderFilter !== 'all' && currentFolderFilter !== 'none' && currentFolderFilter !== 'shared' && !folders.includes(currentFolderFilter)) {
+        if (currentFolderFilter !== 'all' && currentFolderFilter !== 'none' && currentFolderFilter !== 'shared' && !folders.includes(currentFolderFilter)) {
             currentFolderFilter = 'all';
         } else if (currentFolderFilter === 'none' && setsWithoutFolderCount === 0) {
             currentFolderFilter = 'all';
@@ -274,18 +268,16 @@ const init = async () => {
             <div class="folder-chips">
         `;
 
-        if (sharedSets.length > 0) {
-            html += `
-                <button class="folder-chip folder-chip--shared ${currentFolderFilter === 'shared' ? 'active' : ''}" data-folder="shared">
-                    <div>
-                        <span class="material-symbols-rounded">group</span>
-                        <span>Publieke sets</span>
-                    </div>
-                    <span class="chip-count">${sharedSets.length}</span>
-                </button>
-                <div class="folder-chip-divider"></div>
-            `;
-        }
+        html += `
+            <button class="folder-chip folder-chip--shared ${currentFolderFilter === 'shared' ? 'active' : ''}" data-folder="shared">
+                <div>
+                    <span class="material-symbols-rounded">group</span>
+                    <span>Laatst bezocht</span>
+                </div>
+                <span class="chip-count">${sharedSets.length || 0}</span>
+            </button>
+            <div class="folder-chip-divider"></div>
+        `;
 
         html += `
                 <button class="folder-chip ${currentFolderFilter === 'all' ? 'active' : ''}" data-folder="all">
@@ -661,7 +653,7 @@ const init = async () => {
 
         if (allSets.length === 0 && sharedSets.length === 0) {
             updateSetsUsageDisplay();
-            if (folderFilterContainer) folderFilterContainer.innerHTML = '';
+            renderFolderFilter(allSets);
             dashboardContent.innerHTML = `
                 <div class="no-sets-box">
                     <span class="material-symbols-rounded no-sets-icon">menu_book</span>
