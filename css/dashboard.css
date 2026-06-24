@@ -169,6 +169,32 @@ body {
     opacity: 1;
 }
 
+.set-card.selected {
+    border-color: var(--primary) !important;
+    background: rgba(var(--primary-rgb), 0.08) !important;
+    box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.25) !important;
+}
+
+.set-card.in-selection-mode {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.set-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    transition: all 0.2s ease;
+}
+
+.set-card.selected .set-checkbox-wrapper {
+    background: rgba(var(--primary-rgb), 0.2);
+}
+
 .set-card-header {
     display: flex;
     justify-content: space-between;

@@ -69,7 +69,20 @@ const init = async () => {
     if (deleteModal) {
         deleteModal.addEventListener('confirm', async (e) => {
             const setIdToDelete = e.detail.id;
-            if (setIdToDelete !== null) {
+            if (setIdToDelete === 'bulk') {
+                try {
+                    Toast.show('Geselecteerde sets verwijderen...', 'info');
+                    for (const id of selectedSetIds) {
+                        await deleteLocalSet(id);
+                    }
+                    Toast.show('Geselecteerde sets succesvol verwijderd!', 'success');
+                    isSelectionMode = false;
+                    selectedSetIds.clear();
+                    loadSets();
+                } catch (err) {
+                    Toast.show('Fout bij verwijderen van sets: ' + err.message, 'error');
+                }
+            } else if (setIdToDelete !== null) {
                 const setToDelete = await getLocalSet(setIdToDelete);
                 const isOwner = setToDelete ? setToDelete.user_id === user.id : true;
 
@@ -149,6 +162,40 @@ const init = async () => {
     const pageSize = 20;
     const folderFilterContainer = document.getElementById('folder-filter-container');
     const searchInput = document.getElementById('search-input');
+
+    let isSelectionMode = false;
+    const selectedSetIds = new Set();
+    const btnSelectShared = document.getElementById('btn-select-shared');
+    const btnDeleteSelected = document.getElementById('btn-delete-selected');
+
+    if (btnSelectShared) {
+        btnSelectShared.addEventListener('click', () => {
+            isSelectionMode = !isSelectionMode;
+            selectedSetIds.clear();
+            updateDeleteBtnState();
+            renderSets();
+        });
+    }
+
+    if (btnDeleteSelected) {
+        btnDeleteSelected.addEventListener('click', () => {
+            if (selectedSetIds.size > 0 && deleteModal) {
+                deleteModal.open('bulk');
+            }
+        });
+    }
+
+    function updateDeleteBtnState() {
+        if (!btnDeleteSelected) return;
+        btnDeleteSelected.disabled = selectedSetIds.size === 0;
+        if (selectedSetIds.size > 0) {
+            btnDeleteSelected.style.opacity = '1';
+            btnDeleteSelected.style.pointerEvents = 'auto';
+        } else {
+            btnDeleteSelected.style.opacity = '0.5';
+            btnDeleteSelected.style.pointerEvents = 'none';
+        }
+    }
 
     let searchTimeout;
     if (searchInput) {
@@ -295,6 +342,8 @@ const init = async () => {
                 folderFilterContainer.querySelectorAll('.folder-chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
                 currentPage = 1;
+                isSelectionMode = false;
+                selectedSetIds.clear();
                 renderSets();
             });
         });
@@ -336,6 +385,28 @@ const init = async () => {
             } else {
                 filteredSets = allSets;
             }
+        }
+
+        if (currentFolderFilter === 'shared' && filteredSets.length > 0) {
+            if (btnSelectShared) {
+                btnSelectShared.style.display = 'flex';
+                btnSelectShared.title = isSelectionMode ? 'Selecteren annuleren' : 'Sets selecteren';
+                btnSelectShared.innerHTML = isSelectionMode ? '<span class="material-symbols-rounded">close</span>' : '<span class="material-symbols-rounded">select_all</span>';
+                if (isSelectionMode) {
+                    btnSelectShared.style.background = 'rgba(255, 255, 255, 0.15)';
+                } else {
+                    btnSelectShared.style.background = '';
+                }
+            }
+            if (btnDeleteSelected) {
+                btnDeleteSelected.style.display = isSelectionMode ? 'flex' : 'none';
+                updateDeleteBtnState();
+            }
+        } else {
+            if (btnSelectShared) btnSelectShared.style.display = 'none';
+            if (btnDeleteSelected) btnDeleteSelected.style.display = 'none';
+            isSelectionMode = false;
+            selectedSetIds.clear();
         }
 
         if (filteredSets.length === 0) {
@@ -385,9 +456,17 @@ const init = async () => {
                 : '';
 
             const isLocal = set.user_id === user.id || sharedSets.some(s => s.id === set.id);
+            const isSelected = selectedSetIds.has(set.id);
+            const selectCheckboxHTML = isSelectionMode
+                ? `<div class="set-checkbox-wrapper">
+                       <span class="material-symbols-rounded select-checkbox-icon" style="color: ${isSelected ? 'var(--primary)' : 'var(--text-muted)'}; font-size: 24px;">
+                           ${isSelected ? 'check_box' : 'check_box_outline_blank'}
+                       </span>
+                   </div>`
+                : `<span class="set-badge">${escapeHtml(set.type) || 'woorden'}</span>`;
 
             html += `
-                <div class="set-card glass-panel" data-id="${set.id}">
+                <div class="set-card glass-panel ${isSelectionMode ? 'in-selection-mode' : ''} ${isSelected ? 'selected' : ''}" data-id="${set.id}">
                     <div>
                         <div class="set-card-header">
                             <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -397,7 +476,7 @@ const init = async () => {
                                     ${authorLabel}
                                 </div>
                             </div>
-                            <span class="set-badge">${escapeHtml(set.type) || 'woorden'}</span>
+                            ${selectCheckboxHTML}
                         </div>
                         <p class="set-desc">${escapeHtml(set.description) || 'Geen beschrijving'}</p>
                     </div>
@@ -407,11 +486,11 @@ const init = async () => {
                             <span><span class="material-symbols-rounded" style="font-size:16px;">style</span> ${cardCountLabel}</span>
                         </div>
                         <div class="set-actions">
-                            ${set.user_id === user.id ? `
+                            ${!isSelectionMode && set.user_id === user.id ? `
                             <button class="btn-icon-action edit-btn" title="Bewerken" data-id="${set.id}">
                                 <span class="material-symbols-rounded">edit</span>
                             </button>` : ''}
-                            ${isLocal ? `
+                            ${!isSelectionMode && isLocal ? `
                             <button class="btn-icon-action delete-btn" title="Verwijderen" data-id="${set.id}">
                                 <span class="material-symbols-rounded">delete</span>
                             </button>` : ''}
@@ -531,8 +610,19 @@ const init = async () => {
                     if (e.target.closest('.btn-icon-action')) {
                         return;
                     }
-                    const setId = setCard.getAttribute('data-id');
-                    window.location.href = `set.html?id=${setId}`;
+                    const setId = parseInt(setCard.getAttribute('data-id'));
+                    if (isSelectionMode) {
+                        e.stopPropagation();
+                        if (selectedSetIds.has(setId)) {
+                            selectedSetIds.delete(setId);
+                        } else {
+                            selectedSetIds.add(setId);
+                        }
+                        updateDeleteBtnState();
+                        renderSets();
+                    } else {
+                        window.location.href = `set.html?id=${setId}`;
+                    }
                 }
             });
         }
