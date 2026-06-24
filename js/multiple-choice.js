@@ -1,406 +1,310 @@
+import { BaseQuiz } from './base-quiz.js';
 import { state } from './state.js';
 import Toast from './toast.js';
 import { speakText, escapeHtml } from './main.js';
 
-
-document.addEventListener('DOMContentLoaded', () => {
-    
-    document.addEventListener('click', (e) => {
-        const btnMultipleChoice = e.target.closest('#btn-multiple-choice');
-        if (btnMultipleChoice) {
-            e.preventDefault();
-            openMultipleChoiceQuiz();
-        }
-    });
-});
-
-function openMultipleChoiceQuiz(options = {}) {
-    const isOwner = state.currentUser && state.currentSet && state.currentSet.user_id === state.currentUser.id;
-    const savedSettings = (state.currentSet && state.currentSet.settings) || {};
-    const hasStarred = state.currentSet && state.currentSet.cards && state.currentSet.cards.some(c => c.starred);
-    let starOnly = ('starOnly' in options) ? !!options.starOnly : !!savedSettings.starOnly;
-    if (!hasStarred) {
-        starOnly = false;
-        if (state.currentSet && state.currentSet.settings && state.currentSet.settings.starOnly) {
-            state.currentSet.settings.starOnly = false;
-        }
+class MultipleChoiceQuiz extends BaseQuiz {
+    constructor() {
+        super('multiple-choice', 'mc-overlay', 'mc-overlay');
+        this.answered = false;
+        this.currentOptionsData = null;
+        this.clickOutsideHandler = null;
+        this.keydownHandler = null;
     }
-    let randomize = ('randomize' in options) ? !!options.randomize : ('randomize' in savedSettings ? !!savedSettings.randomize : true);
-    let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
-    let autoSpeak = ('autoSpeak' in options) ? !!options.autoSpeak : !!savedSettings.autoSpeak;
-    let timePressure = ('timePressure' in options) ? !!options.timePressure : !!savedSettings.timePressure;
 
-    let timerInterval = null;
+    open(options = {}) {
+        const success = this.initSession(options, {
+            starOnly: false,
+            randomize: true,
+            swapSides: false,
+            autoSpeak: false,
+            timePressure: false
+        });
+        if (!success) return;
 
-    function startTimer() {
-        if (!timePressure) return;
-        clearInterval(timerInterval);
-        const timerContainer = overlay?.querySelector('.quizy-timer-bar-container');
-        const timerFill = overlay?.querySelector('.quizy-timer-bar-fill');
-        if (timerContainer) timerContainer.style.display = 'block';
-        if (timerFill) {
-            timerFill.style.width = '100%';
-            timerFill.style.background = 'linear-gradient(90deg, #ff9800, #ff5722)';
-        }
-        const startTime = Date.now();
-        timerInterval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            let timeLeft = 7000 - elapsed;
-            if (timeLeft <= 0) {
-                timeLeft = 0;
-                clearInterval(timerInterval);
-                if (timerFill) timerFill.style.width = '0%';
-                handleTimeout();
+        this.renderLayout();
+        this.setupElements();
+        this.addEventListeners();
+        this.updateQuestion();
+    }
+
+    renderLayout() {
+        const totalUniqueCards = this.originalCards.length;
+        this.overlay.innerHTML = `
+            <div class="mc-container" style="position: relative;">
+                <div class="mc-header">
+                    <span class="mc-title">${escapeHtml(state.currentSet.title || 'Multiple Choice')}</span>
+                    <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                        <button class="btn-close-flashcards" id="mc-settings-btn" title="Instellingen" style="transform: none;">
+                            <span class="material-symbols-rounded">settings</span>
+                        </button>
+                        <button class="btn-close-flashcards" id="mc-close">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                        <quizy-settings-panel id="mc-settings-panel" mode="multiple-choice"></quizy-settings-panel>
+                    </div>
+                </div>
+
+                <div class="quizy-timer-bar-container" style="display: ${this.settings.timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
+                    <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
+                </div>
+
+                <div class="mc-question-card" id="mc-question">
+                    <button class="btn-mc-speak" title="Uitspreken">
+                        <span class="material-symbols-rounded">volume_up</span>
+                    </button>
+                    <button class="btn-mc-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
+                        <span class="material-symbols-rounded">star</span>
+                    </button>
+                    <div class="mc-question-label" id="mc-question-label">Vraag</div>
+                    <div class="mc-question-text" id="mc-question-text">Laden...</div>
+                </div>
+
+                <div class="mc-options-grid" id="mc-options">
+                    <!-- 4 Choices buttons will go here -->
+                </div>
+
+                <div class="mc-action-area">
+                    <button class="btn-mc-next" id="mc-next" style="display: none;">
+                        Volgende
+                        <span class="material-symbols-rounded">arrow_forward</span>
+                    </button>
+                </div>
+
+                <div class="progress-container">
+                    <span class="progress-text" id="mc-progress-text">Geleerd: 0 van ${totalUniqueCards} kaarten</span>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="mc-progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>
+        `;
+    }
+
+    setupElements() {
+        this.questionTextEl = this.overlay.querySelector('#mc-question-text');
+        this.questionLabelEl = this.overlay.querySelector('#mc-question-label');
+        this.optionsGridEl = this.overlay.querySelector('#mc-options');
+        this.nextBtn = this.overlay.querySelector('#mc-next');
+        this.closeBtn = this.overlay.querySelector('#mc-close');
+        this.progressTextEl = this.overlay.querySelector('#mc-progress-text');
+        this.progressFillEl = this.overlay.querySelector('#mc-progress-fill');
+        this.starBtn = this.overlay.querySelector('.btn-mc-star');
+        this.speakBtn = this.overlay.querySelector('.btn-mc-speak');
+        this.settingsBtn = this.overlay.querySelector('#mc-settings-btn');
+        this.settingsPanel = this.overlay.querySelector('#mc-settings-panel');
+        this.confirmModal = this.overlay.querySelector('#mc-confirm-modal');
+    }
+
+    addEventListeners() {
+        this.settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.settingsPanel.classList.contains('active')) {
+                this.settingsPanel.close();
             } else {
-                const percentage = (timeLeft / 7000) * 100;
-                if (timerFill) timerFill.style.width = `${percentage}%`;
-            }
-        }, 50);
-    }
-
-    function stopTimer() {
-        clearInterval(timerInterval);
-    }
-
-    function handleTimeout() {
-        stopTimer();
-        selectOption(null, null);
-    }
-
-    if (!state.currentSet || !state.currentSet.cards || state.currentSet.cards.length === 0) {
-        Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
-        return;
-    }
-
-    let originalCards = state.currentSet.cards;
-    if (starOnly) {
-        originalCards = originalCards.filter(c => c.starred);
-    }
-
-    if (originalCards.length === 0) {
-        Toast.show('Je hebt geen woorden met een ster om te oefenen.', 'error');
-        return;
-    }
-
-    const mainWrapper = document.querySelector('main.set-wrapper');
-    let overlay = document.getElementById('mc-overlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'mc-overlay';
-        overlay.className = 'mc-overlay';
-        document.body.appendChild(overlay);
-    }
-
-    
-    if (mainWrapper) {
-        Array.from(mainWrapper.children).forEach(child => {
-            if (child !== overlay) {
-                if (!child.hasAttribute('data-prev-display')) {
-                    child.setAttribute('data-prev-display', child.style.display || '');
-                }
-                child.style.display = 'none';
+                const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
+                this.settingsPanel.open(
+                    this.settings,
+                    hasStarred,
+                    state.currentSet.mode === 'talen',
+                    state.currentSet.lang1,
+                    state.currentSet.lang2
+                );
             }
         });
-    }
-    window.scrollTo(0, 0);
 
-    const totalUniqueCards = originalCards.length;
-    
-    
-    let failureCounts = new Map();
-    
-    let learnedCardKeys = new Set();
-    
-    
-    let activeQueue = [...originalCards];
+        this.settingsPanel.addEventListener('save', async (e) => {
+            const newSettings = e.detail;
 
-    
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    }
+            const applySettings = async () => {
+                this.settingsPanel.close();
+                await this.saveSettings(newSettings);
+                this.closeOverlay();
+                this.open(newSettings);
+            };
 
-    if (randomize) {
-        shuffleArray(activeQueue);
-    }
+            if (newSettings.starOnly !== this.settings.starOnly) {
+                this.confirmModal.open();
+                const onConfirm = () => {
+                    this.confirmModal.removeEventListener('confirm', onConfirm);
+                    applySettings();
+                };
+                this.confirmModal.addEventListener('confirm', onConfirm);
+            } else {
+                await this.saveSettings(newSettings);
 
-    let currentIndex = 0;
-    let isReviewPhase = false;
-    let answered = false;
-
-    
-    function getCardKey(card) {
-        return `idx_${state.currentSet.cards.indexOf(card)}`;
-    }
-
-    
-    function generateNoAdjacentQueue(items) {
-        const counts = new Map();
-        items.forEach(item => {
-            const key = getCardKey(item);
-            if (!counts.has(key)) {
-                counts.set(key, { card: item, count: 0 });
-            }
-            counts.get(key).count++;
-        });
-
-        const result = [];
-        let prevKey = null;
-
-        while (counts.size > 0) {
-            let bestKey = null;
-            let maxCount = -1;
-
-            for (const [key, val] of counts.entries()) {
-                if (key !== prevKey && val.count > maxCount) {
-                    maxCount = val.count;
-                    bestKey = key;
-                }
-            }
-
-            
-            if (bestKey === null) {
-                for (const [key, val] of counts.entries()) {
-                    if (val.count > maxCount) {
-                        maxCount = val.count;
-                        bestKey = key;
+                if (newSettings.randomize !== this.settings.randomize) {
+                    this.settings.randomize = newSettings.randomize;
+                    if (this.settings.randomize) {
+                        const remaining = this.activeQueue.slice(this.currentIndex + 1);
+                        this.shuffleArray(remaining);
+                        this.activeQueue.splice(this.currentIndex + 1, this.activeQueue.length - (this.currentIndex + 1), ...remaining);
+                        Toast.show('Vragen worden nu in willekeurige volgorde getoond.', 'success');
+                    } else {
+                        const remaining = this.activeQueue.slice(this.currentIndex + 1);
+                        remaining.sort((a, b) => {
+                            return this.originalCards.indexOf(a) - this.originalCards.indexOf(b);
+                        });
+                        this.activeQueue.splice(this.currentIndex + 1, this.activeQueue.length - (this.currentIndex + 1), ...remaining);
+                        Toast.show('Willekeurige volgorde uitgeschakeld. Vragen gaan verder in de originele volgorde.', 'info');
                     }
                 }
-            }
-
-            if (bestKey === null) break;
-
-            const val = counts.get(bestKey);
-            result.push(val.card);
-            val.count--;
-
-            if (val.count === 0) {
-                counts.delete(bestKey);
-            }
-
-            prevKey = bestKey;
-        }
-
-        return result;
-    }
-
-    
-    overlay.innerHTML = `
-        <div class="mc-container" style="position: relative;">
-            <div class="mc-header">
-                <span class="mc-title">${escapeHtml(state.currentSet.title || 'Multiple Choice')}</span>
-                <div style="display: flex; gap: 8px; align-items: center; position: relative;">
-                    <button class="btn-close-flashcards" id="mc-settings-btn" title="Instellingen" style="transform: none;">
-                        <span class="material-symbols-rounded">settings</span>
-                    </button>
-                    <button class="btn-close-flashcards" id="mc-close">
-                        <span class="material-symbols-rounded">close</span>
-                    </button>
-                    <!-- Settings Panel Component -->
-                    <quizy-settings-panel id="mc-settings-panel" mode="multiple-choice"></quizy-settings-panel>
-                </div>
-            </div>
-
-            <!-- Timer Bar -->
-            <div class="quizy-timer-bar-container" style="display: ${timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
-                <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
-            </div>
-
-            
-            <div class="mc-question-card" id="mc-question">
-                <button class="btn-mc-speak" title="Uitspreken">
-                    <span class="material-symbols-rounded">volume_up</span>
-                </button>
-                <button class="btn-mc-star" ${isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
-                    <span class="material-symbols-rounded">star</span>
-                </button>
-                <div class="mc-question-label" id="mc-question-label">Vraag</div>
-                <div class="mc-question-text" id="mc-question-text">Laden...</div>
-            </div>
-
-            <div class="mc-options-grid" id="mc-options">
-                <!-- 4 Choices buttons will go here -->
-            </div>
-
-            <div class="mc-action-area">
-                <button class="btn-mc-next" id="mc-next" style="display: none;">
-                    Volgende
-                    <span class="material-symbols-rounded">arrow_forward</span>
-                </button>
-            </div>
-
-            <div class="progress-container">
-                <span class="progress-text" id="mc-progress-text">Geleerd: 0 van ${totalUniqueCards} kaarten</span>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="mc-progress-fill"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Custom Confirmation Modal Component -->
-        <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>
-    `;
-
-    
-    overlay.style.display = 'flex';
-    overlay.classList.add('active');
-
-    const questionTextEl = document.getElementById('mc-question-text');
-    const questionLabelEl = document.getElementById('mc-question-label');
-    const optionsGridEl = document.getElementById('mc-options');
-    const nextBtn = document.getElementById('mc-next');
-    const closeBtn = document.getElementById('mc-close');
-    const progressTextEl = document.getElementById('mc-progress-text');
-    const progressFillEl = document.getElementById('mc-progress-fill');
-    const starBtn = overlay.querySelector('.btn-mc-star');
-
-    
-    const settingsBtn = document.getElementById('mc-settings-btn');
-    const settingsPanel = document.getElementById('mc-settings-panel');
-    const confirmModal = document.getElementById('mc-confirm-modal');
-
-    settingsBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (settingsPanel.classList.contains('active')) {
-            settingsPanel.close();
-        } else {
-            const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
-            settingsPanel.open(
-                { starOnly, randomize, swapSides, autoSpeak, timePressure },
-                hasStarred,
-                state.currentSet.mode === 'talen',
-                state.currentSet.lang1,
-                state.currentSet.lang2
-            );
-        }
-    });
-
-    settingsPanel.addEventListener('save', (e) => {
-        const { starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak, timePressure: newTimePressure } = e.detail;
-
-        const applySettings = () => {
-            settingsPanel.close();
-            if (state.currentSet) {
-                state.currentSet.settings = {
-                    ...(state.currentSet.settings || {}),
-                    starOnly: newStarOnly,
-                    randomize: newRandomize,
-                    swapSides: newSwapSides,
-                    autoSpeak: newAutoSpeak,
-                    timePressure: newTimePressure
-                };
-                if (isOwner && state.saveAndSyncCurrentSet) {
-                    state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
+                if (newSettings.swapSides !== this.settings.swapSides) {
+                    this.settings.swapSides = newSettings.swapSides;
+                    this.updateQuestion();
+                    Toast.show(state.currentSet.mode === 'talen' ? 'Talen zijn omgedraaid.' : 'Term en definitie zijn omgedraaid.', 'success');
                 }
+                if (newSettings.autoSpeak !== this.settings.autoSpeak) {
+                    this.settings.autoSpeak = newSettings.autoSpeak;
+                    Toast.show(this.settings.autoSpeak ? 'Automatisch uitspreken ingeschakeld.' : 'Automatisch uitspreken uitgeschakeld.', 'success');
+                }
+                if (newSettings.timePressure !== this.settings.timePressure) {
+                    this.settings.timePressure = newSettings.timePressure;
+                    const timerContainer = this.overlay.querySelector('.quizy-timer-bar-container');
+                    if (timerContainer) {
+                        timerContainer.style.display = this.settings.timePressure ? 'block' : 'none';
+                    }
+                    if (this.settings.timePressure) {
+                        this.triggerTimer();
+                    } else {
+                        this.stopTimer();
+                    }
+                    Toast.show(this.settings.timePressure ? 'Tijdsdruk ingeschakeld.' : 'Tijdsdruk uitgeschakeld.', 'success');
+                }
+                this.settingsPanel.close();
             }
-            document.removeEventListener('click', clickOutsideHandler);
-            openMultipleChoiceQuiz({ starOnly: newStarOnly, randomize: newRandomize, swapSides: newSwapSides, autoSpeak: newAutoSpeak, timePressure: newTimePressure });
+        });
+
+        this.clickOutsideHandler = (e) => {
+            if (!this.settingsPanel.contains(e.target) && e.target !== this.settingsBtn && !this.settingsBtn.contains(e.target)) {
+                this.settingsPanel.close();
+            }
         };
+        document.addEventListener('click', this.clickOutsideHandler);
 
-        if (newStarOnly !== starOnly) {
-            confirmModal.open();
+        this.keydownHandler = (e) => {
+            if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.isContentEditable)) {
+                return;
+            }
+            if (this.settingsPanel.classList.contains('active')) {
+                return;
+            }
             
-            const onConfirm = () => {
-                confirmModal.removeEventListener('confirm', onConfirm);
-                applySettings();
-            };
-            confirmModal.addEventListener('confirm', onConfirm);
-        } else {
-            if (state.currentSet) {
-                state.currentSet.settings = {
-                    ...(state.currentSet.settings || {}),
-                    starOnly: newStarOnly,
-                    randomize: newRandomize,
-                    swapSides: newSwapSides,
-                    autoSpeak: newAutoSpeak,
-                    timePressure: newTimePressure
-                };
-                if (isOwner && state.saveAndSyncCurrentSet) {
-                    state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
-                }
-            }
-            if (newRandomize !== randomize) {
-                randomize = newRandomize;
-                if (randomize) {
-                    const remaining = activeQueue.slice(currentIndex + 1);
-                    shuffleArray(remaining);
-                    activeQueue.splice(currentIndex + 1, activeQueue.length - (currentIndex + 1), ...remaining);
-                    Toast.show('Vragen worden nu in willekeurige volgorde getoond.', 'success');
+            // Support choosing options via keyboard A, B, C, D (or 1, 2, 3, 4) and Enter/Space for Next
+            if (!this.answered) {
+                const optionIndex = ['KeyA', 'KeyB', 'KeyC', 'KeyD'].indexOf(e.code);
+                if (optionIndex !== -1 && optionIndex < this.optionsGridEl.children.length) {
+                    e.preventDefault();
+                    const btn = this.optionsGridEl.children[optionIndex];
+                    btn.click();
                 } else {
-                    const remaining = activeQueue.slice(currentIndex + 1);
-                    remaining.sort((a, b) => {
-                        return originalCards.indexOf(a) - originalCards.indexOf(b);
-                    });
-                    activeQueue.splice(currentIndex + 1, activeQueue.length - (currentIndex + 1), ...remaining);
-                    Toast.show('Willekeurige volgorde uitgeschakeld. Vragen gaan verder in de originele volgorde.', 'info');
+                    const numberIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code);
+                    if (numberIndex !== -1 && numberIndex < this.optionsGridEl.children.length) {
+                        e.preventDefault();
+                        const btn = this.optionsGridEl.children[numberIndex];
+                        btn.click();
+                    }
+                }
+            } else {
+                if (e.code === 'Enter' || e.code === 'Space') {
+                    e.preventDefault();
+                    this.nextBtn.click();
                 }
             }
-            if (newSwapSides !== swapSides) {
-                swapSides = newSwapSides;
-                updateQuestion();
-                Toast.show(state.currentSet.mode === 'talen' ? 'Talen zijn omgedraaid.' : 'Term en definitie zijn omgedraaid.', 'success');
+        };
+        document.addEventListener('keydown', this.keydownHandler);
+
+        this.starBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!this.isOwner) return;
+            const card = this.activeQueue[this.currentIndex];
+            if (!card) return;
+
+            card.starred = !card.starred;
+            const isStarred = !!card.starred;
+            const icon = this.starBtn.querySelector('.material-symbols-rounded');
+            if (isStarred) {
+                this.starBtn.classList.add('starred');
+                icon.style.fontVariationSettings = "'FILL' 1";
+            } else {
+                this.starBtn.classList.remove('starred');
+                icon.style.fontVariationSettings = "'FILL' 0";
             }
-            if (newAutoSpeak !== autoSpeak) {
-                autoSpeak = newAutoSpeak;
-                Toast.show(autoSpeak ? 'Automatisch uitspreken ingeschakeld.' : 'Automatisch uitspreken uitgeschakeld.', 'success');
-            }
-            if (newTimePressure !== timePressure) {
-                timePressure = newTimePressure;
-                const timerContainer = overlay.querySelector('.quizy-timer-bar-container');
-                if (timerContainer) {
-                    timerContainer.style.display = timePressure ? 'block' : 'none';
-                }
-                if (timePressure) {
-                    startTimer();
+
+            try {
+                const hasStarredNow = state.currentSet && state.currentSet.cards && state.currentSet.cards.some(c => c.starred);
+                const starOnlyCheckbox = this.settingsPanel ? this.settingsPanel.querySelector('#setting-star-only') : null;
+                if (!hasStarredNow) {
+                    if (state.currentSet.settings) {
+                        state.currentSet.settings.starOnly = false;
+                    }
+                    if (starOnlyCheckbox) {
+                        starOnlyCheckbox.checked = false;
+                        starOnlyCheckbox.disabled = true;
+                        const label = this.overlay.querySelector('label[for="mc-star-only"]');
+                        const switchEl = this.overlay.querySelector('.fc-switch');
+                        if (label) label.style.cssText = 'opacity: 0.5; cursor: not-allowed;';
+                        if (switchEl) switchEl.style.cssText = 'opacity: 0.5; cursor: not-allowed; pointer-events: none;';
+                    }
                 } else {
-                    stopTimer();
+                    if (starOnlyCheckbox) {
+                        starOnlyCheckbox.disabled = false;
+                        const label = this.overlay.querySelector('label[for="mc-star-only"]');
+                        const switchEl = this.overlay.querySelector('.fc-switch');
+                        if (label) label.style.cssText = '';
+                        if (switchEl) switchEl.style.cssText = '';
+                    }
                 }
-                Toast.show(timePressure ? 'Tijdsdruk ingeschakeld.' : 'Tijdsdruk uitgeschakeld.', 'success');
+                await state.saveAndSyncCurrentSet();
+                if (state.refreshTermsList) {
+                    state.refreshTermsList();
+                }
+            } catch (err) {
+                card.starred = !card.starred;
+                const revertedStarred = !!card.starred;
+                if (revertedStarred) {
+                    this.starBtn.classList.add('starred');
+                    icon.style.fontVariationSettings = "'FILL' 1";
+                } else {
+                    this.starBtn.classList.remove('starred');
+                    icon.style.fontVariationSettings = "'FILL' 0";
+                }
+                Toast.show('Fout bij bijwerken van ster: ' + err.message, 'error');
             }
-            settingsPanel.close();
-        }
-    });
+        });
 
-    const clickOutsideHandler = (e) => {
-        if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
-            settingsPanel.close();
-        }
-    };
-    document.addEventListener('click', clickOutsideHandler);
-
-    function closeMC() {
-        stopTimer();
-        document.removeEventListener('click', clickOutsideHandler);
-        overlay.classList.remove('active');
-        overlay.style.display = 'none'; 
-        if (mainWrapper) {
-            Array.from(mainWrapper.children).forEach(child => {
-                if (child !== overlay) {
-                    child.style.display = child.getAttribute('data-prev-display') || '';
-                    child.removeAttribute('data-prev-display');
-                }
+        if (this.speakBtn) {
+            this.speakBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = this.activeQueue[this.currentIndex];
+                if (!card) return;
+                const text = this.settings.swapSides ? card.definition : card.term;
+                const lang = this.settings.swapSides ? (state.currentSet.lang_col2 || state.currentSet.lang_col1) : state.currentSet.lang_col1;
+                speakText(text, lang);
             });
         }
+
+        this.nextBtn.addEventListener('click', () => this.handleNext());
+        this.closeBtn.addEventListener('click', () => this.closeOverlay());
     }
 
-    function generateOptions(correctCard) {
-        const correctText = swapSides ? correctCard.term : correctCard.definition;
+    triggerTimer() {
+        this.startTimer(() => {
+            this.selectOption(null, null);
+        });
+    }
+
+    generateOptions(correctCard) {
+        const correctText = this.settings.swapSides ? correctCard.term : correctCard.definition;
+        const otherCards = state.currentSet.cards.filter(c => this.getCardKey(c) !== this.getCardKey(correctCard));
+        const potentialDistractors = [...new Set(otherCards.map(c => this.settings.swapSides ? c.term : c.definition))].filter(t => t !== correctText);
         
-        
-        const otherCards = state.currentSet.cards.filter(c => getCardKey(c) !== getCardKey(correctCard));
-        
-        
-        const potentialDistractors = [...new Set(otherCards.map(c => swapSides ? c.term : c.definition))].filter(t => t !== correctText);
-        
-        
-        shuffleArray(potentialDistractors);
+        this.shuffleArray(potentialDistractors);
         const distractors = potentialDistractors.slice(0, 3);
-        
         const allOptions = [correctText, ...distractors];
-        shuffleArray(allOptions);
+        this.shuffleArray(allOptions);
         
         return {
             options: allOptions,
@@ -408,37 +312,34 @@ function openMultipleChoiceQuiz(options = {}) {
         };
     }
 
-    let currentOptionsData = null;
-
-    function updateQuestion() {
-        answered = false;
-        nextBtn.style.display = 'none';
+    updateQuestion() {
+        this.answered = false;
+        this.nextBtn.style.display = 'none';
         
-        const card = activeQueue[currentIndex];
-        startTimer();
+        const card = this.activeQueue[this.currentIndex];
+        this.triggerTimer();
         if (!card) return;
 
-        if (swapSides) {
-            questionTextEl.textContent = card.definition;
+        if (this.settings.swapSides) {
+            this.questionTextEl.textContent = card.definition;
             if (state.currentSet.mode === 'talen') {
-                questionLabelEl.textContent = state.currentSet.lang2 || 'Definitie';
+                this.questionLabelEl.textContent = state.currentSet.lang2 || 'Definitie';
             } else {
-                questionLabelEl.textContent = 'Definitie';
+                this.questionLabelEl.textContent = 'Definitie';
             }
         } else {
-            questionTextEl.textContent = card.term;
+            this.questionTextEl.textContent = card.term;
             if (state.currentSet.mode === 'talen') {
-                questionLabelEl.textContent = state.currentSet.lang1 || 'Term';
+                this.questionLabelEl.textContent = state.currentSet.lang1 || 'Term';
             } else {
-                questionLabelEl.textContent = 'Term';
+                this.questionLabelEl.textContent = 'Term';
             }
         }
 
+        this.currentOptionsData = this.generateOptions(card);
         
-        currentOptionsData = generateOptions(card);
-        
-        optionsGridEl.innerHTML = '';
-        currentOptionsData.options.forEach((optText, index) => {
+        this.optionsGridEl.innerHTML = '';
+        this.currentOptionsData.options.forEach((optText, index) => {
             const letter = String.fromCharCode(65 + index); 
             const btn = document.createElement('button');
             btn.className = 'mc-option-btn';
@@ -446,43 +347,41 @@ function openMultipleChoiceQuiz(options = {}) {
                 <span class="mc-option-badge">${letter}</span>
                 <span>${escapeHtml(optText)}</span>
             `;
-            btn.addEventListener('click', () => selectOption(btn, optText));
-            optionsGridEl.appendChild(btn);
+            btn.addEventListener('click', () => this.selectOption(btn, optText));
+            this.optionsGridEl.appendChild(btn);
         });
 
-        
         const isStarred = !!card.starred;
-        const icon = starBtn.querySelector('.material-symbols-rounded');
+        const icon = this.starBtn.querySelector('.material-symbols-rounded');
         if (isStarred) {
-            starBtn.classList.add('starred');
+            this.starBtn.classList.add('starred');
             icon.style.fontVariationSettings = "'FILL' 1";
         } else {
-            starBtn.classList.remove('starred');
+            this.starBtn.classList.remove('starred');
             icon.style.fontVariationSettings = "'FILL' 0";
         }
 
-        
-        const progressPercentage = (learnedCardKeys.size / totalUniqueCards) * 100;
-        progressTextEl.textContent = `Geleerd: ${learnedCardKeys.size} van ${totalUniqueCards} kaarten${isReviewPhase ? ' (Herhalingsfase)' : ''}`;
-        progressFillEl.style.width = `${progressPercentage}%`;
+        const totalUniqueCards = this.originalCards.length;
+        const progressPercentage = (this.learnedCardKeys.size / totalUniqueCards) * 100;
+        this.progressTextEl.textContent = `Geleerd: ${this.learnedCardKeys.size} van ${totalUniqueCards} kaarten${this.isReviewPhase ? ' (Herhalingsfase)' : ''}`;
+        this.progressFillEl.style.width = `${progressPercentage}%`;
 
-        if (autoSpeak) {
-            const text = swapSides ? card.definition : card.term;
-            const lang = swapSides ? (state.currentSet.lang_col2 || state.currentSet.lang_col1) : state.currentSet.lang_col1;
+        if (this.settings.autoSpeak) {
+            const text = this.settings.swapSides ? card.definition : card.term;
+            const lang = this.settings.swapSides ? (state.currentSet.lang_col2 || state.currentSet.lang_col1) : state.currentSet.lang_col1;
             speakText(text, lang);
         }
     }
 
-    function selectOption(selectedBtn, selectedText) {
-        if (answered) return;
-        answered = true;
-        stopTimer();
+    selectOption(selectedBtn, selectedText) {
+        if (this.answered) return;
+        this.answered = true;
+        this.stopTimer();
 
-        const correctText = currentOptionsData.correctAnswer;
+        const correctText = this.currentOptionsData.correctAnswer;
         const correct = (selectedText === correctText);
 
-        
-        Array.from(optionsGridEl.children).forEach(btn => {
+        Array.from(this.optionsGridEl.children).forEach(btn => {
             btn.disabled = true;
             const textSpan = btn.querySelector('span:not(.mc-option-badge)');
             if (textSpan.textContent === correctText) {
@@ -494,17 +393,17 @@ function openMultipleChoiceQuiz(options = {}) {
             if (selectedBtn) {
                 selectedBtn.classList.add('incorrect');
             }
-            submitAnswer(false);
+            this.submitAnswer(false);
         } else {
-            submitAnswer(true);
+            this.submitAnswer(true);
         }
 
-        nextBtn.style.display = 'inline-flex';
+        this.nextBtn.style.display = 'inline-flex';
     }
 
-    function checkFinished() {
-        if (learnedCardKeys.size === totalUniqueCards) {
-            overlay.innerHTML = `
+    checkFinished() {
+        if (this.learnedCardKeys.size === this.originalCards.length) {
+            this.overlay.innerHTML = `
                 <div class="mc-container" style="text-align: center;">
                     <span class="material-symbols-rounded" style="font-size: 5em; color: var(--primary); margin-bottom: 20px;">emoji_events</span>
                     <h2 class="mc-title" style="font-size: 2em; margin-bottom: 10px;">Goed gedaan!</h2>
@@ -516,72 +415,67 @@ function openMultipleChoiceQuiz(options = {}) {
                 </div>
             `;
             
-            document.getElementById('mc-restart').addEventListener('click', () => {
-                document.removeEventListener('click', clickOutsideHandler);
-                openMultipleChoiceQuiz({ starOnly, randomize, swapSides });
+            this.overlay.querySelector('#mc-restart').addEventListener('click', () => {
+                this.cleanupListeners();
+                this.open({ starOnly: this.settings.starOnly, randomize: this.settings.randomize, swapSides: this.settings.swapSides });
             });
-            document.getElementById('mc-finish-close').addEventListener('click', () => {
-                closeMC();
+            this.overlay.querySelector('#mc-finish-close').addEventListener('click', () => {
+                this.closeOverlay();
             });
             return true;
         }
         return false;
     }
 
-    
-    let currentQuestionCorrect = true;
-
-    function submitAnswer(correct) {
-        const currentCard = activeQueue[currentIndex];
-        const cardKey = getCardKey(currentCard);
+    submitAnswer(correct) {
+        const currentCard = this.activeQueue[this.currentIndex];
+        const cardKey = this.getCardKey(currentCard);
 
         if (correct) {
-            currentQuestionCorrect = true;
-            if (isReviewPhase) {
+            if (this.isReviewPhase) {
                 let appearsLater = false;
-                for (let i = currentIndex + 1; i < activeQueue.length; i++) {
-                    if (getCardKey(activeQueue[i]) === cardKey) {
+                for (let i = this.currentIndex + 1; i < this.activeQueue.length; i++) {
+                    if (this.getCardKey(this.activeQueue[i]) === cardKey) {
                         appearsLater = true;
                         break;
                     }
                 }
                 if (!appearsLater) {
-                    learnedCardKeys.add(cardKey);
+                    this.learnedCardKeys.add(cardKey);
                 }
             } else {
-                if (!failureCounts.has(cardKey) || failureCounts.get(cardKey) === 0) {
-                    learnedCardKeys.add(cardKey);
+                if (!this.failureCounts.has(cardKey) || this.failureCounts.get(cardKey) === 0) {
+                    this.learnedCardKeys.add(cardKey);
                 }
             }
         } else {
-            currentQuestionCorrect = false;
-            failureCounts.set(cardKey, (failureCounts.get(cardKey) || 0) + 1);
+            this.failureCounts.set(cardKey, (this.failureCounts.get(cardKey) || 0) + 1);
 
             const offset = Math.floor(Math.random() * 3) + 3;
-            const insertIndex = currentIndex + 1 + offset;
+            const insertIndex = this.currentIndex + 1 + offset;
             
-            if (insertIndex >= activeQueue.length) {
-                activeQueue.push(currentCard);
+            if (insertIndex >= this.activeQueue.length) {
+                this.activeQueue.push(currentCard);
             } else {
-                activeQueue.splice(insertIndex, 0, currentCard);
+                this.activeQueue.splice(insertIndex, 0, currentCard);
             }
         }
     }
 
-    function handleNext() {
-        stopTimer();
-        if (checkFinished()) {
+    handleNext() {
+        this.stopTimer();
+        if (this.checkFinished()) {
             return;
         }
 
-        currentIndex++;
+        this.currentIndex++;
 
-        if (currentIndex >= activeQueue.length) {
-            isReviewPhase = true;
+        if (this.currentIndex >= this.activeQueue.length) {
+            this.isReviewPhase = true;
             const reviewCards = [];
-            originalCards.forEach(c => {
-                const key = getCardKey(c);
-                const failures = failureCounts.get(key) || 0;
+            this.originalCards.forEach(c => {
+                const key = this.getCardKey(c);
+                const failures = this.failureCounts.get(key) || 0;
                 if (failures > 0) {
                     const repetitions = Math.min(3, failures * 2);
                     for (let r = 0; r < repetitions; r++) {
@@ -591,92 +485,33 @@ function openMultipleChoiceQuiz(options = {}) {
             });
             
             if (reviewCards.length > 0) {
-                activeQueue = generateNoAdjacentQueue(reviewCards);
-                currentIndex = 0;
+                this.activeQueue = this.generateNoAdjacentQueue(reviewCards);
+                this.currentIndex = 0;
             }
         }
 
-        updateQuestion();
+        this.updateQuestion();
     }
 
-    
-    starBtn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (!isOwner) return;
-        const currentCard = activeQueue[currentIndex];
-        if (!currentCard) return;
-
-        currentCard.starred = !currentCard.starred;
-
-        const isStarred = !!currentCard.starred;
-        const icon = starBtn.querySelector('.material-symbols-rounded');
-        if (isStarred) {
-            starBtn.classList.add('starred');
-            icon.style.fontVariationSettings = "'FILL' 1";
-        } else {
-            starBtn.classList.remove('starred');
-            icon.style.fontVariationSettings = "'FILL' 0";
+    cleanupListeners() {
+        super.cleanupListeners();
+        if (this.clickOutsideHandler) {
+            document.removeEventListener('click', this.clickOutsideHandler);
         }
-
-        try {
-            const hasStarredNow = state.currentSet && state.currentSet.cards && state.currentSet.cards.some(c => c.starred);
-            const starOnlyCheckbox = settingsPanel ? settingsPanel.querySelector('#setting-star-only') : null;
-            if (!hasStarredNow) {
-                if (state.currentSet.settings) {
-                    state.currentSet.settings.starOnly = false;
-                }
-                if (starOnlyCheckbox) {
-                    starOnlyCheckbox.checked = false;
-                    starOnlyCheckbox.disabled = true;
-                    const label = overlay.querySelector('label[for="mc-star-only"]');
-                    const switchEl = overlay.querySelector('.fc-switch');
-                    if (label) label.style.cssText = 'opacity: 0.5; cursor: not-allowed;';
-                    if (switchEl) switchEl.style.cssText = 'opacity: 0.5; cursor: not-allowed; pointer-events: none;';
-                }
-            } else {
-                if (starOnlyCheckbox) {
-                    starOnlyCheckbox.disabled = false;
-                    const label = overlay.querySelector('label[for="mc-star-only"]');
-                    const switchEl = overlay.querySelector('.fc-switch');
-                    if (label) label.style.cssText = '';
-                    if (switchEl) switchEl.style.cssText = '';
-                }
-            }
-            await state.saveAndSyncCurrentSet();
-            if (state.refreshTermsList) {
-                state.refreshTermsList();
-            }
-        } catch (err) {
-            currentCard.starred = !currentCard.starred;
-            const revertedStarred = !!currentCard.starred;
-            if (revertedStarred) {
-                starBtn.classList.add('starred');
-                icon.style.fontVariationSettings = "'FILL' 1";
-            } else {
-                starBtn.classList.remove('starred');
-                icon.style.fontVariationSettings = "'FILL' 0";
-            }
-            Toast.show('Fout bij bijwerken van ster: ' + err.message, 'error');
+        if (this.keydownHandler) {
+            document.removeEventListener('keydown', this.keydownHandler);
         }
-    });
-
-    const speakBtn = overlay.querySelector('.btn-mc-speak');
-    if (speakBtn) {
-        speakBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const currentCard = activeQueue[currentIndex];
-            if (!currentCard) return;
-            const text = swapSides ? currentCard.definition : currentCard.term;
-            const lang = swapSides ? (state.currentSet.lang_col2 || state.currentSet.lang_col1) : state.currentSet.lang_col1;
-            speakText(text, lang);
-        });
     }
-
-    nextBtn.addEventListener('click', handleNext);
-    closeBtn.addEventListener('click', closeMC);
-
-    
-    updateQuestion();
 }
 
+const mcInstance = new MultipleChoiceQuiz();
 
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('click', (e) => {
+        const btnMultipleChoice = e.target.closest('#btn-multiple-choice');
+        if (btnMultipleChoice) {
+            e.preventDefault();
+            mcInstance.open();
+        }
+    });
+});

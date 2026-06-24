@@ -1,261 +1,201 @@
+import { BaseQuiz } from './base-quiz.js';
 import { state } from './state.js';
 import Toast from './toast.js';
 import { speakText, escapeHtml, checkSpellingAnswer } from './main.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.addEventListener('click', (e) => {
-        const btnLearnMode = e.target.closest('#btn-learn-mode');
-        if (btnLearnMode) {
-            e.preventDefault();
-            openLearnMode();
-        }
-    });
-});
-
-function openLearnMode() {
-    const isOwner = state.currentUser && state.currentSet && state.currentSet.user_id === state.currentUser.id;
-    if (!state.currentSet || !state.currentSet.cards || state.currentSet.cards.length === 0) {
-        Toast.show('Deze set heeft geen kaarten om te leren.', 'error');
-        return;
+class LearnModeQuiz extends BaseQuiz {
+    constructor() {
+        super('learn', 'learn-overlay', 'learn-overlay');
+        this.cardLevels = new Map();
+        this.activeBatch = [];
+        this.batchSize = 5;
+        this.lastCardKey = null;
+        this.failedInCurrentBatch = new Set();
+        this.nextQueueIndex = 0;
+        this.clickOutsideHandler = null;
     }
 
-    const mainWrapper = document.querySelector('main.set-wrapper');
-    let overlay = document.getElementById('learn-overlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'learn-overlay';
-        overlay.className = 'learn-overlay';
-        document.body.appendChild(overlay);
-    }
-
-    if (mainWrapper) {
-        Array.from(mainWrapper.children).forEach(child => {
-            if (child !== overlay) {
-                if (!child.hasAttribute('data-prev-display')) {
-                    child.setAttribute('data-prev-display', child.style.display || '');
-                }
-                child.style.display = 'none';
-            }
-        });
-    }
-    window.scrollTo(0, 0);
-
-    const originalCards = state.currentSet.cards;
-    const hasStarred = originalCards.some(c => c.starred);
-
-    const savedSettings = (state.currentSet && state.currentSet.settings) || {};
-    let settings = {
-        flashcards: ('learn_flashcards' in savedSettings) ? !!savedSettings.learn_flashcards : true,
-        multipleChoice: ('learn_multipleChoice' in savedSettings) ? !!savedSettings.learn_multipleChoice : true,
-        spelling: ('learn_spelling' in savedSettings) ? !!savedSettings.learn_spelling : true,
-        starOnly: ('starOnly' in savedSettings) ? !!savedSettings.starOnly : false,
-        randomize: ('randomize' in savedSettings) ? !!savedSettings.randomize : true,
-        swapSides: ('swapSides' in savedSettings) ? !!savedSettings.swapSides : false,
-        autoSpeak: ('autoSpeak' in savedSettings) ? !!savedSettings.autoSpeak : false,
-        ignoreParentheses: ('ignoreParentheses' in savedSettings) ? !!savedSettings.ignoreParentheses : true,
-        skipPunctuation: ('skipPunctuation' in savedSettings) ? !!savedSettings.skipPunctuation : true,
-        allowSlashParts: ('allowSlashParts' in savedSettings) ? !!savedSettings.allowSlashParts : true
-    };
-
-    if (!hasStarred) {
-        settings.starOnly = false;
-        if (state.currentSet && state.currentSet.settings && state.currentSet.settings.starOnly) {
-            state.currentSet.settings.starOnly = false;
-        }
-    }
-
-    let activeQueue = [...originalCards];
-    let cardLevels = new Map();
-    let activeBatch = [];
-    const batchSize = 5;
-    let lastCardKey = null;
-    const failedInCurrentBatch = new Set();
-    let nextQueueIndex = 0;
-
-    overlay.innerHTML = `
-        <div class="learn-container" style="position: relative;">
-            <div class="learn-header">
-                <span class="learn-title">${escapeHtml(state.currentSet.title || 'Leermodus')}</span>
-                <div style="display: flex; gap: 8px; align-items: center; position: relative;">
-                    <button class="btn-close-flashcards" id="learn-settings-btn" title="Instellingen" style="transform: none;">
-                        <span class="material-symbols-rounded">settings</span>
-                    </button>
-                    <button class="btn-close-flashcards" id="learn-close">
-                        <span class="material-symbols-rounded">close</span>
-                    </button>
-
-            <!-- Settings Panel Component -->
-                    <quizy-settings-panel id="learn-settings-panel" mode="learn"></quizy-settings-panel>
-                </div>
-            </div>
-
-            <div class="progress-container">
-                <span class="progress-text" id="learn-progress-text">Voortgang: 0%</span>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="learn-progress-fill"></div>
-                </div>
-            </div>
-
-            <div class="learn-card-area" id="learn-card-area"></div>
-
-            <div class="learn-batch-dots" id="learn-batch-dots"></div>
-        </div>
-
-        <!-- Custom Confirmation Modal Component placed outside learn-container to prevent transform/perspective containment -->
-        <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>
-    `;
-
-    overlay.style.display = 'flex';
-    overlay.classList.add('active');
-
-    const cardArea = document.getElementById('learn-card-area');
-    const batchDotsContainer = document.getElementById('learn-batch-dots');
-    const progressText = document.getElementById('learn-progress-text');
-    const progressFill = document.getElementById('learn-progress-fill');
-    const closeBtn = document.getElementById('learn-close');
-    
-    const settingsBtn = document.getElementById('learn-settings-btn');
-    const settingsPanel = document.getElementById('learn-settings-panel');
-    const confirmModal = document.getElementById('learn-confirm-modal');
-
-    closeBtn.addEventListener('click', closeLearn);
-
-    settingsBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (settingsPanel.classList.contains('active')) {
-            settingsPanel.close();
-        } else {
-            const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
-            settingsPanel.open(
-                settings,
-                hasStarred,
-                state.currentSet.mode === 'talen',
-                state.currentSet.lang1,
-                state.currentSet.lang2
-            );
-        }
-    });
-
-    settingsPanel.addEventListener('save', (e) => {
-        const { 
-            flashcards: fc, 
-            multipleChoice: mc, 
-            spelling: sp, 
-            starOnly: star,
-            randomize,
-            swapSides,
-            autoSpeak,
-            ignoreParentheses,
-            skipPunctuation,
-            allowSlashParts
-        } = e.detail;
-
-        if (!fc && !mc && !sp) {
-            Toast.show('Minimaal één leermethode moet actief zijn.', 'error');
-            return;
-        }
-
-        const methodsChanged = (fc !== settings.flashcards) || 
-                               (mc !== settings.multipleChoice) || 
-                               (sp !== settings.spelling) || 
-                               (star !== settings.starOnly);
-
-        const applySettings = (restart) => {
-            settings.flashcards = fc;
-            settings.multipleChoice = mc;
-            settings.spelling = sp;
-            settings.starOnly = star;
-            settings.randomize = randomize;
-            settings.swapSides = swapSides;
-            settings.autoSpeak = autoSpeak;
-            settings.ignoreParentheses = ignoreParentheses;
-            settings.skipPunctuation = skipPunctuation;
-            settings.allowSlashParts = allowSlashParts;
-
-            if (state.currentSet) {
-                state.currentSet.settings = {
-                    ...(state.currentSet.settings || {}),
-                    learn_flashcards: settings.flashcards,
-                    learn_multipleChoice: settings.multipleChoice,
-                    learn_spelling: settings.spelling,
-                    starOnly: settings.starOnly,
-                    randomize: settings.randomize,
-                    swapSides: settings.swapSides,
-                    autoSpeak: settings.autoSpeak,
-                    ignoreParentheses: settings.ignoreParentheses,
-                    skipPunctuation: settings.skipPunctuation,
-                    allowSlashParts: settings.allowSlashParts
-                };
-                if (isOwner && state.saveAndSyncCurrentSet) {
-                    state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
-                }
-            }
-
-            settingsPanel.close();
-            
-            if (restart) {
-                initializeSession();
-            } else {
-                showNextQuestion();
-            }
+    open(options = {}) {
+        const savedSettings = (state.currentSet && state.currentSet.settings) || {};
+        const mappedOptions = {
+            flashcards: 'flashcards' in options ? !!options.flashcards : ('learn_flashcards' in savedSettings ? !!savedSettings.learn_flashcards : true),
+            multipleChoice: 'multipleChoice' in options ? !!options.multipleChoice : ('learn_multipleChoice' in savedSettings ? !!savedSettings.learn_multipleChoice : true),
+            spelling: 'spelling' in options ? !!options.spelling : ('learn_spelling' in savedSettings ? !!savedSettings.learn_spelling : true),
+            starOnly: 'starOnly' in options ? !!options.starOnly : ('starOnly' in savedSettings ? !!savedSettings.starOnly : false),
+            randomize: 'randomize' in options ? !!options.randomize : ('randomize' in savedSettings ? !!savedSettings.randomize : true),
+            swapSides: 'swapSides' in options ? !!options.swapSides : ('swapSides' in savedSettings ? !!savedSettings.swapSides : false),
+            autoSpeak: 'autoSpeak' in options ? !!options.autoSpeak : ('autoSpeak' in savedSettings ? !!savedSettings.autoSpeak : false),
+            ignoreParentheses: 'ignoreParentheses' in options ? !!options.ignoreParentheses : ('ignoreParentheses' in savedSettings ? !!savedSettings.ignoreParentheses : true),
+            skipPunctuation: 'skipPunctuation' in options ? !!options.skipPunctuation : ('skipPunctuation' in savedSettings ? !!savedSettings.skipPunctuation : true),
+            allowSlashParts: 'allowSlashParts' in options ? !!options.allowSlashParts : ('allowSlashParts' in savedSettings ? !!savedSettings.allowSlashParts : true)
         };
 
-        if (methodsChanged) {
-            confirmModal.open({
-                title: 'Sessie herstarten?',
-                message: "Als je de leermethodes of de 'Alleen ster'-modus aanpast, wordt je huidige sessie opnieuw gestart.",
-                sub: 'Weet je zeker dat je wilt doorgaan?'
-            });
+        const success = this.initSession(mappedOptions, mappedOptions);
+        if (!success) return;
 
-            const onConfirm = () => {
-                confirmModal.removeEventListener('confirm', onConfirm);
-                applySettings(true);
-            };
-            confirmModal.addEventListener('confirm', onConfirm);
-        } else {
-            applySettings(false);
-        }
-    });
-
-    const clickOutsideHandler = (e) => {
-        if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
-            settingsPanel.close();
-        }
-    };
-    document.addEventListener('click', clickOutsideHandler);
-
-
-    function getCardKey(card) {
-        return `idx_${state.currentSet.cards.indexOf(card)}`;
+        this.renderLayout();
+        this.setupElements();
+        this.addEventListeners();
+        this.initializeSession();
     }
 
-    function getStartingLevel() {
-        if (settings.flashcards) return 0;
-        if (settings.multipleChoice) return 1;
+    renderLayout() {
+        this.overlay.innerHTML = `
+            <div class="learn-container" style="position: relative;">
+                <div class="learn-header">
+                    <span class="learn-title">${escapeHtml(state.currentSet.title || 'Leermodus')}</span>
+                    <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                        <button class="btn-close-flashcards" id="learn-settings-btn" title="Instellingen" style="transform: none;">
+                            <span class="material-symbols-rounded">settings</span>
+                        </button>
+                        <button class="btn-close-flashcards" id="learn-close">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                        <quizy-settings-panel id="learn-settings-panel" mode="learn"></quizy-settings-panel>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <span class="progress-text" id="learn-progress-text">Voortgang: 0%</span>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="learn-progress-fill"></div>
+                    </div>
+                </div>
+
+                <div class="learn-card-area" id="learn-card-area"></div>
+
+                <div class="learn-batch-dots" id="learn-batch-dots"></div>
+            </div>
+
+            <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>
+        `;
+    }
+
+    setupElements() {
+        this.cardArea = this.overlay.querySelector('#learn-card-area');
+        this.batchDotsContainer = this.overlay.querySelector('#learn-batch-dots');
+        this.progressText = this.overlay.querySelector('#learn-progress-text');
+        this.progressFill = this.overlay.querySelector('#learn-progress-fill');
+        this.closeBtn = this.overlay.querySelector('#learn-close');
+        this.settingsBtn = this.overlay.querySelector('#learn-settings-btn');
+        this.settingsPanel = this.overlay.querySelector('#learn-settings-panel');
+        this.confirmModal = this.overlay.querySelector('#learn-confirm-modal');
+    }
+
+    addEventListeners() {
+        this.closeBtn.addEventListener('click', () => this.closeOverlay());
+
+        this.settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.settingsPanel.classList.contains('active')) {
+                this.settingsPanel.close();
+            } else {
+                const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
+                this.settingsPanel.open(
+                    this.settings,
+                    hasStarred,
+                    state.currentSet.mode === 'talen',
+                    state.currentSet.lang1,
+                    state.currentSet.lang2
+                );
+            }
+        });
+
+        this.settingsPanel.addEventListener('save', async (e) => {
+            const newSettings = e.detail;
+
+            if (!newSettings.flashcards && !newSettings.multipleChoice && !newSettings.spelling) {
+                Toast.show('Minimaal één leermethode moet actief zijn.', 'error');
+                return;
+            }
+
+            const methodsChanged = (newSettings.flashcards !== this.settings.flashcards) || 
+                                   (newSettings.multipleChoice !== this.settings.multipleChoice) || 
+                                   (newSettings.spelling !== this.settings.spelling) || 
+                                   (newSettings.starOnly !== this.settings.starOnly);
+
+            const applyNewSettings = async (restart) => {
+                // Save settings in DB with mapped names
+                const saveMapped = {
+                    learn_flashcards: newSettings.flashcards,
+                    learn_multipleChoice: newSettings.multipleChoice,
+                    learn_spelling: newSettings.spelling,
+                    starOnly: newSettings.starOnly,
+                    randomize: newSettings.randomize,
+                    swapSides: newSettings.swapSides,
+                    autoSpeak: newSettings.autoSpeak,
+                    ignoreParentheses: newSettings.ignoreParentheses,
+                    skipPunctuation: newSettings.skipPunctuation,
+                    allowSlashParts: newSettings.allowSlashParts
+                };
+                
+                await this.saveSettings(saveMapped);
+                
+                // Update local memory settings
+                Object.assign(this.settings, newSettings);
+
+                this.settingsPanel.close();
+                
+                if (restart) {
+                    this.closeOverlay();
+                    this.open(newSettings);
+                } else {
+                    this.showNextQuestion();
+                }
+            };
+
+            if (methodsChanged) {
+                this.confirmModal.open({
+                    title: 'Sessie herstarten?',
+                    message: "Als je de leermethodes of de 'Alleen ster'-modus aanpast, wordt je huidige sessie opnieuw gestart.",
+                    sub: 'Weet je zeker dat je wilt doorgaan?'
+                });
+
+                const onConfirm = () => {
+                    this.confirmModal.removeEventListener('confirm', onConfirm);
+                    applyNewSettings(true);
+                };
+                this.confirmModal.addEventListener('confirm', onConfirm);
+            } else {
+                applyNewSettings(false);
+            }
+        });
+
+        this.clickOutsideHandler = (e) => {
+            if (!this.settingsPanel.contains(e.target) && e.target !== this.settingsBtn && !this.settingsBtn.contains(e.target)) {
+                this.settingsPanel.close();
+            }
+        };
+        document.addEventListener('click', this.clickOutsideHandler);
+    }
+
+    getStartingLevel() {
+        if (this.settings.flashcards) return 0;
+        if (this.settings.multipleChoice) return 1;
         return 2;
     }
 
-    function getMaxLevel() {
-        if (settings.spelling) return 3;
-        if (settings.multipleChoice) return 2;
+    getMaxLevel() {
+        if (this.settings.spelling) return 3;
+        if (this.settings.multipleChoice) return 2;
         return 1;
     }
 
-    function normalizeCardLevel(lvl) {
+    normalizeCardLevel(lvl) {
         let current = lvl;
-        const start = getStartingLevel();
-        const max = getMaxLevel();
+        const start = this.getStartingLevel();
+        const max = this.getMaxLevel();
 
         if (current < start) {
             current = start;
         }
-        if (current === 0 && !settings.flashcards) {
+        if (current === 0 && !this.settings.flashcards) {
             current = 1;
         }
-        if (current === 1 && !settings.multipleChoice) {
+        if (current === 1 && !this.settings.multipleChoice) {
             current = 2;
         }
-        if (current === 2 && !settings.spelling) {
+        if (current === 2 && !this.settings.spelling) {
             current = 3;
         }
         if (current > max) {
@@ -264,58 +204,49 @@ function openLearnMode() {
         return current;
     }
 
-    function advanceCardLevel(card, newRawLevel) {
-        const key = getCardKey(card);
-        cardLevels.set(key, newRawLevel);
-        const normalized = normalizeCardLevel(newRawLevel);
-        if (normalized >= getMaxLevel()) {
-            const idx = activeBatch.findIndex(c => getCardKey(c) === key);
+    advanceCardLevel(card, newRawLevel) {
+        const key = this.getCardKey(card);
+        this.cardLevels.set(key, newRawLevel);
+        const normalized = this.normalizeCardLevel(newRawLevel);
+        if (normalized >= this.getMaxLevel()) {
+            const idx = this.activeBatch.findIndex(c => this.getCardKey(c) === key);
             if (idx !== -1) {
-                activeBatch.splice(idx, 1);
+                this.activeBatch.splice(idx, 1);
             }
         }
     }
 
-    function initializeSession() {
-        activeQueue = settings.starOnly ? originalCards.filter(c => c.starred) : [...originalCards];
-        
-        if (settings.randomize) {
-            for (let i = activeQueue.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [activeQueue[i], activeQueue[j]] = [activeQueue[j], activeQueue[i]];
-            }
-        }
-
-        cardLevels.clear();
-        activeQueue.forEach(card => {
-            cardLevels.set(getCardKey(card), getStartingLevel());
+    initializeSession() {
+        this.cardLevels.clear();
+        this.activeQueue.forEach(card => {
+            this.cardLevels.set(this.getCardKey(card), this.getStartingLevel());
         });
 
-        activeBatch = [];
-        lastCardKey = null;
-        failedInCurrentBatch.clear();
-        nextQueueIndex = 0;
+        this.activeBatch = [];
+        this.lastCardKey = null;
+        this.failedInCurrentBatch.clear();
+        this.nextQueueIndex = 0;
 
-        fillActiveBatch();
-        showNextQuestion();
+        this.fillActiveBatch();
+        this.showNextQuestion();
     }
 
-    function fillActiveBatch() {
-        if (activeBatch.length === 0) {
-            failedInCurrentBatch.forEach(key => {
-                cardLevels.set(key, getStartingLevel());
+    fillActiveBatch() {
+        if (this.activeBatch.length === 0) {
+            this.failedInCurrentBatch.forEach(key => {
+                this.cardLevels.set(key, this.getStartingLevel());
             });
-            failedInCurrentBatch.clear();
+            this.failedInCurrentBatch.clear();
 
-            while (activeBatch.length < batchSize) {
+            while (this.activeBatch.length < this.batchSize) {
                 let found = false;
-                for (let i = 0; i < activeQueue.length; i++) {
-                    const idx = (nextQueueIndex + i) % activeQueue.length;
-                    const c = activeQueue[idx];
-                    const key = getCardKey(c);
-                    if (normalizeCardLevel(cardLevels.get(key)) < getMaxLevel() && !activeBatch.some(bc => getCardKey(bc) === key)) {
-                        activeBatch.push(c);
-                        nextQueueIndex = (idx + 1) % activeQueue.length;
+                for (let i = 0; i < this.activeQueue.length; i++) {
+                    const idx = (this.nextQueueIndex + i) % this.activeQueue.length;
+                    const c = this.activeQueue[idx];
+                    const key = this.getCardKey(c);
+                    if (this.normalizeCardLevel(this.cardLevels.get(key)) < this.getMaxLevel() && !this.activeBatch.some(bc => this.getCardKey(bc) === key)) {
+                        this.activeBatch.push(c);
+                        this.nextQueueIndex = (idx + 1) % this.activeQueue.length;
                         found = true;
                         break;
                     }
@@ -325,78 +256,78 @@ function openLearnMode() {
         }
     }
 
-    function updateProgress() {
-        if (activeQueue.length === 0) {
-            progressText.textContent = 'Voortgang: 0%';
-            progressFill.style.width = '0%';
+    updateProgress() {
+        if (this.activeQueue.length === 0) {
+            this.progressText.textContent = 'Voortgang: 0%';
+            this.progressFill.style.width = '0%';
             return;
         }
 
         let totalLevels = 0;
-        cardLevels.forEach((lvl, key) => {
-            const normalized = normalizeCardLevel(lvl);
-            totalLevels += (normalized - getStartingLevel());
+        this.cardLevels.forEach((lvl, key) => {
+            const normalized = this.normalizeCardLevel(lvl);
+            totalLevels += (normalized - this.getStartingLevel());
         });
 
-        const maxDiff = getMaxLevel() - getStartingLevel();
-        const maxLevels = activeQueue.length * maxDiff;
+        const maxDiff = this.getMaxLevel() - this.getStartingLevel();
+        const maxLevels = this.activeQueue.length * maxDiff;
         const percentage = maxLevels > 0 ? Math.round((totalLevels / maxLevels) * 100) : 100;
-        progressText.textContent = `Voortgang: ${percentage}%`;
-        progressFill.style.width = `${percentage}%`;
+        this.progressText.textContent = `Voortgang: ${percentage}%`;
+        this.progressFill.style.width = `${percentage}%`;
 
-        batchDotsContainer.innerHTML = '';
-        activeBatch.forEach(card => {
-            const lvl = normalizeCardLevel(cardLevels.get(getCardKey(card)));
+        this.batchDotsContainer.innerHTML = '';
+        this.activeBatch.forEach(card => {
+            const lvl = this.normalizeCardLevel(this.cardLevels.get(this.getCardKey(card)));
             const dot = document.createElement('div');
             dot.className = `learn-batch-dot level-${lvl}`;
-            batchDotsContainer.appendChild(dot);
+            this.batchDotsContainer.appendChild(dot);
         });
     }
 
-    function showNextQuestion() {
-        fillActiveBatch();
-        updateProgress();
+    showNextQuestion() {
+        this.fillActiveBatch();
+        this.updateProgress();
 
-        if (activeBatch.length === 0) {
-            showCelebration();
+        if (this.activeBatch.length === 0) {
+            this.showCelebration();
             return;
         }
 
         let selectedCard = null;
-        if (activeBatch.length === 1) {
-            selectedCard = activeBatch[0];
+        if (this.activeBatch.length === 1) {
+            selectedCard = this.activeBatch[0];
         } else {
-            const candidates = activeBatch.filter(c => getCardKey(c) !== lastCardKey);
+            const candidates = this.activeBatch.filter(c => this.getCardKey(c) !== this.lastCardKey);
             if (candidates.length > 0) {
                 selectedCard = candidates[Math.floor(Math.random() * candidates.length)];
             } else {
-                selectedCard = activeBatch[Math.floor(Math.random() * activeBatch.length)];
+                selectedCard = this.activeBatch[Math.floor(Math.random() * this.activeBatch.length)];
             }
         }
 
-        const key = getCardKey(selectedCard);
-        const level = normalizeCardLevel(cardLevels.get(key));
+        const key = this.getCardKey(selectedCard);
+        const level = this.normalizeCardLevel(this.cardLevels.get(key));
 
         if (level === 0) {
-            renderFlashcard(selectedCard);
+            this.renderFlashcard(selectedCard);
         } else if (level === 1) {
-            renderMultipleChoice(selectedCard);
+            this.renderMultipleChoice(selectedCard);
         } else if (level === 2) {
-            renderSpelling(selectedCard);
+            this.renderSpelling(selectedCard);
         }
     }
 
-    function renderFlashcard(card) {
-        const questionText = settings.swapSides ? card.definition : card.term;
-        const answerText = settings.swapSides ? card.term : card.definition;
+    renderFlashcard(card) {
+        const questionText = this.settings.swapSides ? card.definition : card.term;
+        const answerText = this.settings.swapSides ? card.term : card.definition;
         const questionLabel = state.currentSet.mode === 'talen' 
-            ? (settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
-            : (settings.swapSides ? 'Definitie' : 'Term');
+            ? (this.settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
+            : (this.settings.swapSides ? 'Definitie' : 'Term');
         const answerLabel = state.currentSet.mode === 'talen'
-            ? (settings.swapSides ? (state.currentSet.lang_col1 || 'Term') : (state.currentSet.lang_col2 || 'Definitie'))
-            : (settings.swapSides ? 'Term' : 'Definitie');
+            ? (this.settings.swapSides ? (state.currentSet.lang_col1 || 'Term') : (state.currentSet.lang_col2 || 'Definitie'))
+            : (this.settings.swapSides ? 'Term' : 'Definitie');
 
-        cardArea.innerHTML = `
+        this.cardArea.innerHTML = `
             <div class="learn-flashcard-wrapper" id="learn-card-wrapper">
                 <button class="learn-speak-btn" id="learn-speak">
                     <span class="material-symbols-rounded">volume_up</span>
@@ -423,12 +354,12 @@ function openLearnMode() {
             </div>
         `;
 
-        const wrapper = document.getElementById('learn-card-wrapper');
+        const wrapper = this.cardArea.querySelector('#learn-card-wrapper');
         wrapper.addEventListener('click', () => {
             wrapper.classList.toggle('flipped');
         });
 
-        const speakBtn = document.getElementById('learn-speak');
+        const speakBtn = this.cardArea.querySelector('#learn-speak');
         speakBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const text = wrapper.classList.contains('flipped') ? answerText : questionText;
@@ -436,45 +367,39 @@ function openLearnMode() {
             speakText(text, lang);
         });
 
-        document.getElementById('learn-btn-no').addEventListener('click', () => {
-            failedInCurrentBatch.add(getCardKey(card));
-            lastCardKey = getCardKey(card);
-            showNextQuestion();
+        this.cardArea.querySelector('#learn-btn-no').addEventListener('click', () => {
+            this.failedInCurrentBatch.add(this.getCardKey(card));
+            this.lastCardKey = this.getCardKey(card);
+            this.showNextQuestion();
         });
 
-        document.getElementById('learn-btn-yes').addEventListener('click', () => {
-            advanceCardLevel(card, 1);
-            lastCardKey = getCardKey(card);
-            showNextQuestion();
+        this.cardArea.querySelector('#learn-btn-yes').addEventListener('click', () => {
+            this.advanceCardLevel(card, 1);
+            this.lastCardKey = this.getCardKey(card);
+            this.showNextQuestion();
         });
 
-        if (settings.autoSpeak) {
+        if (this.settings.autoSpeak) {
             speakText(questionText, state.currentSet.lang_col1);
         }
     }
 
-    function renderMultipleChoice(card) {
-        const questionText = settings.swapSides ? card.definition : card.term;
-        const correctText = settings.swapSides ? card.term : card.definition;
+    renderMultipleChoice(card) {
+        const questionText = this.settings.swapSides ? card.definition : card.term;
+        const correctText = this.settings.swapSides ? card.term : card.definition;
         const questionLabel = state.currentSet.mode === 'talen'
-            ? (settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
-            : (settings.swapSides ? 'Definitie' : 'Term');
+            ? (this.settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
+            : (this.settings.swapSides ? 'Definitie' : 'Term');
 
-        const otherCards = originalCards.filter(c => getCardKey(c) !== getCardKey(card));
-        const potentialDistractors = [...new Set(otherCards.map(c => settings.swapSides ? c.term : c.definition))].filter(t => t !== correctText);
+        const otherCards = this.originalCards.filter(c => this.getCardKey(c) !== this.getCardKey(card));
+        const potentialDistractors = [...new Set(otherCards.map(c => this.settings.swapSides ? c.term : c.definition))].filter(t => t !== correctText);
         
-        for (let i = potentialDistractors.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [potentialDistractors[i], potentialDistractors[j]] = [potentialDistractors[j], potentialDistractors[i]];
-        }
+        this.shuffleArray(potentialDistractors);
         const distractors = potentialDistractors.slice(0, 3);
         const options = [correctText, ...distractors];
-        for (let i = options.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [options[i], options[j]] = [options[j], options[i]];
-        }
+        this.shuffleArray(options);
 
-        cardArea.innerHTML = `
+        this.cardArea.innerHTML = `
             <div class="learn-mc-question-card">
                 <button class="learn-speak-btn" id="learn-speak">
                     <span class="material-symbols-rounded">volume_up</span>
@@ -491,12 +416,12 @@ function openLearnMode() {
             </div>
         `;
 
-        const speakBtn = document.getElementById('learn-speak');
+        const speakBtn = this.cardArea.querySelector('#learn-speak');
         speakBtn.addEventListener('click', () => {
             speakText(questionText, state.currentSet.lang_col1);
         });
 
-        const optionsGrid = document.getElementById('learn-mc-options');
+        const optionsGrid = this.cardArea.querySelector('#learn-mc-options');
         let answered = false;
 
         options.forEach((optText, index) => {
@@ -520,36 +445,36 @@ function openLearnMode() {
                 });
 
                 if (optText === correctText) {
-                    advanceCardLevel(card, 2);
+                    this.advanceCardLevel(card, 2);
                 } else {
                     btn.classList.add('incorrect');
-                    cardLevels.set(getCardKey(card), 0);
-                    failedInCurrentBatch.add(getCardKey(card));
+                    this.cardLevels.set(this.getCardKey(card), 0);
+                    this.failedInCurrentBatch.add(this.getCardKey(card));
                 }
 
-                document.getElementById('learn-mc-action').style.display = 'flex';
+                this.cardArea.querySelector('#learn-mc-action').style.display = 'flex';
             });
             optionsGrid.appendChild(btn);
         });
 
-        document.getElementById('learn-mc-next').addEventListener('click', () => {
-            lastCardKey = getCardKey(card);
-            showNextQuestion();
+        this.cardArea.querySelector('#learn-mc-next').addEventListener('click', () => {
+            this.lastCardKey = this.getCardKey(card);
+            this.showNextQuestion();
         });
 
-        if (settings.autoSpeak) {
+        if (this.settings.autoSpeak) {
             speakText(questionText, state.currentSet.lang_col1);
         }
     }
 
-    function renderSpelling(card) {
-        const questionText = settings.swapSides ? card.definition : card.term;
-        const correctAnswer = settings.swapSides ? card.term : card.definition;
+    renderSpelling(card) {
+        const questionText = this.settings.swapSides ? card.definition : card.term;
+        const correctAnswer = this.settings.swapSides ? card.term : card.definition;
         const questionLabel = state.currentSet.mode === 'talen'
-            ? (settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
-            : (settings.swapSides ? 'Definitie' : 'Term');
+            ? (this.settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
+            : (this.settings.swapSides ? 'Definitie' : 'Term');
 
-        cardArea.innerHTML = `
+        this.cardArea.innerHTML = `
             <div class="learn-mc-question-card">
                 <button class="learn-speak-btn" id="learn-speak">
                     <span class="material-symbols-rounded">volume_up</span>
@@ -573,31 +498,31 @@ function openLearnMode() {
             </form>
         `;
 
-        const speakBtn = document.getElementById('learn-speak');
+        const speakBtn = this.cardArea.querySelector('#learn-speak');
         speakBtn.addEventListener('click', () => {
             speakText(questionText, state.currentSet.lang_col1);
         });
 
-        const form = document.getElementById('learn-sp-form');
-        const input = document.getElementById('learn-sp-input');
-        const feedback = document.getElementById('learn-sp-feedback');
-        const submitBtn = document.getElementById('learn-sp-submit');
-        const skipBtn = document.getElementById('learn-sp-skip');
+        const form = this.cardArea.querySelector('#learn-sp-form');
+        const input = this.cardArea.querySelector('#learn-sp-input');
+        const feedback = this.cardArea.querySelector('#learn-sp-feedback');
+        const submitBtn = this.cardArea.querySelector('#learn-sp-submit');
+        const skipBtn = this.cardArea.querySelector('#learn-sp-skip');
         let answered = false;
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (answered) {
-                lastCardKey = getCardKey(card);
-                showNextQuestion();
+                this.lastCardKey = this.getCardKey(card);
+                this.showNextQuestion();
                 return;
             }
 
             const inputVal = input.value.trim();
             const correct = checkSpellingAnswer(inputVal, correctAnswer, {
-                skipPunctuation: settings.skipPunctuation,
-                allowSlashParts: settings.allowSlashParts,
-                ignoreParentheses: settings.ignoreParentheses
+                skipPunctuation: this.settings.skipPunctuation,
+                allowSlashParts: this.settings.allowSlashParts,
+                ignoreParentheses: this.settings.ignoreParentheses
             });
             answered = true;
             input.disabled = true;
@@ -605,7 +530,7 @@ function openLearnMode() {
             submitBtn.textContent = 'Volgende';
 
             if (correct) {
-                advanceCardLevel(card, 3);
+                this.advanceCardLevel(card, 3);
                 feedback.innerHTML = `
                     <div class="learn-sp-feedback-card correct">
                         <div class="learn-sp-feedback-status correct">
@@ -616,8 +541,8 @@ function openLearnMode() {
                     </div>
                 `;
             } else {
-                cardLevels.set(getCardKey(card), normalizeCardLevel(1));
-                failedInCurrentBatch.add(getCardKey(card));
+                this.cardLevels.set(this.getCardKey(card), this.normalizeCardLevel(1));
+                this.failedInCurrentBatch.add(this.getCardKey(card));
                 feedback.innerHTML = `
                     <div class="learn-sp-feedback-card incorrect">
                         <div class="learn-sp-feedback-status incorrect">
@@ -638,15 +563,13 @@ function openLearnMode() {
             submitBtn.click();
         });
 
-        if (settings.autoSpeak) {
+        if (this.settings.autoSpeak) {
             speakText(questionText, state.currentSet.lang_col1);
         }
     }
 
-
-
-    function showCelebration() {
-        cardArea.innerHTML = `
+    showCelebration() {
+        this.cardArea.innerHTML = `
             <div style="text-align: center; padding: 40px 0;">
                 <span class="material-symbols-rounded" style="font-size: 5em; color: var(--primary); margin-bottom: 20px; animation: bounce 1s infinite alternate;">emoji_events</span>
                 <h2 class="learn-title" style="font-size: 2em; margin-bottom: 10px;">Gefeliciteerd!</h2>
@@ -658,28 +581,31 @@ function openLearnMode() {
             </div>
         `;
 
-        document.getElementById('learn-restart').addEventListener('click', () => {
-            initializeSession();
+        this.cardArea.querySelector('#learn-restart').addEventListener('click', () => {
+            this.initializeSession();
         });
 
-        document.getElementById('learn-finish-close').addEventListener('click', closeLearn);
+        this.cardArea.querySelector('#learn-finish-close').addEventListener('click', () => {
+            this.closeOverlay();
+        });
     }
 
-    function closeLearn() {
-        document.removeEventListener('click', clickOutsideHandler);
-        overlay.classList.remove('active');
-        overlay.style.display = 'none';
-        const mWrapper = document.querySelector('main.set-wrapper');
-        if (mWrapper) {
-            Array.from(mWrapper.children).forEach(child => {
-                if (child !== overlay) {
-                    child.style.display = child.getAttribute('data-prev-display') || '';
-                    child.removeAttribute('data-prev-display');
-                }
-            });
+    cleanupListeners() {
+        super.cleanupListeners();
+        if (this.clickOutsideHandler) {
+            document.removeEventListener('click', this.clickOutsideHandler);
         }
     }
-
-
-    initializeSession();
 }
+
+const learnModeInstance = new LearnModeQuiz();
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('click', (e) => {
+        const btnLearnMode = e.target.closest('#btn-learn-mode');
+        if (btnLearnMode) {
+            e.preventDefault();
+            learnModeInstance.open();
+        }
+    });
+});
