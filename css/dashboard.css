@@ -539,6 +539,12 @@ body {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
 }
+.btn-sync:disabled,
+.btn-sync.spinning {
+    pointer-events: none;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 .btn-sync .material-symbols-rounded {
     font-size: 20px;
 }

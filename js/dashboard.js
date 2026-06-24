@@ -610,15 +610,24 @@ const init = async () => {
     const syncSetsBtn = document.getElementById('btn-sync-sets');
     if (syncSetsBtn) {
         syncSetsBtn.addEventListener('click', async () => {
+            if (syncSetsBtn.classList.contains('spinning') || syncSetsBtn.disabled) return;
             syncSetsBtn.classList.add('spinning');
+            syncSetsBtn.disabled = true;
+            const startTime = Date.now();
             try {
                 await loadSets({ force: true });
+                const elapsed = Date.now() - startTime;
+                const minDuration = 1500;
+                if (elapsed < minDuration) {
+                    await new Promise(resolve => setTimeout(resolve, minDuration - elapsed));
+                }
                 Toast.show('Synchronisatie voltooid!', 'success');
             } catch (err) {
                 console.error(err);
                 Toast.show('Synchronisatie mislukt: ' + err.message, 'error');
             } finally {
                 syncSetsBtn.classList.remove('spinning');
+                syncSetsBtn.disabled = false;
             }
         });
     }
