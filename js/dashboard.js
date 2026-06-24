@@ -232,7 +232,7 @@ const init = async () => {
                 <button class="folder-chip folder-chip--shared ${currentFolderFilter === 'shared' ? 'active' : ''}" data-folder="shared">
                     <div>
                         <span class="material-symbols-rounded">group</span>
-                        <span>Gedeeld met mij</span>
+                        <span>Publieke sets</span>
                     </div>
                     <span class="chip-count">${sharedSets.length}</span>
                 </button>
