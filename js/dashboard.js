@@ -15,12 +15,12 @@ const init = async () => {
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
-        // Not logged in, redirect to login page
+        
         window.location.href = 'login.html';
         return;
     }
 
-    // Display user's email
+    
     const userEmailEl = document.getElementById('user-email');
     if (userEmailEl) {
         userEmailEl.textContent = user.email;
@@ -58,12 +58,12 @@ const init = async () => {
         return true;
     }
 
-    // Set modal component interaction
+    
     const setModalComp = document.getElementById('set-modal-comp');
     const createSetBtn = document.getElementById('btn-create-set');
     const dashboardContent = document.querySelector('.dashboard-content');
 
-    // Delete Confirmation Modal Elements
+    
     const deleteModal = document.getElementById('delete-confirm-modal');
 
     if (deleteModal) {
@@ -101,7 +101,7 @@ const init = async () => {
         });
     }
 
-    // Rename Folder Modal Elements
+    
     const renameModal = document.getElementById('rename-folder-modal');
 
     if (renameModal) {
@@ -117,7 +117,7 @@ const init = async () => {
                 try {
                     Toast.show('Mapnaam bijwerken...', 'info');
 
-                    // 1. Bulk update on remote database (Supabase)
+                    
                     const { error: updateError } = await supabase
                         .from('Sets')
                         .update({ folder: newName, updated_at: new Date().toISOString() })
@@ -129,7 +129,7 @@ const init = async () => {
                         return;
                     }
 
-                    // 2. Update locally in IndexedDB
+                    
                     const localSets = await getLocalSets();
                     for (const s of localSets) {
                         if (s.user_id === user.id && s.folder && s.folder.trim() === oldName) {
@@ -139,7 +139,7 @@ const init = async () => {
                         }
                     }
 
-                    // 3. Update current folder filter if it was active
+                    
                     if (currentFolderFilter === oldName) {
                         currentFolderFilter = newName;
                     }
@@ -229,7 +229,7 @@ const init = async () => {
         });
     }
 
-    // Function to render folder filter chips
+    
     function renderFolderFilter(sets) {
         if (!folderFilterContainer) return;
 
@@ -257,7 +257,7 @@ const init = async () => {
             return;
         }
 
-        // Check if the current filter is still valid, otherwise reset to 'all'
+        
         if (currentFolderFilter === 'shared' && sharedSets.length === 0) {
             currentFolderFilter = 'all';
         } else if (currentFolderFilter !== 'all' && currentFolderFilter !== 'none' && currentFolderFilter !== 'shared' && !folders.includes(currentFolderFilter)) {
@@ -332,7 +332,7 @@ const init = async () => {
         html += '</div>';
         folderFilterContainer.innerHTML = html;
 
-        // Attach event listeners
+        
         folderFilterContainer.querySelectorAll('.folder-chip').forEach(chip => {
             chip.addEventListener('click', (e) => {
                 if (e.target.closest('.rename-folder-btn')) {
@@ -359,7 +359,7 @@ const init = async () => {
         });
     }
 
-    // Function to render sets based on folder filter
+    
     function renderSets() {
         if (!dashboardContent) return;
 
@@ -420,7 +420,7 @@ const init = async () => {
             return;
         }
 
-        // Clamp currentPage
+        
         const totalPages = Math.ceil(filteredSets.length / pageSize);
         if (currentPage > totalPages) {
             currentPage = Math.max(1, totalPages);
@@ -501,7 +501,7 @@ const init = async () => {
         });
         html += '</div>';
 
-        // Add pagination HTML if totalPages > 1
+        
         if (totalPages > 1) {
             html += `
                 <div class="pagination-container">
@@ -524,7 +524,7 @@ const init = async () => {
 
         dashboardContent.innerHTML = html;
 
-        // Attach event listeners to pagination buttons
+        
         if (totalPages > 1) {
             const btnPrev10 = document.getElementById('btn-page-prev10');
             const btnPrev = document.getElementById('btn-page-prev');
@@ -557,7 +557,7 @@ const init = async () => {
             }
         }
 
-        // Attach event delegation to dashboardContent
+        
         if (dashboardContent && !dashboardContent.dataset.listenerAttached) {
             dashboardContent.dataset.listenerAttached = 'true';
             dashboardContent.addEventListener('click', async (e) => {
@@ -628,7 +628,7 @@ const init = async () => {
         }
     }
 
-    // Function to load and display sets
+    
     async function loadSets({ force = false } = {}) {
         if (!dashboardContent) return;
 
@@ -656,7 +656,7 @@ const init = async () => {
         }
 
         allSets = (sets || []).filter(s => s.user_id === user.id).sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
-        // syncSets returns all local sets (incl. shared), no need to re-read IDB
+        
         sharedSets = (sets || []).filter(s => s.user_id !== user.id).sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
 
         if (allSets.length === 0 && sharedSets.length === 0) {
@@ -757,7 +757,7 @@ const init = async () => {
         });
     }
 
-    // Initial load
+    
     fetchMaxSets().then(() => {
         loadSets();
     });

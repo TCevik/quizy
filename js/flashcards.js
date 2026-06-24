@@ -2,9 +2,9 @@ import { state } from './state.js';
 import Toast from './toast.js';
 import { speakText, escapeHtml } from './main.js';
 
-/* Flashcards JS */
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Intercept clicks on btn-flashcards
+    
     document.addEventListener('click', (e) => {
         const btnFlashcard = e.target.closest('#btn-flashcards');
         if (btnFlashcard) {
@@ -57,7 +57,7 @@ function openFlashcardsQuiz(options = {}) {
         }
     }
 
-    // Hide only the siblings of overlay inside mainWrapper to keep header/footer
+    
     if (mainWrapper) {
         Array.from(mainWrapper.children).forEach(child => {
             if (child !== overlay) {
@@ -72,15 +72,15 @@ function openFlashcardsQuiz(options = {}) {
 
     const totalUniqueCards = originalCards.length;
     
-    // Map to track the number of times each card is answered incorrectly
+    
     let failureCounts = new Map();
-    // Unique card keys that are fully learned/completed
+    
     let learnedCardKeys = new Set();
     
-    // The current active queue of cards to display
+    
     let activeQueue = [...originalCards];
 
-    // Helper to shuffle array in place
+    
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -97,12 +97,12 @@ function openFlashcardsQuiz(options = {}) {
     let isReviewPhase = false;
     let isAnimating = false;
 
-    // Helper to get unique key for a card
+    
     function getCardKey(card) {
         return `idx_${state.currentSet.cards.indexOf(card)}`;
     }
 
-    // Arranges repeated review cards so no identical cards are adjacent unless impossible
+    
     function generateNoAdjacentQueue(items) {
         const counts = new Map();
         items.forEach(item => {
@@ -127,7 +127,7 @@ function openFlashcardsQuiz(options = {}) {
                 }
             }
 
-            // Fallback if we must pick the same key (no other option left)
+            
             if (bestKey === null) {
                 for (const [key, val] of counts.entries()) {
                     if (val.count > maxCount) {
@@ -153,7 +153,7 @@ function openFlashcardsQuiz(options = {}) {
         return result;
     }
 
-    // Render the overlay content
+    
     overlay.innerHTML = `
         <div class="flashcards-container" style="position: relative;">
             <div class="flashcards-header">
@@ -221,7 +221,7 @@ function openFlashcardsQuiz(options = {}) {
         </div>
     `;
 
-    // Show overlay
+    
     overlay.style.display = 'flex';
     overlay.classList.add('active');
 
@@ -235,7 +235,7 @@ function openFlashcardsQuiz(options = {}) {
     const progressTextEl = document.getElementById('fc-progress-text');
     const progressFillEl = document.getElementById('fc-progress-fill');
 
-    // Settings elements
+    
     const settingsBtn = document.getElementById('fc-settings-btn');
     const settingsPanel = document.getElementById('fc-settings-panel');
     const confirmModal = document.getElementById('fc-confirm-modal');
@@ -379,7 +379,7 @@ function openFlashcardsQuiz(options = {}) {
         cardEl.classList.add('no-transition');
         cardEl.classList.remove('flipped');
         
-        // Force reflow
+        
         cardEl.offsetHeight;
         
         const card = activeQueue[currentIndex];
@@ -408,7 +408,7 @@ function openFlashcardsQuiz(options = {}) {
             }
         }
         
-        // Update star buttons
+        
         const isStarred = !!card.starred;
         overlay.querySelectorAll('.btn-flashcard-star').forEach(btn => {
             const icon = btn.querySelector('.material-symbols-rounded');
@@ -421,7 +421,7 @@ function openFlashcardsQuiz(options = {}) {
             }
         });
 
-        // Update progress bar
+        
         const progressPercentage = (learnedCardKeys.size / totalUniqueCards) * 100;
         progressTextEl.textContent = `Geleerd: ${learnedCardKeys.size} van ${totalUniqueCards} kaarten${isReviewPhase ? ' (Herhalingsfase)' : ''}`;
         progressFillEl.style.width = `${progressPercentage}%`;
@@ -472,8 +472,8 @@ function openFlashcardsQuiz(options = {}) {
             isAnimating = true;
             
             if (isReviewPhase) {
-                // In review phase, check if this card appears again in the remaining queue.
-                // If not, it is the last time, so it's officially learned.
+                
+                
                 let appearsLater = false;
                 for (let i = currentIndex + 1; i < activeQueue.length; i++) {
                     if (getCardKey(activeQueue[i]) === cardKey) {
@@ -485,7 +485,7 @@ function openFlashcardsQuiz(options = {}) {
                     learnedCardKeys.add(cardKey);
                 }
             } else {
-                // In main phase, if it was never failed, it is fully learned now
+                
                 if (!failureCounts.has(cardKey) || failureCounts.get(cardKey) === 0) {
                     learnedCardKeys.add(cardKey);
                 }
@@ -500,11 +500,11 @@ function openFlashcardsQuiz(options = {}) {
 
                 currentIndex++;
                 
-                // Transition to review phase when original queue is empty
+                
                 if (currentIndex >= activeQueue.length) {
                     isReviewPhase = true;
-                    // Build review queue based on failure counts:
-                    // Every failure adds 2 repetitions, capped at a maximum of 3.
+                    
+                    
                     const reviewCards = [];
                     originalCards.forEach(c => {
                         const key = getCardKey(c);
@@ -533,11 +533,11 @@ function openFlashcardsQuiz(options = {}) {
             }, 200);
         } else {
             isAnimating = true;
-            // Record failure
+            
             failureCounts.set(cardKey, (failureCounts.get(cardKey) || 0) + 1);
 
-            // Insert card 3 to 5 slots later in activeQueue
-            const offset = Math.floor(Math.random() * 3) + 3; // random 3, 4, or 5
+            
+            const offset = Math.floor(Math.random() * 3) + 3; 
             const insertIndex = currentIndex + 1 + offset;
             
             if (insertIndex >= activeQueue.length) {
@@ -550,7 +550,7 @@ function openFlashcardsQuiz(options = {}) {
             setTimeout(() => {
                 currentIndex++;
                 
-                // Transition to review phase when original queue is empty
+                
                 if (currentIndex >= activeQueue.length) {
                     isReviewPhase = true;
                     const reviewCards = [];
@@ -598,7 +598,7 @@ function openFlashcardsQuiz(options = {}) {
         }
     }
 
-    // Event listeners
+    
     cardEl.addEventListener('click', () => {
         if (isAnimating) return;
         cardEl.classList.toggle('flipped');
@@ -716,7 +716,7 @@ function openFlashcardsQuiz(options = {}) {
         closeFlashcards();
     });
 
-    // Initial card setup
+    
     updateCard();
 }
 

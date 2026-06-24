@@ -8,10 +8,10 @@ class QuizyHeader extends HTMLElement {
         const isDashboard = pathname.includes('dashboard.html');
         const isProfile = pathname.includes('profile.html');
 
-        // Check localStorage to guess login state and avoid navigation flashes
+        
         const hasSession = localStorage.getItem('quizy-auth-token') !== null;
 
-        // Render initial UI immediately (synchronously)
+        
         let initialMenuHTML = '';
         if (isLogin) {
             initialMenuHTML = `<a class="btn-gradient" href="index.html">Terug</a>`;
@@ -57,7 +57,7 @@ class QuizyHeader extends HTMLElement {
 
         setupLogout();
 
-        // Verify/fetch actual user state asynchronously
+        
         const supabase = await supabaseReady;
         let user = null;
         if (supabase) {
@@ -68,11 +68,11 @@ class QuizyHeader extends HTMLElement {
         const menu = this.querySelector('#header-menu');
         if (!menu) return;
 
-        // If the actual state differs from our guess, update it
+        
         if (!isLogin) {
             if (user) {
                 const currentHTML = menu.innerHTML;
-                // Only replace if not already rendered to prevent flash
+                
                 if (!currentHTML.includes('logoutBtn')) {
                     menu.innerHTML = `
                         <a href="dashboard.html" class="${isDashboard ? 'active' : ''}">

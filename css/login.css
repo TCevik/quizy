@@ -1,4 +1,4 @@
-/* Login page styling */
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-light);
@@ -192,7 +192,7 @@ body {
     }
 }
 
-/* Modal styling */
+
 .modal {
     position: fixed;
     top: 0;
@@ -276,7 +276,7 @@ body {
     color: #f87171;
 }
 
-/* Spinner & loading button styles */
+
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }

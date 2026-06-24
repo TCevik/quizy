@@ -165,14 +165,14 @@ const initLogin = async () => {
                     Toast.show(`Registratie mislukt: ${getFriendlyErrorMessage(error)}`, 'error');
                     resetAllTurnstiles();
                 } else {
-                    // Check if user is auto-confirmed or if email confirmation is enabled
+                    
                     if (data?.user && data.user.identities && data.user.identities.length === 0) {
                         Toast.show('Dit e-mailadres is al geregistreerd.', 'error');
                         resetAllTurnstiles();
                     } else if (data?.session) {
                         window.location.href = 'dashboard.html';
                     } else {
-                        // Email confirmation might be needed
+                        
                         Toast.show('Registratie succesvol! Controleer je e-mail voor een verificatielink.', 'success');
                         resetAllTurnstiles();
                     }
@@ -181,7 +181,7 @@ const initLogin = async () => {
         });
     }
 
-    // Forgot password modal functionality
+    
     const resetModal = document.getElementById('resetModal');
     const closeResetModal = document.getElementById('closeResetModal');
     const resetForm = document.getElementById('resetForm');
@@ -231,7 +231,7 @@ const initLogin = async () => {
         });
     }
 
-    // Resend confirmation email modal functionality
+    
     const resendModal = document.getElementById('resendModal');
     const closeResendModal = document.getElementById('closeResendModal');
     const resendForm = document.getElementById('resendForm');

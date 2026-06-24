@@ -4,23 +4,23 @@
     --bg-light: #ffffff;
     --bg-light-rgb: 255, 255, 255;
 
-    /* Brand Colors */
+    
     --primary: #43a047;
     --primary-rgb: 67, 160, 71;
     --primary-hover: #388e3c;
     --primary-active: #2e7d32;
 
-    /* Text & UI */
+    
     --text-primary: #111827;
     --text-secondary: #4b5563;
     --text-muted: #9ca3af;
     --text-light: #ffffff;
     --border-light: #f1f5f9;
 
-    /* Header Dimensions */
+    
     --header-height: 75px;
 
-    /* Theme Colors */
+    
     --blue: #60a5fa;
     --blue-rgb: 96, 165, 250;
     --green: #43a047;
@@ -152,7 +152,7 @@ quizy-footer {
     margin-top: auto;
 }
 
-/* Hide footer during learning sessions */
+
 body:has(.learn-overlay.active) quizy-footer,
 body:has(.flashcards-overlay.active) quizy-footer,
 body:has(.mc-overlay.active) quizy-footer,
@@ -212,7 +212,7 @@ body:has(.sp-overlay.active) quizy-footer,
 }
 
 
-/* Toast Notifications */
+
 #toast-container {
     position: fixed;
     bottom: 24px;
@@ -224,7 +224,7 @@ body:has(.sp-overlay.active) quizy-footer,
 }
 
 .toast {
-    background: #1e293b; /* Distinct background color */
+    background: #1e293b; 
     color: var(--text-light);
     padding: 16px 24px;
     border-radius: 8px;
@@ -276,7 +276,7 @@ body:has(.sp-overlay.active) quizy-footer,
     color: var(--text-light);
 }
 
-/* Gedeelde container & wrapper stijlen */
+
 .dashboard-wrapper, .set-wrapper {
     flex: 1;
     display: flex;
@@ -291,7 +291,7 @@ body:has(.sp-overlay.active) quizy-footer,
     margin: 0 auto;
 }
 
-/* Modals */
+
 quizy-delete-modal:not(.active) {
     opacity: 0;
     pointer-events: none;
@@ -387,7 +387,7 @@ quizy-delete-modal:not(.active) {
     background: rgba(255, 255, 255, 0.04);
 }
 
-/* Gedeelde actieknop stijlen */
+
 .set-actions {
     display: flex;
     gap: 8px;
@@ -419,7 +419,7 @@ quizy-delete-modal:not(.active) {
     border-color: rgba(239, 68, 68, 0.2);
 }
 
-/* Speaker / TTS button */
+
 .btn-speak {
     background: none;
     border: none;
@@ -439,7 +439,7 @@ quizy-delete-modal:not(.active) {
     transform: scale(1.1);
 }
 
-/* Quizy Settings Panel Component */
+
 quizy-settings-panel {
     display: flex;
     visibility: hidden;

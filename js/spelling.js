@@ -2,9 +2,9 @@ import { state } from './state.js';
 import Toast from './toast.js';
 import { speakText, escapeHtml, checkSpellingAnswer as checkSpellingHelper } from './main.js';
 
-/* Spelling JS */
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Intercept clicks on btn-spelling
+    
     document.addEventListener('click', (e) => {
         const btnSpelling = e.target.closest('#btn-spelling');
         if (btnSpelling) {
@@ -19,7 +19,7 @@ function openSpellingQuiz(options = {}) {
     const savedSettings = (state.currentSet && state.currentSet.settings) || {};
     const hasStarred = state.currentSet && state.currentSet.cards && state.currentSet.cards.some(c => c.starred);
     
-    // Normal settings
+    
     let starOnly = ('starOnly' in options) ? !!options.starOnly : !!savedSettings.starOnly;
     if (!hasStarred) {
         starOnly = false;
@@ -31,7 +31,7 @@ function openSpellingQuiz(options = {}) {
     let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
     let autoSpeak = ('autoSpeak' in options) ? !!options.autoSpeak : !!savedSettings.autoSpeak;
     
-    // Spelling-specific settings
+    
     let ignoreParentheses = ('ignoreParentheses' in options) ? !!options.ignoreParentheses : ('ignoreParentheses' in savedSettings ? !!savedSettings.ignoreParentheses : true);
     let skipPunctuation = ('skipPunctuation' in options) ? !!options.skipPunctuation : ('skipPunctuation' in savedSettings ? !!savedSettings.skipPunctuation : true);
     let allowSlashParts = ('allowSlashParts' in options) ? !!options.allowSlashParts : ('allowSlashParts' in savedSettings ? !!savedSettings.allowSlashParts : true);
@@ -64,7 +64,7 @@ function openSpellingQuiz(options = {}) {
         }
     }
 
-    // Hide only the siblings of overlay inside mainWrapper to keep header/footer
+    
     if (mainWrapper) {
         Array.from(mainWrapper.children).forEach(child => {
             if (child !== overlay) {
@@ -79,15 +79,15 @@ function openSpellingQuiz(options = {}) {
 
     const totalUniqueCards = originalCards.length;
     
-    // Map to track the number of times each card is answered incorrectly
+    
     let failureCounts = new Map();
-    // Unique card keys that are fully learned/completed
+    
     let learnedCardKeys = new Set();
     
-    // The current active queue of cards to display
+    
     let activeQueue = [...originalCards];
 
-    // Helper to shuffle array in place
+    
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -104,12 +104,12 @@ function openSpellingQuiz(options = {}) {
     let isReviewPhase = false;
     let answered = false;
 
-    // Helper to get unique key for a card
+    
     function getCardKey(card) {
         return `idx_${state.currentSet.cards.indexOf(card)}`;
     }
 
-    // Arranges repeated review cards so no identical cards are adjacent unless impossible
+    
     function generateNoAdjacentQueue(items) {
         const counts = new Map();
         items.forEach(item => {
@@ -134,7 +134,7 @@ function openSpellingQuiz(options = {}) {
                 }
             }
 
-            // Fallback if we must pick the same key
+            
             if (bestKey === null) {
                 for (const [key, val] of counts.entries()) {
                     if (val.count > maxCount) {
@@ -160,7 +160,7 @@ function openSpellingQuiz(options = {}) {
         return result;
     }
 
-    // Render the overlay content
+    
     overlay.innerHTML = `
         <div class="sp-container" style="position: relative;">
             <div class="sp-header">
@@ -223,7 +223,7 @@ function openSpellingQuiz(options = {}) {
         </div>
     `;
 
-    // Show overlay
+    
     overlay.style.display = 'flex';
     overlay.classList.add('active');
 
@@ -240,7 +240,7 @@ function openSpellingQuiz(options = {}) {
     const starBtn = overlay.querySelector('.btn-sp-star');
     const speakBtn = overlay.querySelector('.btn-sp-speak');
 
-    // Settings elements
+    
     const settingsBtn = document.getElementById('sp-settings-btn');
     const settingsPanel = document.getElementById('sp-settings-panel');
     const confirmModal = document.getElementById('sp-confirm-modal');
@@ -412,7 +412,7 @@ function openSpellingQuiz(options = {}) {
             }
         }
 
-        // Update star button
+        
         const isStarred = !!card.starred;
         const icon = starBtn.querySelector('.material-symbols-rounded');
         if (isStarred) {
@@ -423,7 +423,7 @@ function openSpellingQuiz(options = {}) {
             icon.style.fontVariationSettings = "'FILL' 0";
         }
 
-        // Update progress bar
+        
         const progressPercentage = (learnedCardKeys.size / totalUniqueCards) * 100;
         progressTextEl.textContent = `Geleerd: ${learnedCardKeys.size} van ${totalUniqueCards} kaarten${isReviewPhase ? ' (Herhalingsfase)' : ''}`;
         progressFillEl.style.width = `${progressPercentage}%`;
@@ -477,7 +477,7 @@ function openSpellingQuiz(options = {}) {
 
     function handleFormSubmit() {
         if (answered) {
-            // Already answered, so this click means "Next"
+            
             if (checkFinished()) {
                 return;
             }
@@ -518,7 +518,7 @@ function openSpellingQuiz(options = {}) {
         const cardKey = getCardKey(card);
 
         if (isCorrect) {
-            // Correct logic
+            
             if (isReviewPhase) {
                 let appearsLater = false;
                 for (let i = currentIndex + 1; i < activeQueue.length; i++) {
@@ -546,7 +546,7 @@ function openSpellingQuiz(options = {}) {
                 </div>
             `;
         } else {
-            // Incorrect logic
+            
             failureCounts.set(cardKey, (failureCounts.get(cardKey) || 0) + 1);
 
             const offset = Math.floor(Math.random() * 3) + 3;
@@ -579,7 +579,7 @@ function openSpellingQuiz(options = {}) {
         handleFormSubmit();
     }
 
-    // Star interaction
+    
     starBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!isOwner) return;
@@ -653,7 +653,7 @@ function openSpellingQuiz(options = {}) {
     skipBtn.addEventListener('click', handleSkip);
     closeBtn.addEventListener('click', closeSpelling);
 
-    // Initial setup
+    
     updateQuestion();
 }
 

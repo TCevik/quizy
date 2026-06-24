@@ -12,12 +12,12 @@ const initProfile = async () => {
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
-        // Not logged in, redirect to login page
+        
         window.location.href = 'login.html';
         return;
     }
 
-    // Display user's name
+    
     const userNameEl = document.getElementById('user-name');
     let name = user.user_metadata?.full_name || user.user_metadata?.name;
     if (!name) {
@@ -37,19 +37,19 @@ const initProfile = async () => {
 
 
 
-    // Pre-fill display name input
+    
     const displayNameInput = document.getElementById('display-name');
     if (displayNameInput && name) {
         displayNameInput.value = name;
     }
 
-    // Display user's email
+    
     const userEmailEl = document.getElementById('user-email');
     if (userEmailEl) {
         userEmailEl.textContent = user.email;
     }
 
-    // Change name form submission
+    
     const changeNameForm = document.getElementById('changeNameForm');
 
     function showProfileMessage(text, isSuccess) {
@@ -94,7 +94,7 @@ const initProfile = async () => {
 
 
 
-    // Password reset link functionality
+    
     const resetPasswordBtn = document.getElementById('resetPasswordBtn');
     const profileResetModal = document.getElementById('profileResetModal');
     const closeProfileResetModal = document.getElementById('closeProfileResetModal');
@@ -157,7 +157,7 @@ const initProfile = async () => {
         });
     }
 
-    // Change password form submission
+    
     const changePasswordForm = document.getElementById('changePasswordForm');
     if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', async (e) => {
@@ -200,7 +200,7 @@ const initProfile = async () => {
                 updatePayload.current_password = oldPassword;
             }
 
-            // Update the password
+            
             const { error: updateError } = await supabase.auth.updateUser(updatePayload);
 
             if (updateError) {

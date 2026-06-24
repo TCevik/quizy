@@ -20,7 +20,7 @@ const init = async () => {
     }
     state.currentUser = user;
 
-    // Get set ID from query parameters
+    
     const urlParams = new URLSearchParams(window.location.search);
     const setId = urlParams.get('id');
 
@@ -42,7 +42,7 @@ const init = async () => {
             renderSetDetails();
         }
 
-        // Fetch creator name: use cached value first, fetch live only if missing
+        
         const creatorNameEl = document.getElementById('creator-name');
         if (set && set.creator_name && creatorNameEl) {
             creatorNameEl.textContent = set.creator_name;
@@ -59,7 +59,7 @@ const init = async () => {
                         if (creatorNameEl) {
                             creatorNameEl.textContent = data.profiles.full_name;
                         }
-                        // Cache for next visit
+                        
                         if (currentSet && currentSet.creator_name !== data.profiles.full_name) {
                             currentSet.creator_name = data.profiles.full_name;
                             saveLocalSet(currentSet);
@@ -108,11 +108,11 @@ const init = async () => {
         if (btnDeleteSet) btnDeleteSet.style.display = isOwner ? '' : 'none';
         if (btnToggleVisibility) btnToggleVisibility.style.display = isOwner ? '' : 'none';
 
-        // Title & Description
+        
         document.getElementById('set-title').textContent = currentSet.title || 'Naamloze set';
         document.getElementById('set-description').textContent = currentSet.description || 'Geen beschrijving opgegeven.';
 
-        // Badges
+        
         document.getElementById('set-type-badge').textContent = currentSet.type || 'woorden';
         
         const count = currentSet.cards ? currentSet.cards.length : 0;
@@ -127,7 +127,7 @@ const init = async () => {
             folderBadge.style.display = 'none';
         }
 
-        // Date Info
+        
         const createdDate = currentSet.created_at ? new Date(currentSet.created_at).toLocaleDateString('nl-NL', {
             day: '2-digit',
             month: 'short',
@@ -146,7 +146,7 @@ const init = async () => {
         }) : 'Onbekend';
         document.getElementById('set-updated').textContent = lastUpdated;
 
-        // Visibility Badge and Icon Toggle setup
+        
         const visibility = currentSet.visibility || 'private';
         const visibilityBadge = document.getElementById('set-visibility-badge');
         const visibilityIcon = document.getElementById('visibility-icon');
@@ -225,7 +225,7 @@ const init = async () => {
 
         termsListEl.innerHTML = html;
 
-        // Add event delegation for speaking terms, definitions & starring cards
+        
         if (termsListEl && !termsListEl.dataset.listenerAttached) {
             termsListEl.dataset.listenerAttached = 'true';
             termsListEl.addEventListener('click', async (e) => {
@@ -272,7 +272,7 @@ const init = async () => {
                             icon.style.color = "var(--text-muted)";
                         }
                     } catch (updateError) {
-                        // Revert local change if error
+                        
                         card.starred = !card.starred;
                         if (settingsChanged && currentSet.settings) {
                             currentSet.settings.starOnly = true;
@@ -295,7 +295,7 @@ const init = async () => {
             _originalUpdatedAt = currentSet.updated_at;
         }
 
-        // Always save locally immediately
+        
         currentSet.updated_at = new Date().toISOString();
         await saveLocalSet(currentSet);
 
@@ -344,8 +344,8 @@ const init = async () => {
         }
     };
 
-    // Helper to escape HTML to prevent XSS
-    // Setup Edit and Delete Interaction
+    
+    
     const btnEditSet = document.getElementById('btn-edit-set');
     const btnDeleteSet = document.getElementById('btn-delete-set');
     const btnShareSet = document.getElementById('btn-share-set');
@@ -414,8 +414,8 @@ const init = async () => {
             }
         });
 
-        // Initialize folder options for edit modal if there are folders
-        const localSets = await getLocalSet(setId); // Fallback: just use current set's folder if offline
+        
+        const localSets = await getLocalSet(setId); 
         if (navigator.onLine) {
             try {
                 const { data: setsData } = await supabase
@@ -511,7 +511,7 @@ const init = async () => {
         });
     }
 
-    // Setup Search Event Listener
+    
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -526,7 +526,7 @@ const init = async () => {
         });
     }
 
-    // Learn button bubble effect
+    
     const btnLearn = document.getElementById('btn-learn');
     const learnBubbleMenu = document.getElementById('learn-bubble-menu');
     const flashcardsButtons = document.querySelectorAll('#btn-flashcards');
@@ -547,7 +547,7 @@ const init = async () => {
         });
     }
 
-    // Initial load
+    
     loadSetDetails();
 };
 

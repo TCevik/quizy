@@ -113,7 +113,7 @@ function openLearnMode() {
     const progressText = document.getElementById('learn-progress-text');
     const progressFill = document.getElementById('learn-progress-fill');
     const closeBtn = document.getElementById('learn-close');
-    // Settings elements
+    
     const settingsBtn = document.getElementById('learn-settings-btn');
     const settingsPanel = document.getElementById('learn-settings-panel');
     const confirmModal = document.getElementById('learn-confirm-modal');

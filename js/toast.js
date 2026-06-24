@@ -21,7 +21,7 @@ class Toast {
         
         container.appendChild(toast);
         
-        // Trigger reflow to start animation
+        
         toast.offsetHeight;
         toast.classList.add('show');
         

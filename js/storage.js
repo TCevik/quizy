@@ -205,7 +205,7 @@ export async function getSetWithCards(supabase, setId, userId) {
             return null;
         }
 
-        // Skip full fetch if local data is up-to-date
+        
         const needsFetch = !localSet || !localSet.cards ||
             (!metaErr && setMeta && (!localSet.updated_at || setMeta.updated_at > localSet.updated_at));
 

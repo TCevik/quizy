@@ -10,7 +10,7 @@ class QuizySetModal extends HTMLElement {
             { code: 'de', name: 'Duits' },
             { code: 'es', name: 'Spaans' }
         ];
-        this.currentMode = 'create'; // 'create' or 'edit'
+        this.currentMode = 'create'; 
         this.currentSetId = null;
     }
 
@@ -126,7 +126,7 @@ class QuizySetModal extends HTMLElement {
             </div>
         `;
 
-        // Cache elements
+        
         this.modal = this.querySelector('#create-set-modal');
         this.modalTitleText = this.querySelector('#modal-title-text');
         this.modalClose = this.querySelector('#modal-close');
@@ -148,7 +148,7 @@ class QuizySetModal extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Close modal handlers
+        
         const closeModal = () => this.close();
         if (this.modalClose) this.modalClose.addEventListener('click', closeModal);
         if (this.modalCancel) this.modalCancel.addEventListener('click', closeModal);
@@ -156,7 +156,7 @@ class QuizySetModal extends HTMLElement {
             if (e.target === this.modal) closeModal();
         });
 
-        // Folder logic
+        
         if (this.folderSelect) {
             this.folderSelect.addEventListener('change', () => {
                 if (this.folderSelect.value === '__new__') {
@@ -169,7 +169,7 @@ class QuizySetModal extends HTMLElement {
             });
         }
 
-        // Mode switches
+        
         this.segmentBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 this.segmentBtns.forEach(b => b.classList.remove('active'));
@@ -178,12 +178,12 @@ class QuizySetModal extends HTMLElement {
             });
         });
 
-        // Add row
+        
         if (this.addRowBtn) {
             this.addRowBtn.addEventListener('click', () => this.addTermRow());
         }
 
-        // Form submit
+        
         if (this.form) {
             this.form.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -191,7 +191,7 @@ class QuizySetModal extends HTMLElement {
             });
         }
 
-        // Import handlers
+        
         this.addEventListener('click', (e) => {
             const importBtn = e.target.closest('#btn-import-terms');
             if (importBtn) {
@@ -365,13 +365,13 @@ class QuizySetModal extends HTMLElement {
         this.updateDeleteButtonsState();
         this.updatePlaceholdersAndHeaders();
  
-        // Keep the add button at the exact same screen position so spam-clicking doesn't move it
+        
         if (shouldScroll && this.splitMain && this.addRowBtn) {
             if (this.scrollAnimFrame) {
                 cancelAnimationFrame(this.scrollAnimFrame);
             }
  
-            // Record the target Y position we want the button to stay at
+            
             const targetY = this.addRowBtn.getBoundingClientRect().top;
             const start = Date.now();
  
@@ -379,7 +379,7 @@ class QuizySetModal extends HTMLElement {
                 const currentY = this.addRowBtn.getBoundingClientRect().top;
                 const deltaY = currentY - targetY;
  
-                // If button moved down (deltaY > 0), scroll down by exactly that amount
+                
                 if (Math.abs(deltaY) > 0) {
                     this.splitMain.scrollTop += deltaY;
                 }
@@ -666,7 +666,7 @@ class QuizySetModal extends HTMLElement {
             return;
         }
 
-        // Check if existing rows are all empty
+        
         const existingRows = this.termsContainer.querySelectorAll('.term-row');
         let allEmpty = true;
         existingRows.forEach(row => {
@@ -699,7 +699,7 @@ class QuizySetModal extends HTMLElement {
         this.updateDeleteButtonsState();
         this.updatePlaceholdersAndHeaders();
 
-        // Clear textarea and hide container
+        
         importTextarea.value = '';
         const importContainer = this.querySelector('#import-container');
         if (importContainer) {

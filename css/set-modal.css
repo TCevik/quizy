@@ -1,4 +1,4 @@
-/* Set Modal Component Styling */
+
 
 
 .modal-close-btn {
@@ -68,7 +68,7 @@
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-/* Custom scrollbar for textarea */
+
 .form-group textarea::-webkit-scrollbar {
     width: 6px;
 }
@@ -117,7 +117,7 @@
     gap: 20px;
 }
 
-/* Toggle Switch Styling */
+
 .toggle-group-wrapper {
     justify-content: flex-start;
 }
@@ -188,7 +188,7 @@
     transform: translateX(22px);
 }
 
-/* Segmented Control */
+
 .segmented-control {
     display: flex;
     background: rgba(255, 255, 255, 0.03);
@@ -220,7 +220,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Terms / Definitions list */
+
 .terms-section {
     display: flex;
     flex-direction: column;
@@ -259,7 +259,7 @@
     gap: 12px;
 }
 
-/* Custom scrollbar for modal body */
+
 .modal-body::-webkit-scrollbar {
     width: 6px;
 }
@@ -396,7 +396,7 @@
     }
 }
 
-/* Overlay override to make it full page */
+
 #create-set-modal.modal-overlay {
     padding-top: var(--header-height); 
     background: var(--bg-dark);
@@ -406,7 +406,7 @@
     z-index: 10000;
 }
 
-/* Wide Modal overrides - Full Page Mode */
+
 .modal-card.modal-card-wide {
     max-width: 1200px;
     width: 100%;
@@ -431,14 +431,14 @@
     flex-shrink: 0;
 }
 
-/* Split Layout */
+
 .modal-body.split-layout {
     display: flex;
     flex-direction: row;
     padding: 0;
     gap: 0;
     flex: 1;
-    overflow: hidden; /* Prevent body scrolling, allow children to scroll */
+    overflow: hidden; 
     max-height: none;
 }
 
@@ -462,7 +462,7 @@
     flex-direction: column;
 }
 
-/* Section styling */
+
 .section-title {
     font-size: 1.1em;
     font-weight: 600;
@@ -501,7 +501,7 @@
     font-size: 18px;
 }
 
-/* Scrollbars for split panels */
+
 .split-sidebar::-webkit-scrollbar,
 .split-main::-webkit-scrollbar {
     width: 6px;

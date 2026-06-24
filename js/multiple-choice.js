@@ -2,9 +2,9 @@ import { state } from './state.js';
 import Toast from './toast.js';
 import { speakText, escapeHtml } from './main.js';
 
-/* Multiple Choice JS */
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Intercept clicks on btn-multiple-choice
+    
     document.addEventListener('click', (e) => {
         const btnMultipleChoice = e.target.closest('#btn-multiple-choice');
         if (btnMultipleChoice) {
@@ -57,7 +57,7 @@ function openMultipleChoiceQuiz(options = {}) {
         }
     }
 
-    // Hide only the siblings of overlay inside mainWrapper to keep header/footer
+    
     if (mainWrapper) {
         Array.from(mainWrapper.children).forEach(child => {
             if (child !== overlay) {
@@ -72,15 +72,15 @@ function openMultipleChoiceQuiz(options = {}) {
 
     const totalUniqueCards = originalCards.length;
     
-    // Map to track the number of times each card is answered incorrectly
+    
     let failureCounts = new Map();
-    // Unique card keys that are fully learned/completed
+    
     let learnedCardKeys = new Set();
     
-    // The current active queue of cards to display
+    
     let activeQueue = [...originalCards];
 
-    // Helper to shuffle array in place
+    
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -97,12 +97,12 @@ function openMultipleChoiceQuiz(options = {}) {
     let isReviewPhase = false;
     let answered = false;
 
-    // Helper to get unique key for a card
+    
     function getCardKey(card) {
         return `idx_${state.currentSet.cards.indexOf(card)}`;
     }
 
-    // Arranges repeated review cards so no identical cards are adjacent unless impossible
+    
     function generateNoAdjacentQueue(items) {
         const counts = new Map();
         items.forEach(item => {
@@ -127,7 +127,7 @@ function openMultipleChoiceQuiz(options = {}) {
                 }
             }
 
-            // Fallback if we must pick the same key
+            
             if (bestKey === null) {
                 for (const [key, val] of counts.entries()) {
                     if (val.count > maxCount) {
@@ -153,7 +153,7 @@ function openMultipleChoiceQuiz(options = {}) {
         return result;
     }
 
-    // Render the overlay content
+    
     overlay.innerHTML = `
         <div class="mc-container" style="position: relative;">
             <div class="mc-header">
@@ -205,7 +205,7 @@ function openMultipleChoiceQuiz(options = {}) {
         </div>
     `;
 
-    // Show overlay
+    
     overlay.style.display = 'flex';
     overlay.classList.add('active');
 
@@ -218,7 +218,7 @@ function openMultipleChoiceQuiz(options = {}) {
     const progressFillEl = document.getElementById('mc-progress-fill');
     const starBtn = overlay.querySelector('.btn-mc-star');
 
-    // Settings elements
+    
     const settingsBtn = document.getElementById('mc-settings-btn');
     const settingsPanel = document.getElementById('mc-settings-panel');
     const confirmModal = document.getElementById('mc-confirm-modal');
@@ -334,13 +334,13 @@ function openMultipleChoiceQuiz(options = {}) {
     function generateOptions(correctCard) {
         const correctText = swapSides ? correctCard.term : correctCard.definition;
         
-        // Find other unique answers
+        
         const otherCards = state.currentSet.cards.filter(c => getCardKey(c) !== getCardKey(correctCard));
         
-        // Extract texts
+        
         const potentialDistractors = [...new Set(otherCards.map(c => swapSides ? c.term : c.definition))].filter(t => t !== correctText);
         
-        // Shuffle and pick up to 3 distractors
+        
         shuffleArray(potentialDistractors);
         const distractors = potentialDistractors.slice(0, 3);
         
@@ -378,12 +378,12 @@ function openMultipleChoiceQuiz(options = {}) {
             }
         }
 
-        // Generate Multiple Choice Options
+        
         currentOptionsData = generateOptions(card);
         
         optionsGridEl.innerHTML = '';
         currentOptionsData.options.forEach((optText, index) => {
-            const letter = String.fromCharCode(65 + index); // A, B, C, D
+            const letter = String.fromCharCode(65 + index); 
             const btn = document.createElement('button');
             btn.className = 'mc-option-btn';
             btn.innerHTML = `
@@ -394,7 +394,7 @@ function openMultipleChoiceQuiz(options = {}) {
             optionsGridEl.appendChild(btn);
         });
 
-        // Update star button
+        
         const isStarred = !!card.starred;
         const icon = starBtn.querySelector('.material-symbols-rounded');
         if (isStarred) {
@@ -405,7 +405,7 @@ function openMultipleChoiceQuiz(options = {}) {
             icon.style.fontVariationSettings = "'FILL' 0";
         }
 
-        // Update progress bar
+        
         const progressPercentage = (learnedCardKeys.size / totalUniqueCards) * 100;
         progressTextEl.textContent = `Geleerd: ${learnedCardKeys.size} van ${totalUniqueCards} kaarten${isReviewPhase ? ' (Herhalingsfase)' : ''}`;
         progressFillEl.style.width = `${progressPercentage}%`;
@@ -424,7 +424,7 @@ function openMultipleChoiceQuiz(options = {}) {
         const correctText = currentOptionsData.correctAnswer;
         const correct = (selectedText === correctText);
 
-        // Highlight correct and incorrect answers
+        
         Array.from(optionsGridEl.children).forEach(btn => {
             btn.disabled = true;
             const textSpan = btn.querySelector('span:not(.mc-option-badge)');
@@ -469,7 +469,7 @@ function openMultipleChoiceQuiz(options = {}) {
         return false;
     }
 
-    // Stores if the current question's result was correct or incorrect
+    
     let currentQuestionCorrect = true;
 
     function submitAnswer(correct) {
@@ -539,7 +539,7 @@ function openMultipleChoiceQuiz(options = {}) {
         updateQuestion();
     }
 
-    // Star interaction
+    
     starBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!isOwner) return;
@@ -615,7 +615,7 @@ function openMultipleChoiceQuiz(options = {}) {
     nextBtn.addEventListener('click', handleNext);
     closeBtn.addEventListener('click', closeMC);
 
-    // Initial setup
+    
     updateQuestion();
 }
 

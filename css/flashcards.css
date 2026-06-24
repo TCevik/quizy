@@ -1,6 +1,6 @@
-/* Flashcards CSS */
+
 .flashcards-overlay {
-    display: none; /* hidden by default */
+    display: none; 
     width: 100%;
     min-height: calc(100vh - 200px);
     background: transparent;
@@ -57,7 +57,7 @@
     transform: rotate(90deg);
 }
 
-/* Card Flipping */
+
 .flashcard-wrapper {
     width: 100%;
     height: 300px;
@@ -127,7 +127,7 @@
     word-break: break-word;
 }
 
-/* Controls */
+
 .flashcards-controls {
     display: flex;
     align-items: center;
@@ -202,7 +202,7 @@
 
 
 
-/* Card switching animations */
+
 @keyframes slideOutLeft {
     to {
         opacity: 0;
@@ -278,7 +278,7 @@
     color: #ffca28;
 }
 
-/* Settings Panel */
+
 .fc-settings-panel {
     display: flex;
     visibility: hidden;
@@ -387,7 +387,7 @@
     flex: 1;
 }
 
-/* Custom Toggle Switch */
+
 .fc-switch {
     position: relative;
     display: inline-block;

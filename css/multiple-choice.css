@@ -1,6 +1,6 @@
-/* Multiple Choice CSS */
+
 .mc-overlay {
-    display: none; /* hidden by default */
+    display: none; 
     width: 100%;
     min-height: calc(100vh - 200px);
     background: transparent;
@@ -56,7 +56,7 @@
     transform: rotate(90deg);
 }
 
-/* Question Area */
+
 .mc-question-card {
     width: 100%;
     min-height: 180px;
@@ -117,7 +117,7 @@
     color: var(--text-light);
 }
 
-/* Options Grid */
+
 .mc-options-grid {
     width: 100%;
     display: grid;
@@ -177,7 +177,7 @@
     color: var(--text-muted);
 }
 
-/* Correct / Incorrect states */
+
 .mc-option-btn.correct {
     background: rgba(67, 160, 71, 0.2) !important;
     border-color: rgba(67, 160, 71, 0.6) !important;
@@ -200,7 +200,7 @@
     color: #ffffff !important;
 }
 
-/* Next Action Area */
+
 .mc-action-area {
     width: 100%;
     display: flex;
@@ -228,7 +228,7 @@
     transform: translateY(-2px);
 }
 
-/* Settings Panel */
+
 .mc-settings-panel {
     display: flex;
     visibility: hidden;

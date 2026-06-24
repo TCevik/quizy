@@ -2,12 +2,12 @@ import { supabaseReady, getFriendlyErrorMessage } from './supabase-init.js';
 import Toast from './toast.js';
 
 const initReset = async () => {
-    // Check if the URL hash contains password recovery markers immediately
+    
     const hash = window.location.hash;
     const queryParams = new URLSearchParams(window.location.search);
     const isRecovery = hash.includes('type=recovery') || hash.includes('recovery_token') || queryParams.get('type') === 'recovery';
 
-    // If we are not in a recovery flow, redirect to login
+    
     if (!isRecovery) {
         window.location.href = 'login.html';
         return;
@@ -61,7 +61,7 @@ const initReset = async () => {
             } else {
                 Toast.show('Wachtwoord succesvol bijgewerkt! Je wordt doorgestuurd...', 'success');
                 
-                // Optional: Sign out the recovery session so they log in normally
+                
                 await supabase.auth.signOut();
                 setTimeout(() => {
                     window.location.href = 'login.html';
