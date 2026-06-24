@@ -1,3 +1,7 @@
+import { state } from './state.js';
+import Toast from './toast.js';
+import { speakText, escapeHtml, checkSpellingAnswer as checkSpellingHelper } from './main.js';
+
 /* Spelling JS */
 document.addEventListener('DOMContentLoaded', () => {
     // Intercept clicks on btn-spelling
@@ -11,19 +15,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openSpellingQuiz(options = {}) {
-    const isOwner = window.currentUser && window.currentSet && window.currentSet.user_id === window.currentUser.id;
-    const savedSettings = (window.currentSet && window.currentSet.settings) || {};
-    const hasStarred = window.currentSet && window.currentSet.cards && window.currentSet.cards.some(c => c.starred);
+    const isOwner = state.currentUser && state.currentSet && state.currentSet.user_id === state.currentUser.id;
+    const savedSettings = (state.currentSet && state.currentSet.settings) || {};
+    const hasStarred = state.currentSet && state.currentSet.cards && state.currentSet.cards.some(c => c.starred);
     
     // Normal settings
     let starOnly = ('starOnly' in options) ? !!options.starOnly : !!savedSettings.starOnly;
     if (!hasStarred) {
         starOnly = false;
-        if (window.currentSet && window.currentSet.settings && window.currentSet.settings.starOnly) {
-            window.currentSet.settings.starOnly = false;
+        if (state.currentSet && state.currentSet.settings && state.currentSet.settings.starOnly) {
+            state.currentSet.settings.starOnly = false;
         }
     }
-    let randomize = ('randomize' in options) ? !!options.randomize : !!savedSettings.randomize;
+    let randomize = ('randomize' in options) ? !!options.randomize : ('randomize' in savedSettings ? !!savedSettings.randomize : true);
     let swapSides = ('swapSides' in options) ? !!options.swapSides : !!savedSettings.swapSides;
     let autoSpeak = ('autoSpeak' in options) ? !!options.autoSpeak : !!savedSettings.autoSpeak;
     
@@ -32,18 +36,18 @@ function openSpellingQuiz(options = {}) {
     let skipPunctuation = ('skipPunctuation' in options) ? !!options.skipPunctuation : ('skipPunctuation' in savedSettings ? !!savedSettings.skipPunctuation : true);
     let allowSlashParts = ('allowSlashParts' in options) ? !!options.allowSlashParts : ('allowSlashParts' in savedSettings ? !!savedSettings.allowSlashParts : true);
 
-    if (!window.currentSet || !window.currentSet.cards || window.currentSet.cards.length === 0) {
-        if (window.Toast) window.Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
+    if (!state.currentSet || !state.currentSet.cards || state.currentSet.cards.length === 0) {
+        Toast.show('Deze set heeft geen kaarten om te oefenen.', 'error');
         return;
     }
 
-    let originalCards = window.currentSet.cards;
+    let originalCards = state.currentSet.cards;
     if (starOnly) {
         originalCards = originalCards.filter(c => c.starred);
     }
 
     if (originalCards.length === 0) {
-        if (window.Toast) window.Toast.show('Je hebt geen woorden met een ster om te oefenen.', 'error');
+        Toast.show('Je hebt geen woorden met een ster om te oefenen.', 'error');
         return;
     }
 
@@ -102,7 +106,7 @@ function openSpellingQuiz(options = {}) {
 
     // Helper to get unique key for a card
     function getCardKey(card) {
-        return `idx_${window.currentSet.cards.indexOf(card)}`;
+        return `idx_${state.currentSet.cards.indexOf(card)}`;
     }
 
     // Arranges repeated review cards so no identical cards are adjacent unless impossible
@@ -160,7 +164,7 @@ function openSpellingQuiz(options = {}) {
     overlay.innerHTML = `
         <div class="sp-container" style="position: relative;">
             <div class="sp-header">
-                <span class="sp-title">${escapeHtml(window.currentSet.title || 'Spelling')}</span>
+                <span class="sp-title">${escapeHtml(state.currentSet.title || 'Spelling')}</span>
                 <div style="display: flex; gap: 8px; align-items: center; position: relative;">
                     <button class="btn-close-flashcards" id="sp-settings-btn" title="Instellingen" style="transform: none;">
                         <span class="material-symbols-rounded">settings</span>
@@ -168,116 +172,14 @@ function openSpellingQuiz(options = {}) {
                     <button class="btn-close-flashcards" id="sp-close">
                         <span class="material-symbols-rounded">close</span>
                     </button>
-                    <!-- Settings Panel -->
-                    <div id="sp-settings-panel" class="sp-settings-panel">
-                        <h3 class="sp-settings-title">
-                            <span class="material-symbols-rounded">settings</span> Instellingen
-                        </h3>
-                        
-                        <div class="sp-setting-item">
-                            <div class="sp-setting-row">
-                                <label for="sp-star-only" class="sp-setting-label" style="${!hasStarred ? 'opacity: 0.5; cursor: not-allowed;' : ''}">Alleen sterwoorden</label>
-                                <label class="fc-switch" style="${!hasStarred ? 'opacity: 0.5; cursor: not-allowed; pointer-events: none;' : ''}">
-                                    <input type="checkbox" id="sp-star-only" ${starOnly ? 'checked' : ''} ${!hasStarred ? 'disabled' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="sp-setting-description">Oefen alleen de woorden die je met een ster hebt gemarkeerd.</span>
-                            <span class="sp-warning-text" id="sp-star-warning">Let op: Dit start een nieuwe sessie. Je voortgang gaat verloren!</span>
-                        </div>
-
-                        <div class="sp-setting-item">
-                            <div class="sp-setting-row">
-                                <label for="sp-randomize" class="sp-setting-label">Willekeurige volgorde</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="sp-randomize" ${randomize ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="sp-setting-description">Schud de vragen in een willekeurige volgorde vanaf de volgende vraag.</span>
-                        </div>
-
-                        <div class="sp-setting-item">
-                            <div class="sp-setting-row">
-                                <label for="sp-swap-sides" class="sp-setting-label">${window.currentSet.mode === 'talen' ? 'Talen omdraaien' : 'Term en definitie omdraaien'}</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="sp-swap-sides" ${swapSides ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="sp-setting-description">${window.currentSet.mode === 'talen' ? `Vraag ${escapeHtml(window.currentSet.lang2 || 'de vertaling')} en typ ${escapeHtml(window.currentSet.lang1 || 'het woord')}.` : 'Vraag de definitie en typ de term.'}</span>
-                        </div>
-
-                        <div class="sp-setting-item">
-                            <div class="sp-setting-row">
-                                <label for="sp-auto-speak" class="sp-setting-label">Automatisch uitspreken</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="sp-auto-speak" ${autoSpeak ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="sp-setting-description">Spreek de vraag automatisch uit wanneer deze in beeld komt.</span>
-                        </div>
-
-                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;">
-
-                        <div class="sp-setting-item">
-                            <div class="sp-setting-row">
-                                <label for="sp-ignore-parentheses" class="sp-setting-label">Tussen haakjes goedkeuren</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="sp-ignore-parentheses" ${ignoreParentheses ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="sp-setting-description">Dingen tussen haakjes zijn optioneel. Bijv. "de (mooie) auto" keurt ook "de auto" goed.</span>
-                        </div>
-
-                        <div class="sp-setting-item">
-                            <div class="sp-setting-row">
-                                <label for="sp-skip-punctuation" class="sp-setting-label">Leestekens & accenten skippen</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="sp-skip-punctuation" ${skipPunctuation ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="sp-setting-description">Negeer leestekens, en vervang speciale letters zoals é of ì door e en i.</span>
-                        </div>
-
-                        <div class="sp-setting-item">
-                            <div class="sp-setting-row">
-                                <label for="sp-allow-slash-parts" class="sp-setting-label">Eén kant van / goedkeuren</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="sp-allow-slash-parts" ${allowSlashParts ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="sp-setting-description">Als het antwoord "hoi/hallo" is, is "hoi" óf "hallo" goed.</span>
-                        </div>
-
-                        <div class="sp-settings-actions">
-                            <button class="btn-control" id="sp-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
-                            <button class="btn-control" id="sp-settings-cancel">Annuleren</button>
-                        </div>
-                    </div>
+                    <!-- Settings Panel Component -->
+                    <quizy-settings-panel id="sp-settings-panel" mode="spelling"></quizy-settings-panel>
                 </div>
             </div>
 
-            <!-- Confirmation Modal -->
-            <div id="sp-confirm-modal" class="sp-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(11, 15, 25, 0.85); z-index: 1000; align-items: center; justify-content: center;">
-                <div class="glass-panel" style="max-width: 420px; width: 90%; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(22, 22, 30, 0.95); box-shadow: 0 20px 40px rgba(0,0,0,0.6); overflow: hidden; display: flex; flex-direction: column;">
-                    <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
-                        <h3 style="font-size: 1.2em; font-weight: 600; color: var(--text-light); margin: 0; text-align: left;">Sessie herstarten?</h3>
-                    </div>
-                    <div style="padding: 24px; display: flex; flex-direction: column; gap: 8px; text-align: left;">
-                        <p style="color: var(--text-muted); font-size: 0.95em; line-height: 1.5; margin: 0;">Weet je zeker dat je de instellingen voor ster-woorden wilt wijzigen?</p>
-                        <p style="color: #ef4444; font-size: 0.9em; font-weight: 500; margin: 0;">Dit start een nieuwe sessie en je huidige voortgang gaat verloren.</p>
-                    </div>
-                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; display: flex; justify-content: flex-end; gap: 12px; background: rgba(0,0,0,0.2);">
-                        <button id="sp-confirm-cancel" class="btn-control" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; font-size: 0.9em;">Annuleren</button>
-                        <button id="sp-confirm-ok" class="btn-control" style="background: var(--primary); border: none; color: #fff; padding: 8px 16px; font-size: 0.9em;">Ja, begin opnieuw</button>
-                    </div>
-                </div>
-            </div>
+            <!-- Custom Confirmation Modal Component -->
+            <quizy-confirm-modal id="sp-confirm-modal"></quizy-confirm-modal>
+
             
             <div class="sp-question-card" id="sp-question">
                 <button class="btn-sp-speak" title="Uitspreken">
@@ -341,102 +243,40 @@ function openSpellingQuiz(options = {}) {
     // Settings elements
     const settingsBtn = document.getElementById('sp-settings-btn');
     const settingsPanel = document.getElementById('sp-settings-panel');
-    const settingsSave = document.getElementById('sp-settings-save');
-    const settingsCancel = document.getElementById('sp-settings-cancel');
-    const starOnlyCheckbox = document.getElementById('sp-star-only');
-    const randomizeCheckbox = document.getElementById('sp-randomize');
-    const swapSidesCheckbox = document.getElementById('sp-swap-sides');
-    const autoSpeakCheckbox = document.getElementById('sp-auto-speak');
-    const ignoreParenthesesCheckbox = document.getElementById('sp-ignore-parentheses');
-    const skipPunctuationCheckbox = document.getElementById('sp-skip-punctuation');
-    const allowSlashPartsCheckbox = document.getElementById('sp-allow-slash-parts');
-    const starWarning = document.getElementById('sp-star-warning');
+    const confirmModal = document.getElementById('sp-confirm-modal');
 
     settingsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        settingsPanel.classList.toggle('active');
-        starWarning.style.display = (starOnlyCheckbox.checked !== starOnly) ? 'block' : 'none';
-    });
-
-    starOnlyCheckbox.addEventListener('change', () => {
-        starWarning.style.display = (starOnlyCheckbox.checked !== starOnly) ? 'block' : 'none';
-    });
-
-    settingsCancel.addEventListener('click', (e) => {
-        e.stopPropagation();
-        settingsPanel.classList.remove('active');
-        starOnlyCheckbox.checked = starOnly;
-        randomizeCheckbox.checked = randomize;
-        if (swapSidesCheckbox) swapSidesCheckbox.checked = swapSides;
-        if (autoSpeakCheckbox) autoSpeakCheckbox.checked = autoSpeak;
-        ignoreParenthesesCheckbox.checked = ignoreParentheses;
-        skipPunctuationCheckbox.checked = skipPunctuation;
-        allowSlashPartsCheckbox.checked = allowSlashParts;
-        starWarning.style.display = 'none';
-    });
-
-    settingsSave.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const newStarOnly = starOnlyCheckbox.checked;
-        const newRandomize = randomizeCheckbox.checked;
-        const newSwapSides = swapSidesCheckbox ? swapSidesCheckbox.checked : false;
-        const newAutoSpeak = autoSpeakCheckbox ? autoSpeakCheckbox.checked : false;
-        const newIgnoreParentheses = ignoreParenthesesCheckbox.checked;
-        const newSkipPunctuation = skipPunctuationCheckbox.checked;
-        const newAllowSlashParts = allowSlashPartsCheckbox.checked;
-
-        if (newStarOnly !== starOnly) {
-            const confirmModal = document.getElementById('sp-confirm-modal');
-            const confirmOk = document.getElementById('sp-confirm-ok');
-            const confirmCancel = document.getElementById('sp-confirm-cancel');
-            
-            confirmModal.style.display = 'flex';
-            
-            const onConfirm = () => {
-                confirmModal.style.display = 'none';
-                settingsPanel.classList.remove('active');
-                if (window.currentSet) {
-                    window.currentSet.settings = {
-                        ...(window.currentSet.settings || {}),
-                        starOnly: newStarOnly,
-                        randomize: newRandomize,
-                        swapSides: newSwapSides,
-                        autoSpeak: newAutoSpeak,
-                        ignoreParentheses: newIgnoreParentheses,
-                        skipPunctuation: newSkipPunctuation,
-                        allowSlashParts: newAllowSlashParts
-                    };
-                    if (isOwner && window.saveAndSyncCurrentSet) {
-                        window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
-                    }
-                }
-                document.removeEventListener('click', clickOutsideHandler);
-                openSpellingQuiz({ 
-                    starOnly: newStarOnly, 
-                    randomize: newRandomize, 
-                    swapSides: newSwapSides, 
-                    autoSpeak: newAutoSpeak,
-                    ignoreParentheses: newIgnoreParentheses,
-                    skipPunctuation: newSkipPunctuation,
-                    allowSlashParts: newAllowSlashParts
-                });
-                cleanup();
-            };
-            const onCancel = () => {
-                confirmModal.style.display = 'none';
-                cleanup();
-            };
-            const cleanup = () => {
-                confirmOk.removeEventListener('click', onConfirm);
-                confirmCancel.removeEventListener('click', onCancel);
-            };
-            
-            confirmOk.addEventListener('click', onConfirm);
-            confirmCancel.addEventListener('click', onCancel);
+        if (settingsPanel.classList.contains('active')) {
+            settingsPanel.close();
         } else {
-            if (window.currentSet) {
-                window.currentSet.settings = {
-                    ...(window.currentSet.settings || {}),
+            const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
+            settingsPanel.open(
+                { starOnly, randomize, swapSides, autoSpeak, ignoreParentheses, skipPunctuation, allowSlashParts },
+                hasStarred,
+                state.currentSet.mode === 'talen',
+                state.currentSet.lang1,
+                state.currentSet.lang2
+            );
+        }
+    });
+
+    settingsPanel.addEventListener('save', (e) => {
+        const { 
+            starOnly: newStarOnly, 
+            randomize: newRandomize, 
+            swapSides: newSwapSides, 
+            autoSpeak: newAutoSpeak,
+            ignoreParentheses: newIgnoreParentheses,
+            skipPunctuation: newSkipPunctuation,
+            allowSlashParts: newAllowSlashParts
+        } = e.detail;
+
+        const applySettings = () => {
+            settingsPanel.close();
+            if (state.currentSet) {
+                state.currentSet.settings = {
+                    ...(state.currentSet.settings || {}),
                     starOnly: newStarOnly,
                     randomize: newRandomize,
                     swapSides: newSwapSides,
@@ -445,8 +285,44 @@ function openSpellingQuiz(options = {}) {
                     skipPunctuation: newSkipPunctuation,
                     allowSlashParts: newAllowSlashParts
                 };
-                if (isOwner && window.saveAndSyncCurrentSet) {
-                    window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
+                if (isOwner && state.saveAndSyncCurrentSet) {
+                    state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
+                }
+            }
+            document.removeEventListener('click', clickOutsideHandler);
+            openSpellingQuiz({ 
+                starOnly: newStarOnly, 
+                randomize: newRandomize, 
+                swapSides: newSwapSides, 
+                autoSpeak: newAutoSpeak,
+                ignoreParentheses: newIgnoreParentheses,
+                skipPunctuation: newSkipPunctuation,
+                allowSlashParts: newAllowSlashParts
+            });
+        };
+
+        if (newStarOnly !== starOnly) {
+            confirmModal.open();
+            
+            const onConfirm = () => {
+                confirmModal.removeEventListener('confirm', onConfirm);
+                applySettings();
+            };
+            confirmModal.addEventListener('confirm', onConfirm);
+        } else {
+            if (state.currentSet) {
+                state.currentSet.settings = {
+                    ...(state.currentSet.settings || {}),
+                    starOnly: newStarOnly,
+                    randomize: newRandomize,
+                    swapSides: newSwapSides,
+                    autoSpeak: newAutoSpeak,
+                    ignoreParentheses: newIgnoreParentheses,
+                    skipPunctuation: newSkipPunctuation,
+                    allowSlashParts: newAllowSlashParts
+                };
+                if (isOwner && state.saveAndSyncCurrentSet) {
+                    state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                 }
             }
             if (newRandomize !== randomize) {
@@ -455,14 +331,14 @@ function openSpellingQuiz(options = {}) {
                     const remaining = activeQueue.slice(currentIndex + 1);
                     shuffleArray(remaining);
                     activeQueue.splice(currentIndex + 1, activeQueue.length - (currentIndex + 1), ...remaining);
-                    if (window.Toast) window.Toast.show('Vragen worden nu in willekeurige volgorde getoond.', 'success');
+                    Toast.show('Vragen worden nu in willekeurige volgorde getoond.', 'success');
                 } else {
                     const remaining = activeQueue.slice(currentIndex + 1);
                     remaining.sort((a, b) => {
                         return originalCards.indexOf(a) - originalCards.indexOf(b);
                     });
                     activeQueue.splice(currentIndex + 1, activeQueue.length - (currentIndex + 1), ...remaining);
-                    if (window.Toast) window.Toast.show('Willekeurige volgorde uitgeschakeld. Vragen gaan verder in de originele volgorde.', 'info');
+                    Toast.show('Willekeurige volgorde uitgeschakeld. Vragen gaan verder in de originele volgorde.', 'info');
                 }
             }
             
@@ -473,21 +349,13 @@ function openSpellingQuiz(options = {}) {
             allowSlashParts = newAllowSlashParts;
             
             updateQuestion();
-            settingsPanel.classList.remove('active');
+            settingsPanel.close();
         }
     });
 
     const clickOutsideHandler = (e) => {
         if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
-            settingsPanel.classList.remove('active');
-            starOnlyCheckbox.checked = starOnly;
-            randomizeCheckbox.checked = randomize;
-            if (swapSidesCheckbox) swapSidesCheckbox.checked = swapSides;
-            if (autoSpeakCheckbox) autoSpeakCheckbox.checked = autoSpeak;
-            ignoreParenthesesCheckbox.checked = ignoreParentheses;
-            skipPunctuationCheckbox.checked = skipPunctuation;
-            allowSlashPartsCheckbox.checked = allowSlashParts;
-            starWarning.style.display = 'none';
+            settingsPanel.close();
         }
     };
     document.addEventListener('click', clickOutsideHandler);
@@ -507,7 +375,7 @@ function openSpellingQuiz(options = {}) {
     }
 
     function checkSpellingAnswer(userInput, correctAnswer) {
-        return window.checkSpellingAnswer(userInput, correctAnswer, {
+        return checkSpellingHelper(userInput, correctAnswer, {
             skipPunctuation: skipPunctuation,
             allowSlashParts: allowSlashParts,
             ignoreParentheses: ignoreParentheses
@@ -530,15 +398,15 @@ function openSpellingQuiz(options = {}) {
 
         if (swapSides) {
             questionTextEl.textContent = card.definition;
-            if (window.currentSet.mode === 'talen') {
-                questionLabelEl.textContent = window.currentSet.lang2 || 'Definitie';
+            if (state.currentSet.mode === 'talen') {
+                questionLabelEl.textContent = state.currentSet.lang2 || 'Definitie';
             } else {
                 questionLabelEl.textContent = 'Definitie';
             }
         } else {
             questionTextEl.textContent = card.term;
-            if (window.currentSet.mode === 'talen') {
-                questionLabelEl.textContent = window.currentSet.lang1 || 'Term';
+            if (state.currentSet.mode === 'talen') {
+                questionLabelEl.textContent = state.currentSet.lang1 || 'Term';
             } else {
                 questionLabelEl.textContent = 'Term';
             }
@@ -569,10 +437,8 @@ function openSpellingQuiz(options = {}) {
         const card = activeQueue[currentIndex];
         if (!card) return;
         const text = swapSides ? card.definition : card.term;
-        const lang = swapSides ? (window.currentSet.lang_col2 || window.currentSet.lang_col1) : window.currentSet.lang_col1;
-        if (window.speakText) {
-            window.speakText(text, lang);
-        }
+        const lang = swapSides ? (state.currentSet.lang_col2 || state.currentSet.lang_col1) : state.currentSet.lang_col1;
+        speakText(text, lang);
     }
 
     function checkFinished() {
@@ -733,10 +599,11 @@ function openSpellingQuiz(options = {}) {
         }
 
         try {
-            const hasStarredNow = window.currentSet && window.currentSet.cards && window.currentSet.cards.some(c => c.starred);
+            const hasStarredNow = state.currentSet && state.currentSet.cards && state.currentSet.cards.some(c => c.starred);
+            const starOnlyCheckbox = settingsPanel ? settingsPanel.querySelector('#setting-star-only') : null;
             if (!hasStarredNow) {
-                if (window.currentSet.settings) {
-                    window.currentSet.settings.starOnly = false;
+                if (state.currentSet.settings) {
+                    state.currentSet.settings.starOnly = false;
                 }
                 if (starOnlyCheckbox) {
                     starOnlyCheckbox.checked = false;
@@ -755,9 +622,9 @@ function openSpellingQuiz(options = {}) {
                     if (switchEl) switchEl.style.cssText = '';
                 }
             }
-            await window.saveAndSyncCurrentSet();
-            if (window.refreshTermsList) {
-                window.refreshTermsList();
+            await state.saveAndSyncCurrentSet();
+            if (state.refreshTermsList) {
+                state.refreshTermsList();
             }
         } catch (err) {
             currentCard.starred = !currentCard.starred;
@@ -769,7 +636,7 @@ function openSpellingQuiz(options = {}) {
                 starBtn.classList.remove('starred');
                 icon.style.fontVariationSettings = "'FILL' 0";
             }
-            if (window.Toast) window.Toast.show('Fout bij bijwerken van ster: ' + err.message, 'error');
+            Toast.show('Fout bij bijwerken van ster: ' + err.message, 'error');
         }
     });
 
@@ -790,12 +657,4 @@ function openSpellingQuiz(options = {}) {
     updateQuestion();
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
+

@@ -1,3 +1,5 @@
+import Toast from './toast.js';
+
 class QuizySetModal extends HTMLElement {
     constructor() {
         super();
@@ -324,8 +326,8 @@ class QuizySetModal extends HTMLElement {
     addTermRow(term = '', definition = '', shouldScroll = true, showToastOnLimit = true) {
         const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
         if (allRows.length >= 200) {
-            if (showToastOnLimit && window.Toast) {
-                window.Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
+            if (showToastOnLimit) {
+                Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
             }
             return;
         }
@@ -474,25 +476,25 @@ class QuizySetModal extends HTMLElement {
         const title = titleInput.value.trim();
 
         if (!title) {
-            if (window.Toast) window.Toast.show('Titel is verplicht.', 'error');
+            Toast.show('Titel is verplicht.', 'error');
             return;
         }
 
         if (title.length < 4) {
-            if (window.Toast) window.Toast.show('Titel moet minimaal 4 tekens lang zijn.', 'error');
+            Toast.show('Titel moet minimaal 4 tekens lang zijn.', 'error');
             return;
         }
 
         if (title.length > 100) {
             const over = title.length - 100;
-            if (window.Toast) window.Toast.show(`Titel is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 100).`, 'error');
+            Toast.show(`Titel is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 100).`, 'error');
             return;
         }
 
         const description = this.querySelector('#set-desc').value.trim();
         if (description.length > 300) {
             const over = description.length - 300;
-            if (window.Toast) window.Toast.show(`Beschrijving is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 300).`, 'error');
+            Toast.show(`Beschrijving is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 300).`, 'error');
             return;
         }
 
@@ -500,12 +502,12 @@ class QuizySetModal extends HTMLElement {
         if (folder === '__new__') {
             folder = this.newFolderInput.value.trim();
             if (!folder) {
-                if (window.Toast) window.Toast.show('Vul een naam in voor de nieuwe map.', 'error');
+                Toast.show('Vul een naam in voor de nieuwe map.', 'error');
                 return;
             }
             if (folder.length > 30) {
                 const over = folder.length - 30;
-                if (window.Toast) window.Toast.show(`Mapnaam is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 30).`, 'error');
+                Toast.show(`Mapnaam is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 30).`, 'error');
                 return;
             }
         }
@@ -519,7 +521,7 @@ class QuizySetModal extends HTMLElement {
         const lang2 = lang2Select ? lang2Select.value.trim() : '';
 
         if (!lang1) {
-            if (window.Toast) window.Toast.show('Kies een geldige taal.', 'error');
+            Toast.show('Kies een geldige taal.', 'error');
             return;
         }
 
@@ -545,29 +547,29 @@ class QuizySetModal extends HTMLElement {
 
         if (maxTermOver > 0 || maxDefOver > 0) {
             const maxOver = Math.max(maxTermOver, maxDefOver);
-            if (window.Toast) window.Toast.show(`Een term of definitie is te lang (${maxOver} ${maxOver === 1 ? 'teken' : 'tekens'} over de limiet van 300).`, 'error');
+            Toast.show(`Een term of definitie is te lang (${maxOver} ${maxOver === 1 ? 'teken' : 'tekens'} over de limiet van 300).`, 'error');
             return;
         }
 
         if (hasIncompleteRow) {
-            if (window.Toast) window.Toast.show('Vul voor elke kaart zowel de term als de definitie in.', 'error');
+            Toast.show('Vul voor elke kaart zowel de term als de definitie in.', 'error');
             return;
         }
 
         const uniqueTerms = new Set(rows.map(r => r.term.trim().toLowerCase()));
         if (uniqueTerms.size < 4) {
-            if (window.Toast) window.Toast.show('Een set moet minimaal 4 verschillende termen bevatten.', 'error');
+            Toast.show('Een set moet minimaal 4 verschillende termen bevatten.', 'error');
             return;
         }
 
         const uniqueDefs = new Set(rows.map(r => r.definition.trim().toLowerCase()));
         if (uniqueDefs.size < 4) {
-            if (window.Toast) window.Toast.show('Een set moet minimaal 4 verschillende definities bevatten.', 'error');
+            Toast.show('Een set moet minimaal 4 verschillende definities bevatten.', 'error');
             return;
         }
 
         if (rows.length > 200) {
-            if (window.Toast) window.Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
+            Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
             return;
         }
 
@@ -590,14 +592,12 @@ class QuizySetModal extends HTMLElement {
             }
         }));
 
-        if (window.Toast) {
-            window.Toast.show(
-                this.currentMode === 'edit'
-                    ? 'Wijzigingen succesvol opgeslagen!'
-                    : 'Set succesvol aangemaakt!',
-                'success'
-            );
-        }
+        Toast.show(
+            this.currentMode === 'edit'
+                ? 'Wijzigingen succesvol opgeslagen!'
+                : 'Set succesvol aangemaakt!',
+            'success'
+        );
 
         this.close();
     }
@@ -649,9 +649,7 @@ class QuizySetModal extends HTMLElement {
         });
 
         if (parsedRows.length === 0) {
-            if (window.Toast) {
-                window.Toast.show('Geen geldige woorden gevonden om te importeren.', 'error');
-            }
+            Toast.show('Geen geldige woorden gevonden om te importeren.', 'error');
             return;
         }
 
@@ -674,15 +672,11 @@ class QuizySetModal extends HTMLElement {
         if (currentCount + parsedRows.length > 200) {
             const allowedCount = 200 - currentCount;
             if (allowedCount <= 0) {
-                if (window.Toast) {
-                    window.Toast.show('De set heeft al het maximum van 200 kaarten bereikt.', 'error');
-                }
+                Toast.show('De set heeft al het maximum van 200 kaarten bereikt.', 'error');
                 return;
             }
             parsedRows.splice(allowedCount);
-            if (window.Toast) {
-                window.Toast.show(`Slechts ${allowedCount} woorden konden worden geïmporteerd (maximaal 200 kaarten).`, 'warning');
-            }
+            Toast.show(`Slechts ${allowedCount} woorden konden worden geïmporteerd (maximaal 200 kaarten).`, 'warning');
         }
 
         parsedRows.forEach(row => {
@@ -699,9 +693,7 @@ class QuizySetModal extends HTMLElement {
             importContainer.classList.remove('active');
         }
 
-        if (window.Toast) {
-            window.Toast.show(`${parsedRows.length} woorden succesvol geïmporteerd!`, 'success');
-        }
+        Toast.show(`${parsedRows.length} woorden succesvol geïmporteerd!`, 'success');
     }
 }
 

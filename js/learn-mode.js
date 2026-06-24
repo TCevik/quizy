@@ -1,3 +1,7 @@
+import { state } from './state.js';
+import Toast from './toast.js';
+import { speakText, escapeHtml, checkSpellingAnswer } from './main.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         const btnLearnMode = e.target.closest('#btn-learn-mode');
@@ -9,9 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openLearnMode() {
-    const isOwner = window.currentUser && window.currentSet && window.currentSet.user_id === window.currentUser.id;
-    if (!window.currentSet || !window.currentSet.cards || window.currentSet.cards.length === 0) {
-        if (window.Toast) window.Toast.show('Deze set heeft geen kaarten om te leren.', 'error');
+    const isOwner = state.currentUser && state.currentSet && state.currentSet.user_id === state.currentUser.id;
+    if (!state.currentSet || !state.currentSet.cards || state.currentSet.cards.length === 0) {
+        Toast.show('Deze set heeft geen kaarten om te leren.', 'error');
         return;
     }
 
@@ -21,11 +25,7 @@ function openLearnMode() {
         overlay = document.createElement('div');
         overlay.id = 'learn-overlay';
         overlay.className = 'learn-overlay';
-        if (mainWrapper) {
-            mainWrapper.appendChild(overlay);
-        } else {
-            document.body.appendChild(overlay);
-        }
+        document.body.appendChild(overlay);
     }
 
     if (mainWrapper) {
@@ -40,16 +40,16 @@ function openLearnMode() {
     }
     window.scrollTo(0, 0);
 
-    const originalCards = window.currentSet.cards;
+    const originalCards = state.currentSet.cards;
     const hasStarred = originalCards.some(c => c.starred);
 
-    const savedSettings = (window.currentSet && window.currentSet.settings) || {};
+    const savedSettings = (state.currentSet && state.currentSet.settings) || {};
     let settings = {
         flashcards: ('learn_flashcards' in savedSettings) ? !!savedSettings.learn_flashcards : true,
         multipleChoice: ('learn_multipleChoice' in savedSettings) ? !!savedSettings.learn_multipleChoice : true,
         spelling: ('learn_spelling' in savedSettings) ? !!savedSettings.learn_spelling : true,
         starOnly: ('starOnly' in savedSettings) ? !!savedSettings.starOnly : false,
-        randomize: ('randomize' in savedSettings) ? !!savedSettings.randomize : false,
+        randomize: ('randomize' in savedSettings) ? !!savedSettings.randomize : true,
         swapSides: ('swapSides' in savedSettings) ? !!savedSettings.swapSides : false,
         autoSpeak: ('autoSpeak' in savedSettings) ? !!savedSettings.autoSpeak : false,
         ignoreParentheses: ('ignoreParentheses' in savedSettings) ? !!savedSettings.ignoreParentheses : true,
@@ -59,8 +59,8 @@ function openLearnMode() {
 
     if (!hasStarred) {
         settings.starOnly = false;
-        if (window.currentSet && window.currentSet.settings && window.currentSet.settings.starOnly) {
-            window.currentSet.settings.starOnly = false;
+        if (state.currentSet && state.currentSet.settings && state.currentSet.settings.starOnly) {
+            state.currentSet.settings.starOnly = false;
         }
     }
 
@@ -75,7 +75,7 @@ function openLearnMode() {
     overlay.innerHTML = `
         <div class="learn-container" style="position: relative;">
             <div class="learn-header">
-                <span class="learn-title">${escapeHtml(window.currentSet.title || 'Leermodus')}</span>
+                <span class="learn-title">${escapeHtml(state.currentSet.title || 'Leermodus')}</span>
                 <div style="display: flex; gap: 8px; align-items: center; position: relative;">
                     <button class="btn-close-flashcards" id="learn-settings-btn" title="Instellingen" style="transform: none;">
                         <span class="material-symbols-rounded">settings</span>
@@ -84,130 +84,8 @@ function openLearnMode() {
                         <span class="material-symbols-rounded">close</span>
                     </button>
 
-                    <div id="learn-settings-panel" class="learn-settings-panel">
-                        <h3 class="learn-settings-title">
-                            <span class="material-symbols-rounded">settings</span> Instellingen
-                        </h3>
-                        
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label" style="${!hasStarred ? 'opacity: 0.5;' : ''}">Alleen sterwoorden</label>
-                                <label class="fc-switch" style="${!hasStarred ? 'pointer-events: none; opacity: 0.5;' : ''}">
-                                    <input type="checkbox" id="learn-star-only" ${settings.starOnly ? 'checked' : ''} ${!hasStarred ? 'disabled' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Oefen alleen de woorden die je met een ster hebt gemarkeerd.</span>
-                        </div>
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Willekeurige volgorde</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-randomize" ${settings.randomize ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Schud de vragen in een willekeurige volgorde vanaf de volgende vraag.</span>
-                        </div>
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Vraag/Antwoord omdraaien</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-swap-sides" ${settings.swapSides ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Draai de term en definitie om tijdens het leren.</span>
-                        </div>
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Automatisch uitspreken</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-auto-speak" ${settings.autoSpeak ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Spreek de vraag automatisch uit wanneer deze in beeld komt.</span>
-                        </div>
-
-                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;">
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Flashcards</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-toggle-fc" ${settings.flashcards ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Leer de woorden met behulp van flashcards.</span>
-                        </div>
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Meerkeuze</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-toggle-mc" ${settings.multipleChoice ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Oefen de herkenning van woorden met meerkeuzevragen.</span>
-                        </div>
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Spelling</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-toggle-sp" ${settings.spelling ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Schrijf de vertaling of definitie volledig zelf.</span>
-                        </div>
-
-                        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;">
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Tussen haakjes goedkeuren (Spelling)</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-ignore-parentheses" ${settings.ignoreParentheses ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Dingen tussen haakjes zijn optioneel. Bijv. "de (mooie) auto" keurt ook "de auto" goed.</span>
-                        </div>
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Leestekens & accenten skippen (Spelling)</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-skip-punctuation" ${settings.skipPunctuation ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Negeer leestekens, en vervang speciale letters zoals é of ì door e en i.</span>
-                        </div>
-
-                        <div class="learn-setting-item">
-                            <div class="learn-setting-row">
-                                <label class="learn-setting-label">Eén kant van / goedkeuren (Spelling)</label>
-                                <label class="fc-switch">
-                                    <input type="checkbox" id="learn-allow-slash-parts" ${settings.allowSlashParts ? 'checked' : ''}>
-                                    <span class="fc-slider"></span>
-                                </label>
-                            </div>
-                            <span class="fc-setting-description">Als het antwoord "hoi/hallo" is, is "hoi" óf "hallo" goed.</span>
-                        </div>
-
-                        <div class="learn-settings-actions">
-                            <button class="btn-control" id="learn-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
-                            <button class="btn-control" id="learn-settings-cancel">Annuleren</button>
-                        </div>
-                    </div>
+            <!-- Settings Panel Component -->
+                    <quizy-settings-panel id="learn-settings-panel" mode="learn"></quizy-settings-panel>
                 </div>
             </div>
 
@@ -222,6 +100,9 @@ function openLearnMode() {
 
             <div class="learn-batch-dots" id="learn-batch-dots"></div>
         </div>
+
+        <!-- Custom Confirmation Modal Component placed outside learn-container to prevent transform/perspective containment -->
+        <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>
     `;
 
     overlay.style.display = 'flex';
@@ -232,37 +113,45 @@ function openLearnMode() {
     const progressText = document.getElementById('learn-progress-text');
     const progressFill = document.getElementById('learn-progress-fill');
     const closeBtn = document.getElementById('learn-close');
+    // Settings elements
     const settingsBtn = document.getElementById('learn-settings-btn');
     const settingsPanel = document.getElementById('learn-settings-panel');
-    const settingsSave = document.getElementById('learn-settings-save');
-    const settingsCancel = document.getElementById('learn-settings-cancel');
+    const confirmModal = document.getElementById('learn-confirm-modal');
 
     closeBtn.addEventListener('click', closeLearn);
 
     settingsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        settingsPanel.classList.toggle('active');
+        if (settingsPanel.classList.contains('active')) {
+            settingsPanel.close();
+        } else {
+            const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
+            settingsPanel.open(
+                settings,
+                hasStarred,
+                state.currentSet.mode === 'talen',
+                state.currentSet.lang1,
+                state.currentSet.lang2
+            );
+        }
     });
 
-    settingsCancel.addEventListener('click', () => {
-        settingsPanel.classList.remove('active');
-        document.getElementById('learn-toggle-fc').checked = settings.flashcards;
-        document.getElementById('learn-toggle-mc').checked = settings.multipleChoice;
-        document.getElementById('learn-toggle-sp').checked = settings.spelling;
-        document.getElementById('learn-star-only').checked = settings.starOnly;
-        document.getElementById('learn-randomize').checked = settings.randomize;
-        document.getElementById('learn-swap-sides').checked = settings.swapSides;
-        document.getElementById('learn-auto-speak').checked = settings.autoSpeak;
-    });
-
-    settingsSave.addEventListener('click', () => {
-        const fc = document.getElementById('learn-toggle-fc').checked;
-        const mc = document.getElementById('learn-toggle-mc').checked;
-        const sp = document.getElementById('learn-toggle-sp').checked;
-        const star = document.getElementById('learn-star-only').checked;
+    settingsPanel.addEventListener('save', (e) => {
+        const { 
+            flashcards: fc, 
+            multipleChoice: mc, 
+            spelling: sp, 
+            starOnly: star,
+            randomize,
+            swapSides,
+            autoSpeak,
+            ignoreParentheses,
+            skipPunctuation,
+            allowSlashParts
+        } = e.detail;
 
         if (!fc && !mc && !sp) {
-            if (window.Toast) window.Toast.show('Minimaal één leermethode moet actief zijn.', 'error');
+            Toast.show('Minimaal één leermethode moet actief zijn.', 'error');
             return;
         }
 
@@ -276,16 +165,16 @@ function openLearnMode() {
             settings.multipleChoice = mc;
             settings.spelling = sp;
             settings.starOnly = star;
-            settings.randomize = document.getElementById('learn-randomize').checked;
-            settings.swapSides = document.getElementById('learn-swap-sides').checked;
-            settings.autoSpeak = document.getElementById('learn-auto-speak').checked;
-            settings.ignoreParentheses = document.getElementById('learn-ignore-parentheses').checked;
-            settings.skipPunctuation = document.getElementById('learn-skip-punctuation').checked;
-            settings.allowSlashParts = document.getElementById('learn-allow-slash-parts').checked;
+            settings.randomize = randomize;
+            settings.swapSides = swapSides;
+            settings.autoSpeak = autoSpeak;
+            settings.ignoreParentheses = ignoreParentheses;
+            settings.skipPunctuation = skipPunctuation;
+            settings.allowSlashParts = allowSlashParts;
 
-            if (window.currentSet) {
-                window.currentSet.settings = {
-                    ...(window.currentSet.settings || {}),
+            if (state.currentSet) {
+                state.currentSet.settings = {
+                    ...(state.currentSet.settings || {}),
                     learn_flashcards: settings.flashcards,
                     learn_multipleChoice: settings.multipleChoice,
                     learn_spelling: settings.spelling,
@@ -297,12 +186,12 @@ function openLearnMode() {
                     skipPunctuation: settings.skipPunctuation,
                     allowSlashParts: settings.allowSlashParts
                 };
-                if (isOwner && window.saveAndSyncCurrentSet) {
-                    window.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
+                if (isOwner && state.saveAndSyncCurrentSet) {
+                    state.saveAndSyncCurrentSet().catch(err => console.error("Error saving settings:", err));
                 }
             }
 
-            settingsPanel.classList.remove('active');
+            settingsPanel.close();
             
             if (restart) {
                 initializeSession();
@@ -312,42 +201,17 @@ function openLearnMode() {
         };
 
         if (methodsChanged) {
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay active';
-            modal.style.zIndex = '9999';
-            
-            modal.innerHTML = `
-                <div class="modal-card glass-panel" style="max-width: 420px;">
-                    <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
-                        <h3 style="font-size: 1.3em; font-weight: 600; color: var(--text-light);">Sessie herstarten?</h3>
-                    </div>
-                    <div class="modal-body" style="padding: 24px; gap: 8px;">
-                        <p style="color: var(--text-muted); font-size: 1em; line-height: 1.5; margin: 0;">Als je de leermethodes of de 'Alleen ster'-modus aanpast, wordt je huidige sessie opnieuw gestart.</p>
-                        <p style="color: var(--text-light); font-size: 0.9em; font-weight: 500; margin: 0; margin-top: 10px;">Weet je zeker dat je wilt doorgaan?</p>
-                    </div>
-                    <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; margin-top: 0;">
-                        <button id="learn-restart-cancel" class="btn-text">Annuleren</button>
-                        <button id="learn-restart-confirm" class="btn-gradient" style="padding: 10px 20px;">Doorgaan</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            modal.querySelector('#learn-restart-cancel').addEventListener('click', () => {
-                modal.remove();
+            confirmModal.open({
+                title: 'Sessie herstarten?',
+                message: "Als je de leermethodes of de 'Alleen ster'-modus aanpast, wordt je huidige sessie opnieuw gestart.",
+                sub: 'Weet je zeker dat je wilt doorgaan?'
             });
-            
-            modal.querySelector('#learn-restart-confirm').addEventListener('click', () => {
-                modal.remove();
+
+            const onConfirm = () => {
+                confirmModal.removeEventListener('confirm', onConfirm);
                 applySettings(true);
-            });
-            
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.remove();
-                }
-            });
+            };
+            confirmModal.addEventListener('confirm', onConfirm);
         } else {
             applySettings(false);
         }
@@ -355,24 +219,14 @@ function openLearnMode() {
 
     const clickOutsideHandler = (e) => {
         if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) {
-            settingsPanel.classList.remove('active');
-            document.getElementById('learn-toggle-fc').checked = settings.flashcards;
-            document.getElementById('learn-toggle-mc').checked = settings.multipleChoice;
-            document.getElementById('learn-toggle-sp').checked = settings.spelling;
-            document.getElementById('learn-star-only').checked = settings.starOnly;
-            document.getElementById('learn-randomize').checked = settings.randomize;
-            document.getElementById('learn-swap-sides').checked = settings.swapSides;
-            document.getElementById('learn-auto-speak').checked = settings.autoSpeak;
-            document.getElementById('learn-ignore-parentheses').checked = settings.ignoreParentheses;
-            document.getElementById('learn-skip-punctuation').checked = settings.skipPunctuation;
-            document.getElementById('learn-allow-slash-parts').checked = settings.allowSlashParts;
+            settingsPanel.close();
         }
     };
     document.addEventListener('click', clickOutsideHandler);
 
 
     function getCardKey(card) {
-        return `idx_${window.currentSet.cards.indexOf(card)}`;
+        return `idx_${state.currentSet.cards.indexOf(card)}`;
     }
 
     function getStartingLevel() {
@@ -535,11 +389,11 @@ function openLearnMode() {
     function renderFlashcard(card) {
         const questionText = settings.swapSides ? card.definition : card.term;
         const answerText = settings.swapSides ? card.term : card.definition;
-        const questionLabel = window.currentSet.mode === 'talen' 
-            ? (settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term'))
+        const questionLabel = state.currentSet.mode === 'talen' 
+            ? (settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
             : (settings.swapSides ? 'Definitie' : 'Term');
-        const answerLabel = window.currentSet.mode === 'talen'
-            ? (settings.swapSides ? (window.currentSet.lang_col1 || 'Term') : (window.currentSet.lang_col2 || 'Definitie'))
+        const answerLabel = state.currentSet.mode === 'talen'
+            ? (settings.swapSides ? (state.currentSet.lang_col1 || 'Term') : (state.currentSet.lang_col2 || 'Definitie'))
             : (settings.swapSides ? 'Term' : 'Definitie');
 
         cardArea.innerHTML = `
@@ -578,10 +432,8 @@ function openLearnMode() {
         speakBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const text = wrapper.classList.contains('flipped') ? answerText : questionText;
-            const lang = wrapper.classList.contains('flipped') ? (window.currentSet.lang_col2 || window.currentSet.lang_col1) : window.currentSet.lang_col1;
-            if (window.speakText) {
-                window.speakText(text, lang);
-            }
+            const lang = wrapper.classList.contains('flipped') ? (state.currentSet.lang_col2 || state.currentSet.lang_col1) : state.currentSet.lang_col1;
+            speakText(text, lang);
         });
 
         document.getElementById('learn-btn-no').addEventListener('click', () => {
@@ -596,16 +448,16 @@ function openLearnMode() {
             showNextQuestion();
         });
 
-        if (settings.autoSpeak && window.speakText) {
-            window.speakText(questionText, window.currentSet.lang_col1);
+        if (settings.autoSpeak) {
+            speakText(questionText, state.currentSet.lang_col1);
         }
     }
 
     function renderMultipleChoice(card) {
         const questionText = settings.swapSides ? card.definition : card.term;
         const correctText = settings.swapSides ? card.term : card.definition;
-        const questionLabel = window.currentSet.mode === 'talen'
-            ? (settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term'))
+        const questionLabel = state.currentSet.mode === 'talen'
+            ? (settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
             : (settings.swapSides ? 'Definitie' : 'Term');
 
         const otherCards = originalCards.filter(c => getCardKey(c) !== getCardKey(card));
@@ -641,9 +493,7 @@ function openLearnMode() {
 
         const speakBtn = document.getElementById('learn-speak');
         speakBtn.addEventListener('click', () => {
-            if (window.speakText) {
-                window.speakText(questionText, window.currentSet.lang_col1);
-            }
+            speakText(questionText, state.currentSet.lang_col1);
         });
 
         const optionsGrid = document.getElementById('learn-mc-options');
@@ -687,16 +537,16 @@ function openLearnMode() {
             showNextQuestion();
         });
 
-        if (settings.autoSpeak && window.speakText) {
-            window.speakText(questionText, window.currentSet.lang_col1);
+        if (settings.autoSpeak) {
+            speakText(questionText, state.currentSet.lang_col1);
         }
     }
 
     function renderSpelling(card) {
         const questionText = settings.swapSides ? card.definition : card.term;
         const correctAnswer = settings.swapSides ? card.term : card.definition;
-        const questionLabel = window.currentSet.mode === 'talen'
-            ? (settings.swapSides ? (window.currentSet.lang_col2 || 'Definitie') : (window.currentSet.lang_col1 || 'Term'))
+        const questionLabel = state.currentSet.mode === 'talen'
+            ? (settings.swapSides ? (state.currentSet.lang_col2 || 'Definitie') : (state.currentSet.lang_col1 || 'Term'))
             : (settings.swapSides ? 'Definitie' : 'Term');
 
         cardArea.innerHTML = `
@@ -725,9 +575,7 @@ function openLearnMode() {
 
         const speakBtn = document.getElementById('learn-speak');
         speakBtn.addEventListener('click', () => {
-            if (window.speakText) {
-                window.speakText(questionText, window.currentSet.lang_col1);
-            }
+            speakText(questionText, state.currentSet.lang_col1);
         });
 
         const form = document.getElementById('learn-sp-form');
@@ -746,7 +594,11 @@ function openLearnMode() {
             }
 
             const inputVal = input.value.trim();
-            const correct = checkSpellingAnswer(inputVal, correctAnswer);
+            const correct = checkSpellingAnswer(inputVal, correctAnswer, {
+                skipPunctuation: settings.skipPunctuation,
+                allowSlashParts: settings.allowSlashParts,
+                ignoreParentheses: settings.ignoreParentheses
+            });
             answered = true;
             input.disabled = true;
             skipBtn.style.display = 'none';
@@ -786,18 +638,12 @@ function openLearnMode() {
             submitBtn.click();
         });
 
-        if (settings.autoSpeak && window.speakText) {
-            window.speakText(questionText, window.currentSet.lang_col1);
+        if (settings.autoSpeak) {
+            speakText(questionText, state.currentSet.lang_col1);
         }
     }
 
-    function checkSpellingAnswer(userInput, correctAnswer) {
-        return window.checkSpellingAnswer(userInput, correctAnswer, {
-            skipPunctuation: settings.skipPunctuation,
-            allowSlashParts: settings.allowSlashParts,
-            ignoreParentheses: settings.ignoreParentheses
-        });
-    }
+
 
     function showCelebration() {
         cardArea.innerHTML = `
@@ -823,8 +669,9 @@ function openLearnMode() {
         document.removeEventListener('click', clickOutsideHandler);
         overlay.classList.remove('active');
         overlay.style.display = 'none';
-        if (mainWrapper) {
-            Array.from(mainWrapper.children).forEach(child => {
+        const mWrapper = document.querySelector('main.set-wrapper');
+        if (mWrapper) {
+            Array.from(mWrapper.children).forEach(child => {
                 if (child !== overlay) {
                     child.style.display = child.getAttribute('data-prev-display') || '';
                     child.removeAttribute('data-prev-display');
@@ -833,15 +680,6 @@ function openLearnMode() {
         }
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
 
     initializeSession();
 }

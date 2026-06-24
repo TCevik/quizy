@@ -1,4 +1,7 @@
-document.addEventListener('DOMContentLoaded', async () => {
+import { supabaseReady } from './supabase-init.js';
+import Toast from './toast.js';
+
+const initReset = async () => {
     // Check if the URL hash contains password recovery markers immediately
     const hash = window.location.hash;
     const queryParams = new URLSearchParams(window.location.search);
@@ -10,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const supabase = await window.supabaseReady;
+    const supabase = await supabaseReady;
     if (!supabase) return;
 
     const resetPasswordForm = document.getElementById('resetPasswordForm');
@@ -21,7 +24,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const password = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
-
+            if (password.length < 6) {
+                Toast.show('Wachtwoord moet minimaal 6 tekens lang zijn.', 'error');
+                return;
+            }
             if (password !== confirmPassword) {
                 Toast.show('Wachtwoorden komen niet overeen.', 'error');
                 return;
@@ -44,4 +50,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initReset);
+} else {
+    initReset();
+}

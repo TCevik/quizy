@@ -1,15 +1,12 @@
-document.addEventListener('DOMContentLoaded', async () => {
+import { supabaseReady } from './supabase-init.js';
+import Toast from './toast.js';
+
+const initLogin = async () => {
     const loginForm = document.getElementById('loginForm');
     
-    const supabase = await window.supabaseReady;
+    const supabase = await supabaseReady;
 
-    if (supabase) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            window.location.href = 'dashboard.html';
-            return;
-        }
-    }
+    // Redundant getUser check removed
 
     let isLoginMode = true;
     const toggleAuthBtn = document.getElementById('toggleAuthBtn');
@@ -231,7 +228,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('.cf-turnstile').forEach(div => {
                 try {
                     window.turnstile.reset(div);
-                } catch (e) {}
+                } catch (e) {
+                    console.error('Error resetting Turnstile in login:', e);
+                }
             });
         }
     }
@@ -273,4 +272,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             await resendConfirmationEmail(email);
         });
     }
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLogin);
+} else {
+    initLogin();
+}

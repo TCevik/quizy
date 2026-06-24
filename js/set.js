@@ -1,7 +1,11 @@
-import { getSetWithCards, syncSetToRemote, deleteLocalSet, getLocalSet } from './storage.js';
+import { getSetWithCards, syncSetToRemote, deleteLocalSet, getLocalSet, saveLocalSet } from './storage.js';
+import { supabaseReady } from './supabase-init.js';
+import Toast from './toast.js';
+import { state } from './state.js';
+import { speakText, escapeHtml } from './main.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const supabase = await window.supabaseReady;
+const init = async () => {
+    const supabase = await supabaseReady;
 
     if (!supabase) {
         console.error('Supabase failed to initialize.');
@@ -14,14 +18,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'login.html';
         return;
     }
-    window.currentUser = user;
+    state.currentUser = user;
 
     // Get set ID from query parameters
     const urlParams = new URLSearchParams(window.location.search);
     const setId = urlParams.get('id');
 
     if (!setId) {
-        if (window.Toast) window.Toast.show('Geen set ID opgegeven.', 'error');
+        Toast.show('Geen set ID opgegeven.', 'error');
         setTimeout(() => {
             window.location.href = 'dashboard.html';
         }, 1500);
@@ -34,11 +38,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         let set = await getLocalSet(setId);
         if (set && set.cards) {
             currentSet = set;
-            window.currentSet = set;
+            state.currentSet = set;
             renderSetDetails();
         }
 
-        // Fetch creator name live with join from Supabase (not stored locally)
+        // Fetch creator name: use cached value first, fetch live only if missing
+        const creatorNameEl = document.getElementById('creator-name');
+        if (set && set.creator_name && creatorNameEl) {
+            creatorNameEl.textContent = set.creator_name;
+        }
+
         if (navigator.onLine) {
             supabase
                 .from('Sets')
@@ -46,10 +55,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .eq('id', setId)
                 .single()
                 .then(({ data, error }) => {
-                    if (!error && data) {
-                        const creatorNameEl = document.getElementById('creator-name');
+                    if (!error && data && data.profiles?.full_name) {
                         if (creatorNameEl) {
-                            creatorNameEl.textContent = data.profiles?.full_name || 'Onbekend';
+                            creatorNameEl.textContent = data.profiles.full_name;
+                        }
+                        // Cache for next visit
+                        if (currentSet && currentSet.creator_name !== data.profiles.full_name) {
+                            currentSet.creator_name = data.profiles.full_name;
+                            saveLocalSet(currentSet);
                         }
                     }
                 })
@@ -59,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         set = await getSetWithCards(supabase, setId, user.id);
 
         if (!set) {
-            if (window.Toast) window.Toast.show('Set kon niet worden geladen.', 'error');
+            Toast.show('Set kon niet worden geladen.', 'error');
             document.querySelector('.set-wrapper').innerHTML = `
                 <div class="back-nav">
                     <a href="dashboard.html" class="btn-back">
@@ -78,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (set) {
             currentSet = set;
-            window.currentSet = set;
+            state.currentSet = set;
             renderSetDetails();
         }
     }
@@ -212,80 +225,92 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         termsListEl.innerHTML = html;
 
-        // Add event listeners for speaking terms & definitions
-        termsListEl.querySelectorAll('.btn-speak-term').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const idx = parseInt(btn.getAttribute('data-index'), 10);
-                const card = cards[idx];
-                if (window.speakText) {
-                    window.speakText(card.term, currentSet.lang_col1);
-                }
-            });
-        });
+        // Add event delegation for speaking terms, definitions & starring cards
+        if (termsListEl && !termsListEl.dataset.listenerAttached) {
+            termsListEl.dataset.listenerAttached = 'true';
+            termsListEl.addEventListener('click', async (e) => {
+                const btnSpeakTerm = e.target.closest('.btn-speak-term');
+                const btnSpeakDef = e.target.closest('.btn-speak-def');
+                const btnStarCard = e.target.closest('.btn-star-card');
 
-        termsListEl.querySelectorAll('.btn-speak-def').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const idx = parseInt(btn.getAttribute('data-index'), 10);
-                const card = cards[idx];
-                if (window.speakText) {
-                    window.speakText(card.definition, currentSet.lang_col2 || currentSet.lang_col1);
-                }
-            });
-        });
-
-        // Add event listener for starring cards
-        termsListEl.querySelectorAll('.btn-star-card').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const idx = parseInt(btn.getAttribute('data-index'), 10);
-                const card = cards[idx];
-                
-                card.starred = !card.starred;
-                
-                try {
-                    const hasStarred = cards.some(c => c.starred);
-                    if (!hasStarred && currentSet.settings && currentSet.settings.starOnly) {
-                        currentSet.settings.starOnly = false;
-                    }
-                    await window.saveAndSyncCurrentSet();
-                    const icon = btn.querySelector('.material-symbols-rounded');
-                    if (card.starred) {
-                        icon.style.fontVariationSettings = "'FILL' 1";
-                        icon.style.color = "#ffca28";
-                    } else {
-                        icon.style.fontVariationSettings = "'FILL' 0";
-                        icon.style.color = "var(--text-muted)";
-                    }
-                } catch (updateError) {
-                    // Revert local change if error
+                if (btnSpeakTerm) {
+                    e.stopPropagation();
+                    const idx = parseInt(btnSpeakTerm.getAttribute('data-index'), 10);
+                    const card = currentSet.cards[idx];
+                    speakText(card.term, currentSet.lang_col1);
+                } else if (btnSpeakDef) {
+                    e.stopPropagation();
+                    const idx = parseInt(btnSpeakDef.getAttribute('data-index'), 10);
+                    const card = currentSet.cards[idx];
+                    speakText(card.definition, currentSet.lang_col2 || currentSet.lang_col1);
+                } else if (btnStarCard) {
+                    e.stopPropagation();
+                    const idx = parseInt(btnStarCard.getAttribute('data-index'), 10);
+                    const card = currentSet.cards[idx];
+                    
                     card.starred = !card.starred;
-                    if (window.Toast) window.Toast.show('Fout bij bijwerken van ster: ' + updateError.message, 'error');
+                    
+                    try {
+                        const hasStarred = currentSet.cards.some(c => c.starred);
+                        if (!hasStarred && currentSet.settings && currentSet.settings.starOnly) {
+                            currentSet.settings.starOnly = false;
+                        }
+                        await state.saveAndSyncCurrentSet();
+                        const icon = btnStarCard.querySelector('.material-symbols-rounded');
+                        if (card.starred) {
+                            icon.style.fontVariationSettings = "'FILL' 1";
+                            icon.style.color = "#ffca28";
+                        } else {
+                            icon.style.fontVariationSettings = "'FILL' 0";
+                            icon.style.color = "var(--text-muted)";
+                        }
+                    } catch (updateError) {
+                        // Revert local change if error
+                        card.starred = !card.starred;
+                        Toast.show('Fout bij bijwerken van ster: ' + updateError.message, 'error');
+                    }
                 }
             });
-        });
+        }
     }
 
-    window.saveAndSyncCurrentSet = async () => {
-        if (!currentSet) return;
-        if (currentSet.user_id !== user.id) return;
-        const dbPayload = {
-            title: currentSet.title,
-            description: currentSet.description,
-            folder: currentSet.folder,
-            type: currentSet.type,
-            lang_col1: currentSet.lang_col1,
-            lang_col2: currentSet.lang_col2,
-            cards: currentSet.cards,
-            visibility: currentSet.visibility || 'private',
-            settings: currentSet.settings || null,
-            updated_at: new Date().toISOString()
+    let _remoteSyncTimer = null;
+
+    state.saveAndSyncCurrentSet = async ({ immediate = false } = {}) => {
+        if (!currentSet || currentSet.user_id !== user.id) return;
+
+        // Always save locally immediately
+        currentSet.updated_at = new Date().toISOString();
+        await saveLocalSet(currentSet);
+
+        const doRemoteSync = async () => {
+            const dbPayload = {
+                title: currentSet.title,
+                description: currentSet.description,
+                folder: currentSet.folder,
+                type: currentSet.type,
+                lang_col1: currentSet.lang_col1,
+                lang_col2: currentSet.lang_col2,
+                cards: currentSet.cards,
+                visibility: currentSet.visibility || 'private',
+                settings: currentSet.settings || null,
+                updated_at: currentSet.updated_at
+            };
+            const { error } = await supabase.from('Sets').update(dbPayload).eq('id', currentSet.id);
+            if (error) throw error;
         };
-        await syncSetToRemote(supabase, dbPayload, currentSet.id);
+
+        clearTimeout(_remoteSyncTimer);
+        if (immediate) {
+            await doRemoteSync();
+        } else {
+            _remoteSyncTimer = setTimeout(() => {
+                doRemoteSync().catch(e => console.error('Remote sync error:', e));
+            }, 800);
+        }
     };
 
-    window.refreshTermsList = () => {
+    state.refreshTermsList = () => {
         if (currentSet && currentSet.cards) {
             renderTermsList(currentSet.cards);
         }
@@ -304,9 +329,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const url = window.location.href;
             try {
                 await navigator.clipboard.writeText(url);
-                if (window.Toast) window.Toast.show('Link gekopieerd naar klembord!', 'success');
+                Toast.show('Link gekopieerd naar klembord!', 'success');
             } catch (err) {
-                if (window.Toast) window.Toast.show('Fout bij kopiëren van link.', 'error');
+                Toast.show('Fout bij kopiëren van link.', 'error');
             }
         });
     }
@@ -315,7 +340,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnEditSet.addEventListener('click', () => {
             if (!currentSet) return;
             if (currentSet.user_id !== user.id) {
-                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                Toast.show('Je bent niet de eigenaar van deze set.', 'error');
                 return;
             }
             const mappedData = {
@@ -336,7 +361,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (setModalComp) {
         setModalComp.addEventListener('save', async (e) => {
             if (currentSet && currentSet.user_id !== user.id) {
-                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                Toast.show('Je bent niet de eigenaar van deze set.', 'error');
                 return;
             }
             const { data: setData } = e.detail;
@@ -357,7 +382,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await syncSetToRemote(supabase, dbPayload, currentSet.id);
                 loadSetDetails();
             } catch (updateError) {
-                if (window.Toast) window.Toast.show('Fout bij bewerken: ' + updateError.message, 'error');
+                Toast.show('Fout bij bewerken: ' + updateError.message, 'error');
             }
         });
 
@@ -373,7 +398,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const folders = [...new Set(setsData.map(s => s.folder).filter(f => f && f.trim() !== ''))];
                     setModalComp.updateFolderOptions(folders);
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.error('Error loading folder options:', e);
+            }
         } else if (currentSet && currentSet.folder) {
             setModalComp.updateFolderOptions([currentSet.folder]);
         }
@@ -382,7 +409,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnDeleteSet && deleteModal) {
         btnDeleteSet.addEventListener('click', () => {
             if (currentSet && currentSet.user_id !== user.id) {
-                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                Toast.show('Je bent niet de eigenaar van deze set.', 'error');
                 return;
             }
             deleteModal.open(setId);
@@ -395,14 +422,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function applyVisibilityChange() {
         const newVisibility = currentSet.visibility === 'public' ? 'private' : 'public';
         currentSet.visibility = newVisibility;
-        if (window.Toast) window.Toast.show('Zichtbaarheid bijwerken...', 'info');
+        Toast.show('Zichtbaarheid bijwerken...', 'info');
         try {
-            await window.saveAndSyncCurrentSet();
+            await state.saveAndSyncCurrentSet({ immediate: true });
             renderSetDetails();
-            if (window.Toast) window.Toast.show(`Set is nu ${newVisibility === 'public' ? 'openbaar' : 'privé'}!`, 'success');
+            Toast.show(`Set is nu ${newVisibility === 'public' ? 'openbaar' : 'privé'}!`, 'success');
         } catch (err) {
             currentSet.visibility = newVisibility === 'public' ? 'private' : 'public';
-            if (window.Toast) window.Toast.show('Fout bij bijwerken: ' + err.message, 'error');
+            Toast.show('Fout bij bijwerken: ' + err.message, 'error');
         }
     }
 
@@ -410,7 +437,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnToggleVisibility.addEventListener('click', async () => {
             if (!currentSet) return;
             if (currentSet.user_id !== user.id) {
-                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                Toast.show('Je bent niet de eigenaar van deze set.', 'error');
                 return;
             }
 
@@ -440,30 +467,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (deleteModal) {
         deleteModal.addEventListener('confirm', async () => {
             if (currentSet && currentSet.user_id !== user.id) {
-                if (window.Toast) window.Toast.show('Je bent niet de eigenaar van deze set.', 'error');
+                Toast.show('Je bent niet de eigenaar van deze set.', 'error');
                 return;
             }
             const { error: deleteError } = await supabase.from('Sets').delete().eq('id', setId);
             if (deleteError) {
-                if (window.Toast) window.Toast.show('Fout bij verwijderen: ' + deleteError.message, 'error');
+                Toast.show('Fout bij verwijderen: ' + deleteError.message, 'error');
             } else {
                 await deleteLocalSet(setId);
-                if (window.Toast) window.Toast.show('Set succesvol verwijderd!', 'success');
+                Toast.show('Set succesvol verwijderd!', 'success');
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 1000);
             }
         });
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
     }
 
     // Setup Search Event Listener
@@ -504,4 +521,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initial load
     loadSetDetails();
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}

@@ -1,3 +1,6 @@
+import { supabaseReady } from './supabase-init.js';
+import Toast from './toast.js';
+
 class QuizyHeader extends HTMLElement {
     async connectedCallback() {
         const isLogin = this.hasAttribute('login-page');
@@ -6,7 +9,7 @@ class QuizyHeader extends HTMLElement {
         const isProfile = pathname.includes('profile.html');
 
         // Check localStorage to guess login state and avoid navigation flashes
-        const hasSession = Object.keys(localStorage).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+        const hasSession = localStorage.getItem('quizy-auth-token') !== null;
 
         // Render initial UI immediately (synchronously)
         let initialMenuHTML = '';
@@ -43,7 +46,7 @@ class QuizyHeader extends HTMLElement {
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async (e) => {
                     e.preventDefault();
-                    const supabase = await window.supabaseReady;
+                    const supabase = await supabaseReady;
                     if (supabase) {
                         await supabase.auth.signOut();
                         window.location.href = 'index.html';
@@ -55,7 +58,7 @@ class QuizyHeader extends HTMLElement {
         setupLogout();
 
         // Verify/fetch actual user state asynchronously
-        const supabase = await window.supabaseReady;
+        const supabase = await supabaseReady;
         let user = null;
         if (supabase) {
             const { data } = await supabase.auth.getUser();
@@ -234,10 +237,16 @@ class QuizyRenameModal extends HTMLElement {
         const handleConfirm = () => {
             const newName = input.value.trim();
             if (newName) {
-                this.dispatchEvent(new CustomEvent('confirm', { detail: { oldName: this._oldName, newName } }));
-                this.close();
+                const event = new CustomEvent('confirm', {
+                    detail: { oldName: this._oldName, newName },
+                    cancelable: true
+                });
+                this.dispatchEvent(event);
+                if (!event.defaultPrevented) {
+                    this.close();
+                }
             } else {
-                if (window.Toast) window.Toast.show('Vul een geldige naam in', 'error');
+                Toast.show('Vul een geldige naam in', 'error');
             }
         };
 
@@ -265,3 +274,320 @@ class QuizyRenameModal extends HTMLElement {
     }
 }
 customElements.define('quizy-rename-modal', QuizyRenameModal);
+
+class QuizyConfirmModal extends HTMLElement {
+    connectedCallback() {
+        this.className = 'modal-overlay';
+        this.innerHTML = `
+            <div class="modal-card glass-panel" style="max-width: 420px; width: 90%;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px;">
+                    <h3 id="confirm-modal-title" style="font-size: 1.2em; font-weight: 600; color: var(--text-light); margin: 0; text-align: left;">Sessie herstarten?</h3>
+                </div>
+                <div class="modal-body" style="padding: 24px; display: flex; flex-direction: column; gap: 8px; text-align: left;">
+                    <p id="confirm-modal-message" style="color: var(--text-muted); font-size: 0.95em; line-height: 1.5; margin: 0;">Weet je zeker dat je de instellingen voor ster-woorden wilt wijzigen?</p>
+                    <p id="confirm-modal-sub" style="color: #ef4444; font-size: 0.9em; font-weight: 500; margin: 0;">Dit start een nieuwe sessie en je huidige voortgang gaat verloren.</p>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 16px 24px 20px 24px; display: flex; justify-content: flex-end; gap: 12px; background: rgba(0,0,0,0.2); margin-top: 0;">
+                    <button id="btn-confirm-cancel" class="btn-control" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; font-size: 0.9em; cursor: pointer; border-radius: 8px; color: var(--text-light);">Annuleren</button>
+                    <button id="btn-confirm-ok" class="btn-control" style="background: var(--primary); border: none; color: #fff; padding: 8px 16px; font-size: 0.9em; cursor: pointer; border-radius: 8px;">Ja, begin opnieuw</button>
+                </div>
+            </div>
+        `;
+
+        this.addEventListener('click', (e) => {
+            if (e.target === this || e.target.id === 'btn-confirm-cancel') {
+                this.close();
+            }
+        });
+
+        this.querySelector('#btn-confirm-ok').addEventListener('click', () => {
+            this.dispatchEvent(new CustomEvent('confirm'));
+            this.close();
+        });
+    }
+
+    open({ title, message, sub } = {}) {
+        if (title) this.querySelector('#confirm-modal-title').textContent = title;
+        if (message) this.querySelector('#confirm-modal-message').textContent = message;
+        if (sub) {
+            const subEl = this.querySelector('#confirm-modal-sub');
+            subEl.textContent = sub;
+            subEl.style.display = 'block';
+        }
+        this.classList.add('active');
+    }
+
+    close() {
+        this.classList.remove('active');
+    }
+}
+customElements.define('quizy-confirm-modal', QuizyConfirmModal);
+
+class QuizySettingsPanel extends HTMLElement {
+    constructor() {
+        super();
+        this.currentSettings = {};
+        this.hasStarred = false;
+        this.isTalenMode = false;
+        this.lang1 = '';
+        this.lang2 = '';
+    }
+
+    connectedCallback() {
+        this.render();
+    }
+
+    static get observedAttributes() {
+        return ['mode'];
+    }
+
+    attributeChangedCallback() {
+        this.render();
+    }
+
+    open(settings, hasStarred, isTalenMode, lang1, lang2) {
+        this.currentSettings = settings || {};
+        this.hasStarred = !!hasStarred;
+        this.isTalenMode = !!isTalenMode;
+        this.lang1 = lang1 || '';
+        this.lang2 = lang2 || '';
+        this.render();
+        this.classList.add('active');
+        
+        const starOnlyCheckbox = this.querySelector('#setting-star-only');
+        const starWarning = this.querySelector('.warning-text');
+        if (starOnlyCheckbox && starWarning) {
+            starWarning.style.display = 'none';
+            starOnlyCheckbox.addEventListener('change', () => {
+                starWarning.style.display = (starOnlyCheckbox.checked !== this.currentSettings.starOnly) ? 'block' : 'none';
+            });
+        }
+    }
+
+    close() {
+        this.classList.remove('active');
+    }
+
+    render() {
+        const mode = this.getAttribute('mode') || 'flashcards';
+        const s = this.currentSettings;
+        const starOnly = s.starOnly || false;
+        const randomize = ('randomize' in s) ? !!s.randomize : true;
+        const swapSides = s.swapSides || false;
+        const autoSpeak = s.autoSpeak || false;
+
+        const getSpellingSettingsHTML = (settingsObj) => {
+            const ignoreParentheses = settingsObj.ignoreParentheses !== false;
+            const skipPunctuation = settingsObj.skipPunctuation !== false;
+            const allowSlashParts = settingsObj.allowSlashParts !== false;
+
+            return `
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;">
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-ignore-parentheses" class="setting-label">Tussen haakjes goedkeuren</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-ignore-parentheses" ${ignoreParentheses ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Dingen tussen haakjes zijn optioneel. Bijv. "de (mooie) auto" keurt ook "de auto" goed.</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-skip-punctuation" class="setting-label">Leestekens & accenten skippen</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-skip-punctuation" ${skipPunctuation ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Negeer leestekens, en vervang speciale letters zoals é of ì door e en i.</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-allow-slash-parts" class="setting-label">Eén kant van / goedkeuren</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-allow-slash-parts" ${allowSlashParts ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Als het antwoord "hoi/hallo" is, is "hoi" óf "hallo" goed.</span>
+                </div>
+            `;
+        };
+
+        let extraSettingsHTML = '';
+        if (mode === 'spelling') {
+            extraSettingsHTML = getSpellingSettingsHTML(s);
+        } else if (mode === 'learn') {
+            const toggleFc = s.flashcards !== false;
+            const toggleMc = s.multipleChoice !== false;
+            const toggleSp = s.spelling !== false;
+
+            extraSettingsHTML = `
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;">
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label class="setting-label">Flashcards</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-toggle-fc" ${toggleFc ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Leer de woorden met behulp van flashcards.</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label class="setting-label">Meerkeuze</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-toggle-mc" ${toggleMc ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Oefen de herkenning van woorden met meerkeuzevragen.</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label class="setting-label">Spelling</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-toggle-sp" ${toggleSp ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Typ de antwoorden om de spelling te oefenen.</span>
+                </div>
+                ${getSpellingSettingsHTML(s)}
+            `;
+        }
+
+
+        let swapSidesLabel = 'Term en definitie omdraaien';
+        let swapSidesDesc = 'Toon de definitie als vraag en de term als antwoord.';
+        if (this.isTalenMode) {
+            swapSidesLabel = 'Talen omdraaien';
+            if (mode === 'flashcards') {
+                swapSidesDesc = `Toon ${escapeHtml(this.lang2 || 'de vertaling')} op de voorkant en ${escapeHtml(this.lang1 || 'het woord')} op de achterkant.`;
+            } else if (mode === 'multiple-choice') {
+                swapSidesDesc = `Toon ${escapeHtml(this.lang2 || 'de vertaling')} als vraag en ${escapeHtml(this.lang1 || 'het woord')} als antwoord.`;
+            } else if (mode === 'spelling') {
+                swapSidesDesc = `Vraag ${escapeHtml(this.lang2 || 'de vertaling')} en typ ${escapeHtml(this.lang1 || 'het woord')}.`;
+            } else if (mode === 'learn') {
+                swapSidesDesc = 'Draai de term en definitie om tijdens het leren.';
+            }
+        } else {
+            if (mode === 'flashcards') {
+                swapSidesDesc = 'Toon de definitie op de voorkant en de term op de achterkant.';
+            } else if (mode === 'learn') {
+                swapSidesDesc = 'Draai de term en definitie om tijdens het leren.';
+            }
+        }
+
+        let randomizeDesc = 'Schud de kaarten in een willekeurige volgorde vanaf het volgende woord.';
+        if (mode !== 'flashcards') {
+            randomizeDesc = 'Schud de vragen in een willekeurige volgorde vanaf de volgende vraag.';
+        }
+
+        let autoSpeakDesc = 'Spreek woorden automatisch uit wanneer ze in beeld komen of bij het omdraaien.';
+        if (mode !== 'flashcards') {
+            autoSpeakDesc = 'Spreek de vraag automatisch uit wanneer deze in beeld komt.';
+        }
+
+        this.innerHTML = `
+            <div class="settings-panel-container">
+                <h3 class="settings-title">
+                    <span class="material-symbols-rounded">settings</span> Instellingen
+                </h3>
+                
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-star-only" class="setting-label" style="${!this.hasStarred ? 'opacity: 0.5; cursor: not-allowed;' : ''}">Alleen sterwoorden</label>
+                        <label class="fc-switch" style="${!this.hasStarred ? 'opacity: 0.5; cursor: not-allowed; pointer-events: none;' : ''}">
+                            <input type="checkbox" id="setting-star-only" ${starOnly ? 'checked' : ''} ${!this.hasStarred ? 'disabled' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Oefen alleen de woorden die je met een ster hebt gemarkeerd.</span>
+                    <span class="warning-text" style="display: none; color: #ef4444; font-size: 0.85em; margin-top: 6px; font-weight: 500;">Let op: Dit start een nieuwe sessie. Je voortgang gaat verloren!</span>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-randomize" class="setting-label">Willekeurige volgorde</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-randomize" ${randomize ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">${randomizeDesc}</span>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-swap-sides" class="setting-label">${swapSidesLabel}</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-swap-sides" ${swapSides ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">${swapSidesDesc}</span>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-auto-speak" class="setting-label">Automatisch uitspreken</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-auto-speak" ${autoSpeak ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">${autoSpeakDesc}</span>
+                </div>
+
+                ${extraSettingsHTML}
+
+                <div class="settings-actions">
+                    <button class="btn-control" id="btn-settings-save" style="background: var(--primary); color: #fff;">Opslaan</button>
+                    <button class="btn-control" id="btn-settings-cancel">Annuleren</button>
+                </div>
+            </div>
+        `;
+
+        const saveBtn = this.querySelector('#btn-settings-save');
+        const cancelBtn = this.querySelector('#btn-settings-cancel');
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                const detail = {
+                    starOnly: this.querySelector('#setting-star-only')?.checked || false,
+                    randomize: this.querySelector('#setting-randomize')?.checked || false,
+                    swapSides: this.querySelector('#setting-swap-sides')?.checked || false,
+                    autoSpeak: this.querySelector('#setting-auto-speak')?.checked || false,
+                };
+
+                if (mode === 'spelling' || mode === 'learn') {
+                    detail.ignoreParentheses = this.querySelector('#setting-ignore-parentheses')?.checked || false;
+                    detail.skipPunctuation = this.querySelector('#setting-skip-punctuation')?.checked || false;
+                    detail.allowSlashParts = this.querySelector('#setting-allow-slash-parts')?.checked || false;
+                }
+                if (mode === 'learn') {
+                    detail.flashcards = this.querySelector('#setting-toggle-fc')?.checked || false;
+                    detail.multipleChoice = this.querySelector('#setting-toggle-mc')?.checked || false;
+                    detail.spelling = this.querySelector('#setting-toggle-sp')?.checked || false;
+                }
+
+                this.dispatchEvent(new CustomEvent('save', { detail }));
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.close();
+                this.dispatchEvent(new CustomEvent('cancel'));
+            });
+        }
+    }
+}
+customElements.define('quizy-settings-panel', QuizySettingsPanel);

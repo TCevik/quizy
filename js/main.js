@@ -1,6 +1,17 @@
-document.addEventListener('DOMContentLoaded', async () => {
+import { supabaseReady } from './supabase-init.js';
 
-    const hasSession = Object.keys(localStorage).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+export function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+const initMain = async () => {
+    const hasSession = localStorage.getItem('quizy-auth-token') !== null;
     const startBtns = document.querySelectorAll('a[href="login.html"]');
 
     if (hasSession) {
@@ -9,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    const supabase = await window.supabaseReady;
+    const supabase = await supabaseReady;
     if (supabase) {
         const { data } = await supabase.auth.getUser();
         if (data?.user) {
@@ -22,10 +33,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     }
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMain);
+} else {
+    initMain();
+}
 
 
-window.speakText = function(text, langName) {
+export function speakText(text, langName) {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -41,9 +58,9 @@ window.speakText = function(text, langName) {
         utterance.lang = langCode;
     }
     window.speechSynthesis.speak(utterance);
-};
+}
 
-window.checkSpellingAnswer = function(userInput, correctAnswer, options = {}) {
+export function checkSpellingAnswer(userInput, correctAnswer, options = {}) {
     const {
         skipPunctuation = true,
         allowSlashParts = true,
@@ -69,18 +86,10 @@ window.checkSpellingAnswer = function(userInput, correctAnswer, options = {}) {
     if (allowSlashParts) {
         let newAnswers = [];
         answers.forEach(ans => {
-            const parts = ans.split('/').map(p => p.trim());
-            const getSubsets = (array) => {
-                return array.reduce(
-                    (subsets, value) => subsets.concat(subsets.map(set => [...set, value])),
-                    [[]]
-                );
-            };
-            const subsets = getSubsets(parts).filter(set => set.length > 0);
-            subsets.forEach(set => {
-                newAnswers.push(set.join('/'));
-                newAnswers.push(set.join(' / '));
-            });
+            if (ans.includes('/')) {
+                const parts = ans.split('/').map(p => p.trim());
+                newAnswers.push(...parts);
+            }
         });
         answers = [...answers, ...newAnswers];
     }

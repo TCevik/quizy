@@ -1,17 +1,21 @@
 .learn-overlay {
     display: none;
-    width: 100%;
-    min-height: calc(100vh - 200px);
-    background: transparent;
-    padding: 0 0 40px 0;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - var(--header-height));
+    background: var(--bg-dark);
+    z-index: 1500;
     box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .learn-overlay.active {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding-top: 20px;
+    padding: 40px 24px;
 }
 
 .learn-container {
@@ -131,7 +135,7 @@
 
 .learn-mc-options-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 16px;
     width: 100%;
     margin-bottom: 20px;
@@ -152,6 +156,18 @@
     gap: 16px;
     text-align: left;
     width: 100%;
+    word-break: break-word;
+}
+
+.learn-mc-option-btn > span:not(.learn-mc-option-badge) {
+    display: -webkit-box;
+    -webkit-line-clamp: 8;
+    line-clamp: 8;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .learn-mc-option-btn:hover:not(:disabled) {

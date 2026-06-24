@@ -1,17 +1,11 @@
 import { syncSets, syncSetToRemote, deleteLocalSet, getLocalSet, getLocalSets, saveLocalSet } from './storage.js';
+import { supabaseReady } from './supabase-init.js';
+import Toast from './toast.js';
+import { escapeHtml } from './main.js';
 
-function escapeHtml(unsafe) {
-    if (typeof unsafe !== 'string') return unsafe;
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const supabase = await window.supabaseReady;
+const init = async () => {
+    const supabase = await supabaseReady;
 
     if (!supabase) {
         console.error('Supabase failed to initialize.');
@@ -56,6 +50,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function checkMaxSetsLimit() {
+        if (maxSets > 0 && allSets.length >= maxSets) {
+            Toast.show(`Je hebt de limiet van ${maxSets} sets bereikt.`, 'error');
+            return false;
+        }
+        return true;
+    }
+
     // Set modal component interaction
     const setModalComp = document.getElementById('set-modal-comp');
     const createSetBtn = document.getElementById('btn-create-set');
@@ -68,14 +70,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         deleteModal.addEventListener('confirm', async (e) => {
             const setIdToDelete = e.detail.id;
             if (setIdToDelete !== null) {
-                const { error: deleteError } = await supabase.from('Sets').delete().eq('id', setIdToDelete);
-                if (deleteError) {
-                    if (window.Toast) window.Toast.show('Fout bij verwijderen: ' + deleteError.message, 'error');
-                } else {
-                    await deleteLocalSet(setIdToDelete);
-                    if (window.Toast) window.Toast.show('Set succesvol verwijderd!', 'success');
-                    loadSets();
+                const setToDelete = await getLocalSet(setIdToDelete);
+                const isOwner = setToDelete ? setToDelete.user_id === user.id : true;
+
+                if (isOwner) {
+                    const { error: deleteError } = await supabase.from('Sets').delete().eq('id', setIdToDelete);
+                    if (deleteError) {
+                        Toast.show('Fout bij verwijderen: ' + deleteError.message, 'error');
+                        return;
+                    }
                 }
+
+                await deleteLocalSet(setIdToDelete);
+                Toast.show('Set succesvol verwijderd!', 'success');
+                loadSets();
             }
         });
     }
@@ -87,8 +95,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         renameModal.addEventListener('confirm', async (e) => {
             const { oldName, newName } = e.detail;
             if (oldName && newName && oldName.trim() !== '' && newName.trim() !== '') {
+                if (newName.length > 30) {
+                    e.preventDefault();
+                    const over = newName.length - 30;
+                    Toast.show(`Mapnaam is te lang (${over} ${over === 1 ? 'teken' : 'tekens'} over de limiet van 30).`, 'error');
+                    return;
+                }
                 try {
-                    if (window.Toast) window.Toast.show('Mapnaam bijwerken...', 'info');
+                    Toast.show('Mapnaam bijwerken...', 'info');
 
                     // 1. Bulk update on remote database (Supabase)
                     const { error: updateError } = await supabase
@@ -98,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         .eq('folder', oldName);
 
                     if (updateError) {
-                        if (window.Toast) window.Toast.show('Fout bij remote bijwerken: ' + updateError.message, 'error');
+                        Toast.show('Fout bij remote bijwerken: ' + updateError.message, 'error');
                         return;
                     }
 
@@ -117,10 +131,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                         currentFolderFilter = newName;
                     }
 
-                    if (window.Toast) window.Toast.show('Mapnaam succesvol aangepast!', 'success');
+                    Toast.show('Mapnaam succesvol aangepast!', 'success');
                     loadSets();
                 } catch (err) {
-                    if (window.Toast) window.Toast.show('Fout bij hernoemen map: ' + err.message, 'error');
+                    Toast.show('Fout bij hernoemen map: ' + err.message, 'error');
                 }
             }
         });
@@ -464,63 +478,64 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Attach event listeners to card actions
-        dashboardContent.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const setId = parseInt(btn.getAttribute('data-id'));
-                const setToEdit = allSets.find(s => s.id === setId);
-                if (setToEdit && setModalComp) {
-                    if (window.Toast) window.Toast.show('Set laden...', 'info');
+        // Attach event delegation to dashboardContent
+        if (dashboardContent && !dashboardContent.dataset.listenerAttached) {
+            dashboardContent.dataset.listenerAttached = 'true';
+            dashboardContent.addEventListener('click', async (e) => {
+                const editBtn = e.target.closest('.edit-btn');
+                const deleteBtn = e.target.closest('.delete-btn');
+                const setCard = e.target.closest('.set-card');
 
-                    let fullSet = await getLocalSet(setId);
-                    if (!fullSet || !fullSet.cards) {
-                        const { data: remoteSet, error: detailError } = await supabase
-                            .from('Sets')
-                            .select('lang_col1, lang_col2, settings, cards')
-                            .eq('id', setId)
-                            .single();
+                if (editBtn) {
+                    e.stopPropagation();
+                    const setId = parseInt(editBtn.getAttribute('data-id'));
+                    const setToEdit = allSets.find(s => s.id === setId);
+                    if (setToEdit && setModalComp) {
+                        Toast.show('Set laden...', 'info');
 
-                        if (detailError) {
-                            if (window.Toast) window.Toast.show('Fout bij laden van set: ' + detailError.message, 'error');
-                            return;
+                        let fullSet = await getLocalSet(setId);
+                        if (!fullSet || !fullSet.cards) {
+                            const { data: remoteSet, error: detailError } = await supabase
+                                .from('Sets')
+                                .select('lang_col1, lang_col2, settings, cards')
+                                .eq('id', setId)
+                                .single();
+
+                            if (detailError) {
+                                Toast.show('Fout bij laden van set: ' + detailError.message, 'error');
+                                return;
+                            }
+                            fullSet = { ...setToEdit, ...remoteSet };
                         }
-                        fullSet = { ...setToEdit, ...remoteSet };
+
+                        const mappedData = {
+                            id: setToEdit.id,
+                            title: setToEdit.title,
+                            description: setToEdit.description,
+                            folder: setToEdit.folder,
+                            mode: setToEdit.type,
+                            lang1: fullSet.lang_col1,
+                            lang2: fullSet.lang_col2,
+                            visibility: fullSet.visibility || 'private',
+                            rows: fullSet.cards
+                        };
+                        setModalComp.open('edit', mappedData);
                     }
-
-                    const mappedData = {
-                        id: setToEdit.id,
-                        title: setToEdit.title,
-                        description: setToEdit.description,
-                        folder: setToEdit.folder,
-                        mode: setToEdit.type,
-                        lang1: fullSet.lang_col1,
-                        lang2: fullSet.lang_col2,
-                        visibility: fullSet.visibility || 'private',
-                        rows: fullSet.cards
-                    };
-                    setModalComp.open('edit', mappedData);
+                } else if (deleteBtn) {
+                    e.stopPropagation();
+                    const setId = parseInt(deleteBtn.getAttribute('data-id'));
+                    if (deleteModal) {
+                        deleteModal.open(setId);
+                    }
+                } else if (setCard) {
+                    if (e.target.closest('.btn-icon-action')) {
+                        return;
+                    }
+                    const setId = setCard.getAttribute('data-id');
+                    window.location.href = `set.html?id=${setId}`;
                 }
             });
-        });
-
-        dashboardContent.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const setId = parseInt(btn.getAttribute('data-id'));
-                if (deleteModal) {
-                    deleteModal.open(setId);
-                }
-            });
-        });
-
-        dashboardContent.querySelectorAll('.set-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-icon-action')) {
-                    return;
-                }
-                const setId = card.getAttribute('data-id');
-                window.location.href = `set.html?id=${setId}`;
-            });
-        });
+        }
     }
 
     // Function to load and display sets
@@ -543,9 +558,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sets = await syncSets(supabase, user.id);
 
         allSets = (sets || []).filter(s => s.user_id === user.id);
-        // Refresh shared sets from IndexedDB (syncSets may have cleaned up stale ones)
-        const allLocal = await getLocalSets();
-        sharedSets = allLocal.filter(s => s.user_id !== user.id).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        // syncSets returns all local sets (incl. shared), no need to re-read IDB
+        sharedSets = (sets || []).filter(s => s.user_id !== user.id).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
         if (allSets.length === 0 && sharedSets.length === 0) {
             updateSetsUsageDisplay();
@@ -563,7 +577,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
             const createFirstBtn = document.getElementById('btn-create-first-set');
             if (createFirstBtn && setModalComp) {
-                createFirstBtn.addEventListener('click', () => setModalComp.open('create'));
+                createFirstBtn.addEventListener('click', () => {
+                    if (checkMaxSetsLimit()) {
+                        setModalComp.open('create');
+                    }
+                });
             }
             return;
         }
@@ -575,7 +593,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (createSetBtn && setModalComp) {
         createSetBtn.addEventListener('click', () => {
-            setModalComp.open('create');
+            if (checkMaxSetsLimit()) {
+                setModalComp.open('create');
+            }
         });
     }
 
@@ -601,14 +621,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await syncSetToRemote(supabase, dbPayload);
                     loadSets();
                 } catch (insertError) {
-                    if (window.Toast) window.Toast.show('Fout bij aanmaken: ' + insertError.message, 'error');
+                    Toast.show('Fout bij aanmaken: ' + insertError.message, 'error');
                 }
             } else if (saveMode === 'edit') {
                 try {
                     await syncSetToRemote(supabase, dbPayload, setData.id);
                     loadSets();
                 } catch (updateError) {
-                    if (window.Toast) window.Toast.show('Fout bij bewerken: ' + updateError.message, 'error');
+                    Toast.show('Fout bij bewerken: ' + updateError.message, 'error');
                 }
             }
         });
@@ -618,5 +638,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchMaxSets().then(() => {
         loadSets();
     });
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 

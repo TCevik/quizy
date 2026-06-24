@@ -1,5 +1,8 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const supabase = await window.supabaseReady;
+import { supabaseReady } from './supabase-init.js';
+import Toast from './toast.js';
+
+const initProfile = async () => {
+    const supabase = await supabaseReady;
 
     if (!supabase) {
         console.error('Supabase failed to initialize.');
@@ -105,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function resetProfileTurnstile() {
         if (window.turnstile && profileResetForm) {
             profileResetForm.querySelectorAll('.cf-turnstile').forEach(div => {
-                try { window.turnstile.reset(div); } catch (e) {}
+                try { window.turnstile.reset(div); } catch (e) { console.error('Error resetting Turnstile in profile:', e); }
             });
         }
     }
@@ -215,4 +218,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initProfile);
+} else {
+    initProfile();
+}

@@ -43,5 +43,4 @@ class Toast {
     }
 }
 
-// Attach to window so it can be used globally
-window.Toast = Toast;
+export default Toast;
