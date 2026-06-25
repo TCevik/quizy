@@ -92,45 +92,45 @@ class QuizyHeader extends HTMLElement {
                     setupLogout();
                 }
 
-                // Check premium status
+                // Check subscription status
                 try {
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('premium')
+                        .select('subscription')
                         .eq('id', user.id)
                         .single();
-                    if (profile && profile.premium) {
+                    if (profile && profile.subscription && profile.subscription !== 'none') {
                         const logo = this.querySelector('.logo');
                         if (logo) {
-                            logo.innerHTML = 'Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">Pro</span>';
+                            logo.innerHTML = `Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">${profile.subscription}</span>`;
                             logo.style.display = 'inline-flex';
                             logo.style.alignItems = 'center';
                         }
                     }
                 } catch (err) {
-                    console.error('Error fetching profile premium:', err);
+                    console.error('Error fetching profile subscription:', err);
                 }
             } else {
                 menu.innerHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
             }
         } else if (user) {
-            // Even on login page or if isLogin is true, if they are logged in, check premium for logo
+            // Even on login page or if isLogin is true, if they are logged in, check subscription for logo
             try {
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('premium')
+                    .select('subscription')
                     .eq('id', user.id)
                     .single();
-                if (profile && profile.premium) {
+                if (profile && profile.subscription && profile.subscription !== 'none') {
                     const logo = this.querySelector('.logo');
                     if (logo) {
-                        logo.innerHTML = 'Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">Pro</span>';
+                        logo.innerHTML = `Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">${profile.subscription}</span>`;
                         logo.style.display = 'inline-flex';
                         logo.style.alignItems = 'center';
                     }
                 }
             } catch (err) {
-                console.error('Error fetching profile premium:', err);
+                console.error('Error fetching profile subscription:', err);
             }
         }
     }
