@@ -104,11 +104,46 @@ export class BaseQuiz {
     }
 
     wrapWithAds(contentHtml) {
-        return contentHtml;
+        return `
+            <div class="quiz-ad-wrapper">
+                <div class="quiz-ad-side left-ad-side">
+                    <div class="quizy-ad-box">
+                        <div class="quizy-ad-label">Advertentie</div>
+                        <ins class="adsbygoogle"
+                             style="display:block; min-width:160px; max-width:300px; height:600px;"
+                             data-ad-client="ca-pub-8924607946192862"
+                             data-ad-slot="5862330293"
+                             data-ad-format="vertical"
+                             data-full-width-responsive="true"></ins>
+                    </div>
+                </div>
+                
+                ${contentHtml}
+                
+                <div class="quiz-ad-side right-ad-side">
+                    <div class="quizy-ad-box">
+                        <div class="quizy-ad-label">Advertentie</div>
+                        <ins class="adsbygoogle"
+                             style="display:block; min-width:160px; max-width:300px; height:600px;"
+                             data-ad-client="ca-pub-8924607946192862"
+                             data-ad-slot="5862330293"
+                             data-ad-format="vertical"
+                             data-full-width-responsive="true"></ins>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     triggerAds() {
-        // Ads removed during learning
+        try {
+            const ads = this.overlay.querySelectorAll('.adsbygoogle');
+            ads.forEach(() => {
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            });
+        } catch (e) {
+            console.error('Error triggering side ads:', e);
+        }
     }
 
     closeOverlay() {
