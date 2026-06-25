@@ -1,7 +1,5 @@
 import { supabaseReady } from './supabase-init.js';
 import Toast from './toast.js';
-import './ads.js';
-
 
 class QuizyHeader extends HTMLElement {
     async connectedCallback() {
