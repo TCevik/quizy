@@ -32,63 +32,69 @@ class SpellingQuiz extends BaseQuiz {
     renderLayout() {
         const totalUniqueCards = this.originalCards.length;
         this.overlay.innerHTML = `
-            <div class="sp-container" style="position: relative;">
-                <div class="sp-header">
-                    <span class="sp-title">${escapeHtml(state.currentSet.title || 'Spelling')}</span>
-                    <div style="display: flex; gap: 8px; align-items: center; position: relative;">
-                        <button class="btn-close-flashcards" id="sp-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
-                            <span class="material-symbols-rounded">info</span>
+            <div class="learning-layout-wrapper">
+                <quizy-ad type="display" class="learning-side-ad"></quizy-ad>
+
+                <div class="sp-container" style="position: relative;">
+                    <div class="sp-header">
+                        <span class="sp-title">${escapeHtml(state.currentSet.title || 'Spelling')}</span>
+                        <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                            <button class="btn-close-flashcards" id="sp-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
+                                <span class="material-symbols-rounded">info</span>
+                            </button>
+                            <button class="btn-close-flashcards" id="sp-settings-btn" title="Instellingen" style="transform: none;">
+                                <span class="material-symbols-rounded">settings</span>
+                            </button>
+                            <button class="btn-close-flashcards" id="sp-close">
+                                <span class="material-symbols-rounded">close</span>
+                            </button>
+                            <quizy-settings-panel id="sp-settings-panel" mode="spelling"></quizy-settings-panel>
+                        </div>
+                    </div>
+
+                    <div class="quizy-timer-bar-container" style="display: ${this.settings.timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
+                        <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
+                    </div>
+
+                    <div class="sp-question-card" id="sp-question">
+                        <button class="btn-sp-speak" title="Uitspreken">
+                            <span class="material-symbols-rounded">volume_up</span>
                         </button>
-                        <button class="btn-close-flashcards" id="sp-settings-btn" title="Instellingen" style="transform: none;">
-                            <span class="material-symbols-rounded">settings</span>
+                        <button class="btn-sp-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
+                            <span class="material-symbols-rounded">star</span>
                         </button>
-                        <button class="btn-close-flashcards" id="sp-close">
-                            <span class="material-symbols-rounded">close</span>
-                        </button>
-                        <quizy-settings-panel id="sp-settings-panel" mode="spelling"></quizy-settings-panel>
+                        <div class="sp-question-label" id="sp-question-label">Schrijf de vertaling</div>
+                        <div class="sp-question-text" id="sp-question-text">Laden...</div>
+                    </div>
+
+                    <div style="width: 100%;">
+                        <form id="sp-form" class="sp-input-form" autocomplete="off" onsubmit="return false;">
+                            <div class="sp-input-wrapper">
+                                <input type="text" id="sp-user-input" class="sp-input" placeholder="Typ je antwoord hier..." autofocus>
+                            </div>
+                            
+                            <div id="sp-feedback-container" style="display: none;"></div>
+
+                            <div class="sp-action-area">
+                                <button type="button" class="btn-sp-action secondary" id="sp-btn-skip">
+                                    Overslaan
+                                </button>
+                                <button type="submit" class="btn-sp-action primary" id="sp-btn-submit">
+                                    Controleren
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="progress-container">
+                        <span class="progress-text" id="sp-progress-text">Geleerd: 0 van ${totalUniqueCards} kaarten</span>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="sp-progress-fill"></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="quizy-timer-bar-container" style="display: ${this.settings.timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
-                    <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
-                </div>
-
-                <div class="sp-question-card" id="sp-question">
-                    <button class="btn-sp-speak" title="Uitspreken">
-                        <span class="material-symbols-rounded">volume_up</span>
-                    </button>
-                    <button class="btn-sp-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
-                        <span class="material-symbols-rounded">star</span>
-                    </button>
-                    <div class="sp-question-label" id="sp-question-label">Schrijf de vertaling</div>
-                    <div class="sp-question-text" id="sp-question-text">Laden...</div>
-                </div>
-
-                <div style="width: 100%;">
-                    <form id="sp-form" class="sp-input-form" autocomplete="off" onsubmit="return false;">
-                        <div class="sp-input-wrapper">
-                            <input type="text" id="sp-user-input" class="sp-input" placeholder="Typ je antwoord hier..." autofocus>
-                        </div>
-                        
-                        <div id="sp-feedback-container" style="display: none;"></div>
-
-                        <div class="sp-action-area">
-                            <button type="button" class="btn-sp-action secondary" id="sp-btn-skip">
-                                Overslaan
-                            </button>
-                            <button type="submit" class="btn-sp-action primary" id="sp-btn-submit">
-                                Controleren
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="progress-container">
-                    <span class="progress-text" id="sp-progress-text">Geleerd: 0 van ${totalUniqueCards} kaarten</span>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="sp-progress-fill"></div>
-                    </div>
-                </div>
+                <quizy-ad type="display" class="learning-side-ad"></quizy-ad>
             </div>
 
             <quizy-confirm-modal id="sp-confirm-modal"></quizy-confirm-modal>

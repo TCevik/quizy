@@ -31,55 +31,61 @@ class MultipleChoiceQuiz extends BaseQuiz {
     renderLayout() {
         const totalUniqueCards = this.originalCards.length;
         this.overlay.innerHTML = `
-            <div class="mc-container" style="position: relative;">
-                <div class="mc-header">
-                    <span class="mc-title">${escapeHtml(state.currentSet.title || 'Multiple Choice')}</span>
-                    <div style="display: flex; gap: 8px; align-items: center; position: relative;">
-                        <button class="btn-close-flashcards" id="mc-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
-                            <span class="material-symbols-rounded">info</span>
+            <div class="learning-layout-wrapper">
+                <quizy-ad type="display" class="learning-side-ad"></quizy-ad>
+
+                <div class="mc-container" style="position: relative;">
+                    <div class="mc-header">
+                        <span class="mc-title">${escapeHtml(state.currentSet.title || 'Multiple Choice')}</span>
+                        <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                            <button class="btn-close-flashcards" id="mc-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
+                                <span class="material-symbols-rounded">info</span>
+                            </button>
+                            <button class="btn-close-flashcards" id="mc-settings-btn" title="Instellingen" style="transform: none;">
+                                <span class="material-symbols-rounded">settings</span>
+                            </button>
+                            <button class="btn-close-flashcards" id="mc-close">
+                                <span class="material-symbols-rounded">close</span>
+                            </button>
+                            <quizy-settings-panel id="mc-settings-panel" mode="multiple-choice"></quizy-settings-panel>
+                        </div>
+                    </div>
+
+                    <div class="quizy-timer-bar-container" style="display: ${this.settings.timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
+                        <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
+                    </div>
+
+                    <div class="mc-question-card" id="mc-question">
+                        <button class="btn-mc-speak" title="Uitspreken">
+                            <span class="material-symbols-rounded">volume_up</span>
                         </button>
-                        <button class="btn-close-flashcards" id="mc-settings-btn" title="Instellingen" style="transform: none;">
-                            <span class="material-symbols-rounded">settings</span>
+                        <button class="btn-mc-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
+                            <span class="material-symbols-rounded">star</span>
                         </button>
-                        <button class="btn-close-flashcards" id="mc-close">
-                            <span class="material-symbols-rounded">close</span>
+                        <div class="mc-question-label" id="mc-question-label">Vraag</div>
+                        <div class="mc-question-text" id="mc-question-text">Laden...</div>
+                    </div>
+
+                    <div class="mc-options-grid" id="mc-options">
+                        <!-- 4 Choices buttons will go here -->
+                    </div>
+
+                    <div class="mc-action-area">
+                        <button class="btn-mc-next" id="mc-next" style="display: none;">
+                            Volgende
+                            <span class="material-symbols-rounded">arrow_forward</span>
                         </button>
-                        <quizy-settings-panel id="mc-settings-panel" mode="multiple-choice"></quizy-settings-panel>
+                    </div>
+
+                    <div class="progress-container">
+                        <span class="progress-text" id="mc-progress-text">Geleerd: 0 van ${totalUniqueCards} kaarten</span>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="mc-progress-fill"></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="quizy-timer-bar-container" style="display: ${this.settings.timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
-                    <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
-                </div>
-
-                <div class="mc-question-card" id="mc-question">
-                    <button class="btn-mc-speak" title="Uitspreken">
-                        <span class="material-symbols-rounded">volume_up</span>
-                    </button>
-                    <button class="btn-mc-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
-                        <span class="material-symbols-rounded">star</span>
-                    </button>
-                    <div class="mc-question-label" id="mc-question-label">Vraag</div>
-                    <div class="mc-question-text" id="mc-question-text">Laden...</div>
-                </div>
-
-                <div class="mc-options-grid" id="mc-options">
-                    <!-- 4 Choices buttons will go here -->
-                </div>
-
-                <div class="mc-action-area">
-                    <button class="btn-mc-next" id="mc-next" style="display: none;">
-                        Volgende
-                        <span class="material-symbols-rounded">arrow_forward</span>
-                    </button>
-                </div>
-
-                <div class="progress-container">
-                    <span class="progress-text" id="mc-progress-text">Geleerd: 0 van ${totalUniqueCards} kaarten</span>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="mc-progress-fill"></div>
-                    </div>
-                </div>
+                <quizy-ad type="display" class="learning-side-ad"></quizy-ad>
             </div>
 
             <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>

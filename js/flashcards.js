@@ -30,71 +30,77 @@ class FlashcardsQuiz extends BaseQuiz {
     renderLayout() {
         const totalUniqueCards = this.originalCards.length;
         this.overlay.innerHTML = `
-            <div class="flashcards-container" style="position: relative;">
-                <div class="flashcards-header">
-                    <span class="flashcards-title">${escapeHtml(state.currentSet.title || 'Flashcards')}</span>
-                    <div style="display: flex; gap: 8px; align-items: center; position: relative;">
-                        <button class="btn-close-flashcards" id="fc-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
-                            <span class="material-symbols-rounded">info</span>
-                        </button>
-                        <button class="btn-close-flashcards" id="fc-settings-btn" title="Instellingen" style="transform: none;">
-                            <span class="material-symbols-rounded">settings</span>
-                        </button>
-                        <button class="btn-close-flashcards" id="fc-close">
-                            <span class="material-symbols-rounded">close</span>
-                        </button>
-                        <quizy-settings-panel id="fc-settings-panel" mode="flashcards"></quizy-settings-panel>
-                    </div>
-                </div>
+            <div class="learning-layout-wrapper">
+                <quizy-ad type="display" class="learning-side-ad"></quizy-ad>
 
-                <div class="quizy-timer-bar-container" style="display: ${this.settings.timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
-                    <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
-                </div>
-
-                <div class="flashcard-wrapper" id="fc-card">
-                    <div class="flashcard-inner">
-                        <div class="flashcard-face flashcard-front">
-                            <button class="btn-flashcard-speak" title="Uitspreken">
-                                <span class="material-symbols-rounded">volume_up</span>
+                <div class="flashcards-container" style="position: relative;">
+                    <div class="flashcards-header">
+                        <span class="flashcards-title">${escapeHtml(state.currentSet.title || 'Flashcards')}</span>
+                        <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                            <button class="btn-close-flashcards" id="fc-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
+                                <span class="material-symbols-rounded">info</span>
                             </button>
-                            <button class="btn-flashcard-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
-                                <span class="material-symbols-rounded">star</span>
+                            <button class="btn-close-flashcards" id="fc-settings-btn" title="Instellingen" style="transform: none;">
+                                <span class="material-symbols-rounded">settings</span>
                             </button>
-                            <div class="flashcard-label">Term</div>
-                            <div class="flashcard-text" id="fc-front-text">Laden...</div>
-                        </div>
-                        <div class="flashcard-face flashcard-back">
-                            <button class="btn-flashcard-speak" title="Uitspreken">
-                                <span class="material-symbols-rounded">volume_up</span>
+                            <button class="btn-close-flashcards" id="fc-close">
+                                <span class="material-symbols-rounded">close</span>
                             </button>
-                            <button class="btn-flashcard-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
-                                <span class="material-symbols-rounded">star</span>
-                            </button>
-                            <div class="flashcard-label">Definitie</div>
-                            <div class="flashcard-text" id="fc-back-text">Laden...</div>
+                            <quizy-settings-panel id="fc-settings-panel" mode="flashcards"></quizy-settings-panel>
                         </div>
                     </div>
-                </div>
 
-                <div class="flashcards-controls">
-                    <button class="btn-control btn-control-circle btn-wrong" id="fc-wrong" title="Niet geweten" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 56px; height: 56px;">
-                        <span class="material-symbols-rounded" style="font-size: 28px;">close</span>
-                    </button>
-                    <button class="btn-control" id="fc-flip">
-                        <span class="material-symbols-rounded">flip</span>
-                        Omdraaien
-                    </button>
-                    <button class="btn-control btn-control-circle btn-correct" id="fc-correct" title="Geweten" style="background: rgba(67, 160, 71, 0.15); border: 1px solid rgba(67, 160, 71, 0.3); color: #43a047; width: 56px; height: 56px;">
-                        <span class="material-symbols-rounded" style="font-size: 28px;">check</span>
-                    </button>
-                </div>
+                    <div class="quizy-timer-bar-container" style="display: ${this.settings.timePressure ? 'block' : 'none'}; width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; margin-top: -10px; margin-bottom: 16px; border-radius: 3px;">
+                        <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
+                    </div>
 
-                <div class="progress-container">
-                    <span class="progress-text" id="fc-progress-text">Geleerd: 0 van ${totalUniqueCards} kaarten</span>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="fc-progress-fill"></div>
+                    <div class="flashcard-wrapper" id="fc-card">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-face flashcard-front">
+                                <button class="btn-flashcard-speak" title="Uitspreken">
+                                    <span class="material-symbols-rounded">volume_up</span>
+                                </button>
+                                <button class="btn-flashcard-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
+                                    <span class="material-symbols-rounded">star</span>
+                                </button>
+                                <div class="flashcard-label">Term</div>
+                                <div class="flashcard-text" id="fc-front-text">Laden...</div>
+                            </div>
+                            <div class="flashcard-face flashcard-back">
+                                <button class="btn-flashcard-speak" title="Uitspreken">
+                                    <span class="material-symbols-rounded">volume_up</span>
+                                </button>
+                                <button class="btn-flashcard-star" ${this.isOwner ? '' : 'disabled style="pointer-events: none; cursor: default;"'}>
+                                    <span class="material-symbols-rounded">star</span>
+                                </button>
+                                <div class="flashcard-label">Definitie</div>
+                                <div class="flashcard-text" id="fc-back-text">Laden...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flashcards-controls">
+                        <button class="btn-control btn-control-circle btn-wrong" id="fc-wrong" title="Niet geweten" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 56px; height: 56px;">
+                            <span class="material-symbols-rounded" style="font-size: 28px;">close</span>
+                        </button>
+                        <button class="btn-control" id="fc-flip">
+                            <span class="material-symbols-rounded">flip</span>
+                            Omdraaien
+                        </button>
+                        <button class="btn-control btn-control-circle btn-correct" id="fc-correct" title="Geweten" style="background: rgba(67, 160, 71, 0.15); border: 1px solid rgba(67, 160, 71, 0.3); color: #43a047; width: 56px; height: 56px;">
+                            <span class="material-symbols-rounded" style="font-size: 28px;">check</span>
+                        </button>
+                    </div>
+
+                    <div class="progress-container">
+                        <span class="progress-text" id="fc-progress-text">Geleerd: 0 van ${totalUniqueCards} kaarten</span>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="fc-progress-fill"></div>
+                        </div>
                     </div>
                 </div>
+
+                <quizy-ad type="display" class="learning-side-ad"></quizy-ad>
             </div>
 
             <quizy-confirm-modal id="fc-confirm-modal"></quizy-confirm-modal>
