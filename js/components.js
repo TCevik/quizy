@@ -809,11 +809,15 @@ class QuizyAd extends HTMLElement {
         }
 
         this.appendChild(ins);
-        try {
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (e) {
-            console.error('AdSense loading error:', e);
-        }
+        
+        // Defer the push to ensure the element is fully mounted and layouted in the DOM
+        setTimeout(() => {
+            try {
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {
+                console.error('AdSense loading error:', e);
+            }
+        }, 150);
     }
 }
 customElements.define('quizy-ad', QuizyAd);
