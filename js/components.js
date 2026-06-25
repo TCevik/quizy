@@ -1,6 +1,5 @@
 import { supabaseReady } from './supabase-init.js';
 import Toast from './toast.js';
-import { checkPremiumStatus } from './ads.js';
 
 
 class QuizyHeader extends HTMLElement {
@@ -36,30 +35,12 @@ class QuizyHeader extends HTMLElement {
             initialMenuHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
         }
 
-        const updateLogo = () => {
-            const isPremium = localStorage.getItem('quizy-is-premium') === 'true';
-            const logoEl = this.querySelector('.logo');
-            if (logoEl) {
-                if (isPremium) {
-                    if (!logoEl.querySelector('.logo-pro-badge')) {
-                        logoEl.innerHTML = `Quizy <span class="logo-pro-badge" style="color: #22c55e; font-weight: 800; font-size: 0.75em; margin-left: 6px; padding: 2px 6px; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; background: rgba(34, 197, 94, 0.1); letter-spacing: 1px; display: inline-block; vertical-align: middle;">PRO</span>`;
-                    }
-                } else {
-                    const badge = logoEl.querySelector('.logo-pro-badge');
-                    if (badge) {
-                        badge.remove();
-                    }
-                }
-            }
-        };
-
         this.innerHTML = `
             <a href="index.html" class="logo">Quizy</a>
             <nav class="header-items" id="header-menu">
                 ${initialMenuHTML}
             </nav>
         `;
-        updateLogo();
 
         const setupLogout = () => {
             const logoutBtn = this.querySelector('#logoutBtn');
@@ -69,7 +50,6 @@ class QuizyHeader extends HTMLElement {
                     const supabase = await supabaseReady;
                     if (supabase) {
                         await supabase.auth.signOut();
-                        localStorage.removeItem('quizy-is-premium');
                         window.location.href = 'index.html';
                     }
                 });
@@ -84,11 +64,6 @@ class QuizyHeader extends HTMLElement {
         if (supabase) {
             const { data } = await supabase.auth.getUser();
             user = data?.user;
-            if (user) {
-                checkPremiumStatus().then(() => {
-                    updateLogo();
-                });
-            }
         }
 
 

@@ -585,23 +585,6 @@ body {
     .dashboard-sidebar {
         position: sticky;
     }
-    .dashboard-sidebar .quizy-ad-box {
-        position: absolute;
-        right: calc(100% + 24px);
-        top: 0;
-        width: 250px !important;
-        margin: 0;
-        max-height: calc(100vh - var(--header-height) - 164px) !important;
-        overflow: hidden !important;
-        display: flex;
-        flex-direction: column;
-    }
-    .dashboard-sidebar .quizy-ad-box ins.adsbygoogle {
-        display: block !important;
-        width: 100% !important;
-        max-height: 100% !important;
-        height: auto !important;
-    }
 }
 
 
