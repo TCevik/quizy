@@ -41,39 +41,33 @@ class LearnModeQuiz extends BaseQuiz {
 
     renderLayout() {
         this.overlay.innerHTML = `
-            <div class="learning-layout-wrapper">
-                <quizy-ad type="display" class="learning-side-ad"></quizy-ad>
-
-                <div class="learn-container" style="position: relative;">
-                    <div class="learn-header">
-                        <span class="learn-title">${escapeHtml(state.currentSet.title || 'Leermodus')}</span>
-                        <div style="display: flex; gap: 8px; align-items: center; position: relative;">
-                            <button class="btn-close-flashcards" id="learn-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
-                                <span class="material-symbols-rounded">info</span>
-                            </button>
-                            <button class="btn-close-flashcards" id="learn-settings-btn" title="Instellingen" style="transform: none;">
-                                <span class="material-symbols-rounded">settings</span>
-                            </button>
-                            <button class="btn-close-flashcards" id="learn-close">
-                                <span class="material-symbols-rounded">close</span>
-                            </button>
-                            <quizy-settings-panel id="learn-settings-panel" mode="learn"></quizy-settings-panel>
-                        </div>
+            <div class="learn-container" style="position: relative;">
+                <div class="learn-header">
+                    <span class="learn-title">${escapeHtml(state.currentSet.title || 'Leermodus')}</span>
+                    <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                        <button class="btn-close-flashcards" id="learn-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
+                            <span class="material-symbols-rounded">info</span>
+                        </button>
+                        <button class="btn-close-flashcards" id="learn-settings-btn" title="Instellingen" style="transform: none;">
+                            <span class="material-symbols-rounded">settings</span>
+                        </button>
+                        <button class="btn-close-flashcards" id="learn-close">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                        <quizy-settings-panel id="learn-settings-panel" mode="learn"></quizy-settings-panel>
                     </div>
-
-                    <div class="progress-container">
-                        <span class="progress-text" id="learn-progress-text">Voortgang: 0%</span>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" id="learn-progress-fill"></div>
-                        </div>
-                    </div>
-
-                    <div class="learn-card-area" id="learn-card-area"></div>
-
-                    <div class="learn-batch-dots" id="learn-batch-dots"></div>
                 </div>
 
-                <quizy-ad type="display" class="learning-side-ad"></quizy-ad>
+                <div class="progress-container">
+                    <span class="progress-text" id="learn-progress-text">Voortgang: 0%</span>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="learn-progress-fill"></div>
+                    </div>
+                </div>
+
+                <div class="learn-card-area" id="learn-card-area"></div>
+
+                <div class="learn-batch-dots" id="learn-batch-dots"></div>
             </div>
 
             <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>

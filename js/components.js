@@ -776,48 +776,4 @@ class QuizyKeybindsModal extends HTMLElement {
         `;
     }
 }
-customElements.define('quizy-keybinds-modal', QuizyKeybindsModal);
-
-class QuizyAd extends HTMLElement {
-    connectedCallback() {
-        const type = this.getAttribute('type') || 'display';
-        const ins = document.createElement('ins');
-        ins.className = 'adsbygoogle';
-        ins.style.display = 'block';
-
-        if (type === 'in-feed') {
-            ins.setAttribute('data-ad-format', 'fluid');
-            ins.setAttribute('data-ad-layout-key', '-fb+5w+4e-db+86');
-            ins.setAttribute('data-ad-client', 'ca-pub-8924607946192862');
-            ins.setAttribute('data-ad-slot', '8058343678');
-        } else if (type === 'in-article') {
-            ins.style.textAlign = 'center';
-            ins.setAttribute('data-ad-layout', 'in-article');
-            ins.setAttribute('data-ad-format', 'fluid');
-            ins.setAttribute('data-ad-client', 'ca-pub-8924607946192862');
-            ins.setAttribute('data-ad-slot', '5571781132');
-        } else if (type === 'multiplex') {
-            ins.setAttribute('data-ad-format', 'autorelaxed');
-            ins.setAttribute('data-ad-client', 'ca-pub-8924607946192862');
-            ins.setAttribute('data-ad-slot', '8087529182');
-        } else {
-            // display
-            ins.setAttribute('data-ad-client', 'ca-pub-8924607946192862');
-            ins.setAttribute('data-ad-slot', '5862330293');
-            ins.setAttribute('data-ad-format', 'auto');
-            ins.setAttribute('data-full-width-responsive', 'true');
-        }
-
-        this.appendChild(ins);
-        
-        // Defer the push to ensure the element is fully mounted and layouted in the DOM
-        setTimeout(() => {
-            try {
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-            } catch (e) {
-                console.error('AdSense loading error:', e);
-            }
-        }, 150);
-    }
-}
-customElements.define('quizy-ad', QuizyAd);
+customElements.define('quizy-keybinds-modal', QuizyKeybindsModal);
