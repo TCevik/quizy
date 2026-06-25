@@ -65,9 +65,13 @@ class LearnModeQuiz extends BaseQuiz {
                     </div>
                 </div>
 
+                <quizy-ad slot="1928374843" ad-style="display:block; width:100%; min-height:90px; margin-bottom:20px;"></quizy-ad>
+
                 <div class="learn-card-area" id="learn-card-area"></div>
 
                 <div class="learn-batch-dots" id="learn-batch-dots"></div>
+
+                <quizy-ad slot="1928374839" ad-style="display:block; width:100%; min-height:90px; margin-top:20px;"></quizy-ad>
             </div>
 
             <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>

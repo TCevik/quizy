@@ -776,4 +776,35 @@ class QuizyKeybindsModal extends HTMLElement {
         `;
     }
 }
-customElements.define('quizy-keybinds-modal', QuizyKeybindsModal);
+customElements.define('quizy-keybinds-modal', QuizyKeybindsModal);
+
+class QuizyAd extends HTMLElement {
+    connectedCallback() {
+        const client = this.getAttribute('client') || 'ca-pub-8924607946192862';
+        const slot = this.getAttribute('slot') || '2837492837';
+        const format = this.getAttribute('format') || 'auto';
+        const responsive = this.getAttribute('responsive') || 'true';
+        const style = this.getAttribute('ad-style') || 'display:block; width:100%; min-height:90px; max-height:280px;';
+
+        this.innerHTML = `
+            <div class="quizy-ad-container">
+                <span class="quizy-ad-label">ADVERTENTIE</span>
+                <ins class="adsbygoogle"
+                     style="${style}"
+                     data-ad-client="${client}"
+                     data-ad-slot="${slot}"
+                     data-ad-format="${format}"
+                     data-full-width-responsive="${responsive}"></ins>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            try {
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {
+                console.warn('AdSense push failed', e);
+            }
+        }, 100);
+    }
+}
+customElements.define('quizy-ad', QuizyAd);
