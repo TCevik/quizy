@@ -40,7 +40,7 @@ class LearnModeQuiz extends BaseQuiz {
     }
 
     renderLayout() {
-        this.overlay.innerHTML = `
+        const mainContent = `
             <div class="learn-container" style="position: relative;">
                 <div class="learn-header">
                     <span class="learn-title">${escapeHtml(state.currentSet.title || 'Leermodus')}</span>
@@ -73,6 +73,8 @@ class LearnModeQuiz extends BaseQuiz {
             <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>
             <quizy-keybinds-modal id="learn-keybinds-modal" mode="learn"></quizy-keybinds-modal>
         `;
+        this.overlay.innerHTML = this.wrapWithAds(mainContent);
+        this.triggerAds();
     }
 
     setupElements() {

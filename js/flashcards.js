@@ -29,7 +29,7 @@ class FlashcardsQuiz extends BaseQuiz {
 
     renderLayout() {
         const totalUniqueCards = this.originalCards.length;
-        this.overlay.innerHTML = `
+        const mainContent = `
             <div class="flashcards-container" style="position: relative;">
                 <div class="flashcards-header">
                     <span class="flashcards-title">${escapeHtml(state.currentSet.title || 'Flashcards')}</span>
@@ -100,6 +100,8 @@ class FlashcardsQuiz extends BaseQuiz {
             <quizy-confirm-modal id="fc-confirm-modal"></quizy-confirm-modal>
             <quizy-keybinds-modal id="fc-keybinds-modal" mode="flashcards"></quizy-keybinds-modal>
         `;
+        this.overlay.innerHTML = this.wrapWithAds(mainContent);
+        this.triggerAds();
     }
 
     setupElements() {

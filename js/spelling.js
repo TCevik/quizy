@@ -31,7 +31,7 @@ class SpellingQuiz extends BaseQuiz {
 
     renderLayout() {
         const totalUniqueCards = this.originalCards.length;
-        this.overlay.innerHTML = `
+        const mainContent = `
             <div class="sp-container" style="position: relative;">
                 <div class="sp-header">
                     <span class="sp-title">${escapeHtml(state.currentSet.title || 'Spelling')}</span>
@@ -94,6 +94,8 @@ class SpellingQuiz extends BaseQuiz {
             <quizy-confirm-modal id="sp-confirm-modal"></quizy-confirm-modal>
             <quizy-keybinds-modal id="sp-keybinds-modal" mode="spelling"></quizy-keybinds-modal>
         `;
+        this.overlay.innerHTML = this.wrapWithAds(mainContent);
+        this.triggerAds();
     }
 
     setupElements() {

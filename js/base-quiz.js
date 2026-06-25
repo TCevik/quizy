@@ -103,6 +103,43 @@ export class BaseQuiz {
         this.overlay.classList.add('active');
     }
 
+    wrapWithAds(contentHtml) {
+        return `
+            <div class="quiz-ad-wrapper">
+                <div class="quiz-ad-side left-ad">
+                    <div class="quizy-ad-box">
+                        <div class="quizy-ad-label">Advertentie</div>
+                        <ins class="adsbygoogle" style="display:block; text-align:center;" data-ad-layout="in-article" data-ad-format="fluid"
+                            data-ad-client="ca-pub-8924607946192862" data-ad-slot="5571781132"></ins>
+                    </div>
+                </div>
+                ${contentHtml}
+                <div class="quiz-ad-side right-ad">
+                    <div class="quizy-ad-box">
+                        <div class="quizy-ad-label">Advertentie</div>
+                        <ins class="adsbygoogle" style="display:block" data-ad-format="fluid" data-ad-layout-key="-fb+5w+4e-db+86"
+                            data-ad-client="ca-pub-8924607946192862" data-ad-slot="8058343678"></ins>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    triggerAds() {
+        setTimeout(() => {
+            try {
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {
+                console.error("AdSense trigger error:", e);
+            }
+            try {
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {
+                console.error("AdSense trigger error:", e);
+            }
+        }, 100);
+    }
+
     closeOverlay() {
         this.cleanupListeners();
         if (this.overlay) {

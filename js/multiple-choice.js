@@ -30,7 +30,7 @@ class MultipleChoiceQuiz extends BaseQuiz {
 
     renderLayout() {
         const totalUniqueCards = this.originalCards.length;
-        this.overlay.innerHTML = `
+        const mainContent = `
             <div class="mc-container" style="position: relative;">
                 <div class="mc-header">
                     <span class="mc-title">${escapeHtml(state.currentSet.title || 'Multiple Choice')}</span>
@@ -85,6 +85,8 @@ class MultipleChoiceQuiz extends BaseQuiz {
             <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>
             <quizy-keybinds-modal id="mc-keybinds-modal" mode="multiple-choice"></quizy-keybinds-modal>
         `;
+        this.overlay.innerHTML = this.wrapWithAds(mainContent);
+        this.triggerAds();
     }
 
     setupElements() {
