@@ -1,3 +1,4 @@
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-light);
@@ -7,42 +8,25 @@ body {
 }
 
 .dashboard-layout {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
     padding: 24px;
     display: grid;
-    grid-template-columns: 260px 260px 1fr;
+    grid-template-columns: 280px 1fr;
     gap: 32px;
     opacity: 0;
     animation: dashboardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
     align-items: start;
 }
 
-.dashboard-sidebar,
-.dashboard-ad-sidebar {
+.dashboard-sidebar {
     position: sticky;
     top: calc(var(--header-height) + 24px);
     background: rgba(var(--bg-light-rgb), 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 24px;
-}
-
-.dashboard-ad-sidebar {
-    height: calc(100vh - var(--header-height) - 64px);
-    max-height: 800px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.dashboard-ad-sidebar .quizy-ad-box {
-    height: 100%;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
 .dashboard-main {
@@ -133,7 +117,6 @@ body {
         opacity: 0;
         transform: translateY(30px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -378,7 +361,7 @@ body {
     width: 100%;
 }
 
-.folder-chip>div {
+.folder-chip > div {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -417,7 +400,6 @@ body {
 .folder-chip.active .rename-folder-btn {
     display: inline-flex !important;
 }
-
 .rename-folder-btn:hover {
     color: var(--primary) !important;
 }
@@ -536,7 +518,7 @@ body {
     box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.15);
 }
 
-#search-input:focus+.search-icon {
+#search-input:focus + .search-icon {
     color: var(--primary);
 }
 
@@ -579,29 +561,25 @@ body {
     height: 48px;
     width: 48px;
 }
-
 .btn-sync:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
 }
-
 .btn-sync:disabled,
 .btn-sync.spinning {
     pointer-events: none;
     opacity: 0.6;
     cursor: not-allowed;
 }
-
 .btn-sync .material-symbols-rounded {
     font-size: 20px;
 }
-
 .btn-sync.spinning .material-symbols-rounded {
     animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
-    100% {
-        transform: rotate(360deg);
-    }
+    100% { transform: rotate(360deg); }
 }
+
+
+
