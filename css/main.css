@@ -547,30 +547,4 @@ quizy-settings-panel .settings-actions button {
     flex: 1;
 }
 
-/* Advertenties */
-.quizy-ad-container {
-    margin: 16px auto;
-    width: 100%;
-    max-width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 10px;
-    box-sizing: border-box;
-}
-
-.quizy-ad-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
-}
-
 

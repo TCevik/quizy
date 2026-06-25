@@ -52,8 +52,6 @@ class MultipleChoiceQuiz extends BaseQuiz {
                     <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
                 </div>
 
-                <quizy-ad slot="1928374845" ad-style="display:block; width:100%; min-height:90px; margin-bottom:20px;"></quizy-ad>
-
                 <div class="mc-question-card" id="mc-question">
                     <button class="btn-mc-speak" title="Uitspreken">
                         <span class="material-symbols-rounded">volume_up</span>
@@ -82,8 +80,6 @@ class MultipleChoiceQuiz extends BaseQuiz {
                         <div class="progress-bar-fill" id="mc-progress-fill"></div>
                     </div>
                 </div>
-
-                <quizy-ad slot="1928374841" ad-style="display:block; width:100%; min-height:90px; margin-top:20px;"></quizy-ad>
             </div>
 
             <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>
