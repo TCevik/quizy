@@ -1,5 +1,7 @@
 import { supabaseReady } from './supabase-init.js';
 import Toast from './toast.js';
+import { checkPremiumStatus } from './ads.js';
+
 
 class QuizyHeader extends HTMLElement {
     async connectedCallback() {
@@ -49,6 +51,7 @@ class QuizyHeader extends HTMLElement {
                     const supabase = await supabaseReady;
                     if (supabase) {
                         await supabase.auth.signOut();
+                        localStorage.removeItem('quizy-is-premium');
                         window.location.href = 'index.html';
                     }
                 });
@@ -63,7 +66,11 @@ class QuizyHeader extends HTMLElement {
         if (supabase) {
             const { data } = await supabase.auth.getUser();
             user = data?.user;
+            if (user) {
+                checkPremiumStatus();
+            }
         }
+
 
         const menu = this.querySelector('#header-menu');
         if (!menu) return;

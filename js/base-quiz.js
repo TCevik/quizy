@@ -104,6 +104,9 @@ export class BaseQuiz {
     }
 
     wrapWithAds(contentHtml) {
+        if (localStorage.getItem('quizy-is-premium') === 'true') {
+            return contentHtml;
+        }
         return `
             <div class="quiz-ad-wrapper">
                 <div class="quiz-ad-side left-ad-side">
