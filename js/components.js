@@ -70,7 +70,6 @@ class QuizyHeader extends HTMLElement {
         const menu = this.querySelector('#header-menu');
         if (!menu) return;
 
-        
         if (!isLogin) {
             if (user) {
                 const currentHTML = menu.innerHTML;
@@ -92,8 +91,46 @@ class QuizyHeader extends HTMLElement {
                     `;
                     setupLogout();
                 }
+
+                // Check premium status
+                try {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('premium')
+                        .eq('id', user.id)
+                        .single();
+                    if (profile && profile.premium) {
+                        const logo = this.querySelector('.logo');
+                        if (logo) {
+                            logo.innerHTML = 'Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">Pro</span>';
+                            logo.style.display = 'inline-flex';
+                            logo.style.alignItems = 'center';
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error fetching profile premium:', err);
+                }
             } else {
                 menu.innerHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
+            }
+        } else if (user) {
+            // Even on login page or if isLogin is true, if they are logged in, check premium for logo
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('premium')
+                    .eq('id', user.id)
+                    .single();
+                if (profile && profile.premium) {
+                    const logo = this.querySelector('.logo');
+                    if (logo) {
+                        logo.innerHTML = 'Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">Pro</span>';
+                        logo.style.display = 'inline-flex';
+                        logo.style.alignItems = 'center';
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching profile premium:', err);
             }
         }
     }
