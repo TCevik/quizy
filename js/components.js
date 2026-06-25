@@ -780,48 +780,60 @@ customElements.define('quizy-keybinds-modal', QuizyKeybindsModal);
 
 class QuizyAd extends HTMLElement {
     connectedCallback() {
-        const client = this.getAttribute('client') || 'ca-pub-8924607946192862';
-        const slot = this.getAttribute('slot') || '2837492837';
-        const format = this.getAttribute('format') || 'auto';
-        const responsive = this.getAttribute('responsive') || 'true';
-        const style = this.getAttribute('ad-style') || 'display:block; width:100%; min-height:90px; max-height:280px;';
+        const type = this.getAttribute('ad-type') || 'display';
+        let insHtml = '';
 
-        const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
-
-        if (isLocal) {
-            this.innerHTML = `
-                <div class="quizy-ad-container local-ad-placeholder">
-                    <span class="quizy-ad-label" style="opacity: 0.6;">ADVERTENTIE (LOKAAL)</span>
-                    <div class="local-ad-content" style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 20px; color: var(--text-muted); font-size: 0.9em; background: rgba(255, 255, 255, 0.01); border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.08); width: 100%; box-sizing: border-box;">
-                        <span class="material-symbols-rounded" style="color: var(--primary); font-size: 24px; animation: pulse 2s infinite;">ads_click</span>
-                        <div style="text-align: left;">
-                            <strong style="color: var(--text-light); display: block; font-size: 0.95em; margin-bottom: 2px;">Google AdSense</strong>
-                            <span style="font-size: 0.85em; opacity: 0.8;">Slot: ${slot} | Client: ${client}</span>
-                        </div>
-                    </div>
-                </div>
+        if (type === 'display') {
+            insHtml = `
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-8924607946192862"
+                     data-ad-slot="5862330293"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
             `;
-        } else {
-            this.innerHTML = `
-                <div class="quizy-ad-container">
-                    <span class="quizy-ad-label">ADVERTENTIE</span>
-                    <ins class="adsbygoogle"
-                         style="${style}"
-                         data-ad-client="${client}"
-                         data-ad-slot="${slot}"
-                         data-ad-format="${format}"
-                         data-full-width-responsive="${responsive}"></ins>
-                </div>
+        } else if (type === 'in-feed') {
+            insHtml = `
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-format="fluid"
+                     data-ad-layout-key="-fb+5w+4e-db+86"
+                     data-ad-client="ca-pub-8924607946192862"
+                     data-ad-slot="8058343678"></ins>
             `;
-            
-            setTimeout(() => {
-                try {
-                    (window.adsbygoogle = window.adsbygoogle || []).push({});
-                } catch (e) {
-                    console.warn('AdSense push failed', e);
-                }
-            }, 100);
+        } else if (type === 'in-article') {
+            insHtml = `
+                <ins class="adsbygoogle"
+                     style="display:block; text-align:center;"
+                     data-ad-layout="in-article"
+                     data-ad-format="fluid"
+                     data-ad-client="ca-pub-8924607946192862"
+                     data-ad-slot="5571781132"></ins>
+            `;
+        } else if (type === 'multiplex') {
+            insHtml = `
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-format="autorelaxed"
+                     data-ad-client="ca-pub-8924607946192862"
+                     data-ad-slot="8087529182"></ins>
+            `;
         }
+
+        this.innerHTML = `
+            <div class="quizy-ad-container">
+                <span class="quizy-ad-label">ADVERTENTIE</span>
+                ${insHtml}
+            </div>
+        `;
+        
+        setTimeout(() => {
+            try {
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {
+                console.warn('AdSense push failed', e);
+            }
+        }, 100);
     }
 }
 customElements.define('quizy-ad', QuizyAd);
