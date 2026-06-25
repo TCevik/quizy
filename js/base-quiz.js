@@ -126,18 +126,23 @@ export class BaseQuiz {
     }
 
     triggerAds() {
-        setTimeout(() => {
-            try {
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-            } catch (e) {
-                console.error("AdSense trigger error:", e);
-            }
-            try {
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-            } catch (e) {
-                console.error("AdSense trigger error:", e);
-            }
-        }, 100);
+        const loadAds = () => {
+            if (!this.overlay) return;
+            const insElements = this.overlay.querySelectorAll('ins.adsbygoogle:not([data-adsbygoogle-status])');
+            insElements.forEach(() => {
+                try {
+                    (window.adsbygoogle = window.adsbygoogle || []).push({});
+                } catch (e) {
+                    console.error("AdSense trigger error:", e);
+                }
+            });
+        };
+
+        // Trigger immediately and at delayed intervals to ensure rendering and visibility
+        loadAds();
+        setTimeout(loadAds, 100);
+        setTimeout(loadAds, 500);
+        setTimeout(loadAds, 1000);
     }
 
     closeOverlay() {
