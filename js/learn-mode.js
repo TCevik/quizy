@@ -45,6 +45,9 @@ class LearnModeQuiz extends BaseQuiz {
                 <div class="learn-header">
                     <span class="learn-title">${escapeHtml(state.currentSet.title || 'Leermodus')}</span>
                     <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                        <button class="btn-close-flashcards" id="learn-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
+                            <span class="material-symbols-rounded">info</span>
+                        </button>
                         <button class="btn-close-flashcards" id="learn-settings-btn" title="Instellingen" style="transform: none;">
                             <span class="material-symbols-rounded">settings</span>
                         </button>
@@ -68,6 +71,7 @@ class LearnModeQuiz extends BaseQuiz {
             </div>
 
             <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>
+            <quizy-keybinds-modal id="learn-keybinds-modal" mode="learn"></quizy-keybinds-modal>
         `;
     }
 
@@ -80,9 +84,18 @@ class LearnModeQuiz extends BaseQuiz {
         this.settingsBtn = this.overlay.querySelector('#learn-settings-btn');
         this.settingsPanel = this.overlay.querySelector('#learn-settings-panel');
         this.confirmModal = this.overlay.querySelector('#learn-confirm-modal');
+        this.infoBtn = this.overlay.querySelector('#learn-info-btn');
+        this.keybindsModal = this.overlay.querySelector('#learn-keybinds-modal');
     }
 
     addEventListeners() {
+        if (this.infoBtn && this.keybindsModal) {
+            this.infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.keybindsModal.open('learn');
+            });
+        }
+
         this.closeBtn.addEventListener('click', () => this.closeOverlay());
 
         this.settingsBtn.addEventListener('click', (e) => {
@@ -167,6 +180,77 @@ class LearnModeQuiz extends BaseQuiz {
             }
         };
         document.addEventListener('click', this.clickOutsideHandler);
+
+        this.keydownHandler = (e) => {
+            if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.isContentEditable)) {
+                return;
+            }
+            if (this.settingsPanel.classList.contains('active') || (this.keybindsModal && this.keybindsModal.classList.contains('active'))) {
+                return;
+            }
+
+            if (this.currentSubMode === 'flashcards') {
+                if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+                    e.preventDefault();
+                    const wrapper = this.cardArea.querySelector('#learn-card-wrapper');
+                    if (wrapper) wrapper.click();
+                } else if (e.code === 'ArrowLeft') {
+                    e.preventDefault();
+                    const wrongBtn = this.cardArea.querySelector('#learn-btn-no');
+                    if (wrongBtn) wrongBtn.click();
+                } else if (e.code === 'ArrowRight') {
+                    e.preventDefault();
+                    const correctBtn = this.cardArea.querySelector('#learn-btn-yes');
+                    if (correctBtn) correctBtn.click();
+                }
+            } else if (this.currentSubMode === 'multiple-choice') {
+                const optionsGrid = this.cardArea.querySelector('#learn-mc-options');
+                const nextBtn = this.cardArea.querySelector('#learn-mc-next');
+                const answered = nextBtn && nextBtn.style.display !== 'none';
+                
+                if (!answered && optionsGrid) {
+                    const totalOptions = optionsGrid.children.length;
+                    if (e.code === 'ArrowDown') {
+                        e.preventDefault();
+                        if (this.keyboardSelectedIndex !== -1 && this.keyboardSelectedIndex < totalOptions) {
+                            optionsGrid.children[this.keyboardSelectedIndex].classList.remove('keyboard-selected');
+                        }
+                        this.keyboardSelectedIndex = (this.keyboardSelectedIndex + 1) % totalOptions;
+                        optionsGrid.children[this.keyboardSelectedIndex].classList.add('keyboard-selected');
+                    } else if (e.code === 'ArrowUp') {
+                        e.preventDefault();
+                        if (this.keyboardSelectedIndex !== -1 && this.keyboardSelectedIndex < totalOptions) {
+                            optionsGrid.children[this.keyboardSelectedIndex].classList.remove('keyboard-selected');
+                        }
+                        this.keyboardSelectedIndex = (this.keyboardSelectedIndex - 1 + totalOptions) % totalOptions;
+                        optionsGrid.children[this.keyboardSelectedIndex].classList.add('keyboard-selected');
+                    } else if (e.code === 'Enter') {
+                        e.preventDefault();
+                        if (this.keyboardSelectedIndex !== -1 && this.keyboardSelectedIndex < totalOptions) {
+                            optionsGrid.children[this.keyboardSelectedIndex].click();
+                        }
+                    } else {
+                        const optionIndex = ['KeyA', 'KeyB', 'KeyC', 'KeyD'].indexOf(e.code);
+                        if (optionIndex !== -1 && optionIndex < totalOptions) {
+                            e.preventDefault();
+                            optionsGrid.children[optionIndex].click();
+                        } else {
+                            const numberIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code);
+                            if (numberIndex !== -1 && numberIndex < totalOptions) {
+                                e.preventDefault();
+                                optionsGrid.children[numberIndex].click();
+                            }
+                        }
+                    }
+                } else if (answered && nextBtn) {
+                    if (e.code === 'Enter' || e.code === 'Space') {
+                        e.preventDefault();
+                        nextBtn.click();
+                    }
+                }
+            }
+        };
+        document.addEventListener('keydown', this.keydownHandler);
     }
 
     getStartingLevel() {
@@ -318,6 +402,7 @@ class LearnModeQuiz extends BaseQuiz {
     }
 
     renderFlashcard(card) {
+        this.currentSubMode = 'flashcards';
         const questionText = this.settings.swapSides ? card.definition : card.term;
         const answerText = this.settings.swapSides ? card.term : card.definition;
         const questionLabel = state.currentSet.mode === 'talen' 
@@ -385,6 +470,8 @@ class LearnModeQuiz extends BaseQuiz {
     }
 
     renderMultipleChoice(card) {
+        this.currentSubMode = 'multiple-choice';
+        this.keyboardSelectedIndex = -1;
         const questionText = this.settings.swapSides ? card.definition : card.term;
         const correctText = this.settings.swapSides ? card.term : card.definition;
         const questionLabel = state.currentSet.mode === 'talen'
@@ -468,6 +555,7 @@ class LearnModeQuiz extends BaseQuiz {
     }
 
     renderSpelling(card) {
+        this.currentSubMode = 'spelling';
         const questionText = this.settings.swapSides ? card.definition : card.term;
         const correctAnswer = this.settings.swapSides ? card.term : card.definition;
         const questionLabel = state.currentSet.mode === 'talen'
@@ -594,6 +682,9 @@ class LearnModeQuiz extends BaseQuiz {
         super.cleanupListeners();
         if (this.clickOutsideHandler) {
             document.removeEventListener('click', this.clickOutsideHandler);
+        }
+        if (this.keydownHandler) {
+            document.removeEventListener('keydown', this.keydownHandler);
         }
     }
 }

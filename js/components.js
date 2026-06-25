@@ -607,4 +607,173 @@ class QuizySettingsPanel extends HTMLElement {
         }
     }
 }
-customElements.define('quizy-settings-panel', QuizySettingsPanel);
+customElements.define('quizy-settings-panel', QuizySettingsPanel);
+
+class QuizyKeybindsModal extends HTMLElement {
+    connectedCallback() {
+        this.className = 'modal-overlay';
+        this.render();
+        this.setupListeners();
+    }
+
+    static get observedAttributes() {
+        return ['mode'];
+    }
+
+    attributeChangedCallback() {
+        this.render();
+        this.setupListeners();
+    }
+
+    open(mode) {
+        if (mode) this.setAttribute('mode', mode);
+        this.classList.add('active');
+    }
+
+    close() {
+        this.classList.remove('active');
+    }
+
+    setupListeners() {
+        const closeBtn = this.querySelector('#btn-keybinds-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.close();
+            });
+        }
+        this.addEventListener('click', (e) => {
+            if (e.target === this) {
+                this.close();
+            }
+        });
+    }
+
+    render() {
+        const mode = this.getAttribute('mode') || 'all';
+        
+        let title = 'Toetsenbord Sneltoetsen';
+        let content = '';
+
+        const flashcardKeybinds = `
+            <div class="keybind-section">
+                <h4 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 8px; font-size: 1.05em;">
+                    <span class="material-symbols-rounded">style</span> Flashcards
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Kaart omdraaien</span>
+                        <div style="display: flex; gap: 4px;">
+                            <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">Spatiebalk</kbd>
+                            <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">↑</kbd>
+                            <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">↓</kbd>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Goed</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">→</kbd>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Fout</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">←</kbd>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const mcKeybinds = `
+            <div class="keybind-section">
+                <h4 style="margin-top: 0; color: var(--orange); display: flex; align-items: center; gap: 8px; font-size: 1.05em;">
+                    <span class="material-symbols-rounded">list</span> Meerkeuze
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Optie selecteren (A, B, C, D)</span>
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">A-D</kbd>
+                            <span style="color: var(--text-muted); font-size: 0.8em;">of</span>
+                            <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">1-4</kbd>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Navigeren door opties</span>
+                        <div style="display: flex; gap: 4px;">
+                            <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">↑</kbd>
+                            <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">↓</kbd>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Keuze bevestigen</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">Enter</kbd>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Volgende vraag</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">Enter</kbd>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const spellingKeybinds = `
+            <div class="keybind-section">
+                <h4 style="margin-top: 0; color: var(--teal); display: flex; align-items: center; gap: 8px; font-size: 1.05em;">
+                    <span class="material-symbols-rounded">edit_square</span> Spelling
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Antwoord typen</span>
+                        <span style="color: var(--text-light); font-size: 0.85em; font-style: italic;">Gewoon typen</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Antwoord bevestigen</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">Enter</kbd>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Volgende vraag</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">Enter</kbd>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        if (mode === 'flashcards') {
+            title = 'Toetsenbord Sneltoetsen: Flashcards';
+            content = flashcardKeybinds;
+        } else if (mode === 'multiple-choice') {
+            title = 'Toetsenbord Sneltoetsen: Meerkeuze';
+            content = mcKeybinds;
+        } else if (mode === 'spelling') {
+            title = 'Toetsenbord Sneltoetsen: Spelling';
+            content = spellingKeybinds;
+        } else {
+            title = 'Toetsenbord Sneltoetsen: Leermodus';
+            content = `
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    ${flashcardKeybinds}
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;">
+                    ${mcKeybinds}
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;">
+                    ${spellingKeybinds}
+                </div>
+            `;
+        }
+
+        this.innerHTML = `
+            <div class="modal-card glass-panel" style="max-width: 440px; width: 90%; max-height: 85vh; display: flex; flex-direction: column; text-align: left; padding: 0; background: rgba(22, 22, 30, 0.98); border: 1px solid rgba(255, 255, 255, 0.12);">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 18px 24px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="material-symbols-rounded" style="color: var(--primary); font-size: 24px;">keyboard</span>
+                        <h3 style="font-size: 1.15em; font-weight: 600; color: var(--text-light); margin: 0;">${title}</h3>
+                    </div>
+                    <button id="btn-keybinds-close" class="btn-close-flashcards" title="Sluiten" style="transform: none; position: static; width: 32px; height: 32px;">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+                    ${content}
+                </div>
+            </div>
+        `;
+    }
+}
+customElements.define('quizy-keybinds-modal', QuizyKeybindsModal);

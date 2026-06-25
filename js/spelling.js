@@ -36,6 +36,9 @@ class SpellingQuiz extends BaseQuiz {
                 <div class="sp-header">
                     <span class="sp-title">${escapeHtml(state.currentSet.title || 'Spelling')}</span>
                     <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                        <button class="btn-close-flashcards" id="sp-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
+                            <span class="material-symbols-rounded">info</span>
+                        </button>
                         <button class="btn-close-flashcards" id="sp-settings-btn" title="Instellingen" style="transform: none;">
                             <span class="material-symbols-rounded">settings</span>
                         </button>
@@ -89,6 +92,7 @@ class SpellingQuiz extends BaseQuiz {
             </div>
 
             <quizy-confirm-modal id="sp-confirm-modal"></quizy-confirm-modal>
+            <quizy-keybinds-modal id="sp-keybinds-modal" mode="spelling"></quizy-keybinds-modal>
         `;
     }
 
@@ -108,9 +112,18 @@ class SpellingQuiz extends BaseQuiz {
         this.settingsBtn = this.overlay.querySelector('#sp-settings-btn');
         this.settingsPanel = this.overlay.querySelector('#sp-settings-panel');
         this.confirmModal = this.overlay.querySelector('#sp-confirm-modal');
+        this.infoBtn = this.overlay.querySelector('#sp-info-btn');
+        this.keybindsModal = this.overlay.querySelector('#sp-keybinds-modal');
     }
 
     addEventListeners() {
+        if (this.infoBtn && this.keybindsModal) {
+            this.infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.keybindsModal.open('spelling');
+            });
+        }
+
         this.settingsBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             if (this.settingsPanel.classList.contains('active')) {

@@ -446,3 +446,11 @@
 .learn-settings-actions button {
     flex: 1;
 }
+
+.learn-mc-option-btn.keyboard-selected {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 2px var(--primary);
+    transform: translateY(-2px);
+}
+

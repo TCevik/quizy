@@ -34,6 +34,9 @@ class FlashcardsQuiz extends BaseQuiz {
                 <div class="flashcards-header">
                     <span class="flashcards-title">${escapeHtml(state.currentSet.title || 'Flashcards')}</span>
                     <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                        <button class="btn-close-flashcards" id="fc-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
+                            <span class="material-symbols-rounded">info</span>
+                        </button>
                         <button class="btn-close-flashcards" id="fc-settings-btn" title="Instellingen" style="transform: none;">
                             <span class="material-symbols-rounded">settings</span>
                         </button>
@@ -95,6 +98,7 @@ class FlashcardsQuiz extends BaseQuiz {
             </div>
 
             <quizy-confirm-modal id="fc-confirm-modal"></quizy-confirm-modal>
+            <quizy-keybinds-modal id="fc-keybinds-modal" mode="flashcards"></quizy-keybinds-modal>
         `;
     }
 
@@ -111,9 +115,18 @@ class FlashcardsQuiz extends BaseQuiz {
         this.settingsBtn = this.overlay.querySelector('#fc-settings-btn');
         this.settingsPanel = this.overlay.querySelector('#fc-settings-panel');
         this.confirmModal = this.overlay.querySelector('#fc-confirm-modal');
+        this.infoBtn = this.overlay.querySelector('#fc-info-btn');
+        this.keybindsModal = this.overlay.querySelector('#fc-keybinds-modal');
     }
 
     addEventListeners() {
+        if (this.infoBtn && this.keybindsModal) {
+            this.infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.keybindsModal.open('flashcards');
+            });
+        }
+
         this.settingsBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             if (this.settingsPanel.classList.contains('active')) {
@@ -203,10 +216,10 @@ class FlashcardsQuiz extends BaseQuiz {
             if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.isContentEditable)) {
                 return;
             }
-            if (this.settingsPanel.classList.contains('active')) {
+            if (this.settingsPanel.classList.contains('active') || (this.keybindsModal && this.keybindsModal.classList.contains('active'))) {
                 return;
             }
-            if (e.code === 'Space') {
+            if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') {
                 e.preventDefault();
                 this.flipCard();
             } else if (e.code === 'ArrowLeft') {

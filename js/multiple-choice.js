@@ -35,6 +35,9 @@ class MultipleChoiceQuiz extends BaseQuiz {
                 <div class="mc-header">
                     <span class="mc-title">${escapeHtml(state.currentSet.title || 'Multiple Choice')}</span>
                     <div style="display: flex; gap: 8px; align-items: center; position: relative;">
+                        <button class="btn-close-flashcards" id="mc-info-btn" title="Toetsenbord sneltoetsen" style="transform: none;">
+                            <span class="material-symbols-rounded">info</span>
+                        </button>
                         <button class="btn-close-flashcards" id="mc-settings-btn" title="Instellingen" style="transform: none;">
                             <span class="material-symbols-rounded">settings</span>
                         </button>
@@ -80,6 +83,7 @@ class MultipleChoiceQuiz extends BaseQuiz {
             </div>
 
             <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>
+            <quizy-keybinds-modal id="mc-keybinds-modal" mode="multiple-choice"></quizy-keybinds-modal>
         `;
     }
 
@@ -96,9 +100,18 @@ class MultipleChoiceQuiz extends BaseQuiz {
         this.settingsBtn = this.overlay.querySelector('#mc-settings-btn');
         this.settingsPanel = this.overlay.querySelector('#mc-settings-panel');
         this.confirmModal = this.overlay.querySelector('#mc-confirm-modal');
+        this.infoBtn = this.overlay.querySelector('#mc-info-btn');
+        this.keybindsModal = this.overlay.querySelector('#mc-keybinds-modal');
     }
 
     addEventListeners() {
+        if (this.infoBtn && this.keybindsModal) {
+            this.infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.keybindsModal.open('multiple-choice');
+            });
+        }
+
         this.settingsBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             if (this.settingsPanel.classList.contains('active')) {
@@ -188,23 +201,45 @@ class MultipleChoiceQuiz extends BaseQuiz {
             if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.isContentEditable)) {
                 return;
             }
-            if (this.settingsPanel.classList.contains('active')) {
+            if (this.settingsPanel.classList.contains('active') || (this.keybindsModal && this.keybindsModal.classList.contains('active'))) {
                 return;
             }
             
             // Support choosing options via keyboard A, B, C, D (or 1, 2, 3, 4) and Enter/Space for Next
             if (!this.answered) {
-                const optionIndex = ['KeyA', 'KeyB', 'KeyC', 'KeyD'].indexOf(e.code);
-                if (optionIndex !== -1 && optionIndex < this.optionsGridEl.children.length) {
+                const totalOptions = this.optionsGridEl.children.length;
+                if (e.code === 'ArrowDown') {
                     e.preventDefault();
-                    const btn = this.optionsGridEl.children[optionIndex];
-                    btn.click();
+                    if (this.keyboardSelectedIndex !== -1) {
+                        this.optionsGridEl.children[this.keyboardSelectedIndex].classList.remove('keyboard-selected');
+                    }
+                    this.keyboardSelectedIndex = (this.keyboardSelectedIndex + 1) % totalOptions;
+                    this.optionsGridEl.children[this.keyboardSelectedIndex].classList.add('keyboard-selected');
+                } else if (e.code === 'ArrowUp') {
+                    e.preventDefault();
+                    if (this.keyboardSelectedIndex !== -1) {
+                        this.optionsGridEl.children[this.keyboardSelectedIndex].classList.remove('keyboard-selected');
+                    }
+                    this.keyboardSelectedIndex = (this.keyboardSelectedIndex - 1 + totalOptions) % totalOptions;
+                    this.optionsGridEl.children[this.keyboardSelectedIndex].classList.add('keyboard-selected');
+                } else if (e.code === 'Enter') {
+                    e.preventDefault();
+                    if (this.keyboardSelectedIndex !== -1) {
+                        this.optionsGridEl.children[this.keyboardSelectedIndex].click();
+                    }
                 } else {
-                    const numberIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code);
-                    if (numberIndex !== -1 && numberIndex < this.optionsGridEl.children.length) {
+                    const optionIndex = ['KeyA', 'KeyB', 'KeyC', 'KeyD'].indexOf(e.code);
+                    if (optionIndex !== -1 && optionIndex < totalOptions) {
                         e.preventDefault();
-                        const btn = this.optionsGridEl.children[numberIndex];
+                        const btn = this.optionsGridEl.children[optionIndex];
                         btn.click();
+                    } else {
+                        const numberIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code);
+                        if (numberIndex !== -1 && numberIndex < totalOptions) {
+                            e.preventDefault();
+                            const btn = this.optionsGridEl.children[numberIndex];
+                            btn.click();
+                        }
                     }
                 }
             } else {
@@ -315,6 +350,7 @@ class MultipleChoiceQuiz extends BaseQuiz {
     updateQuestion() {
         this.answered = false;
         this.nextBtn.style.display = 'none';
+        this.keyboardSelectedIndex = -1;
         
         const card = this.activeQueue[this.currentIndex];
         this.triggerTimer();
