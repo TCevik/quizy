@@ -9,10 +9,9 @@ class QuizyHeader extends HTMLElement {
         const isDashboard = pathname.includes('dashboard.html');
         const isProfile = pathname.includes('profile.html');
 
-        
         const hasSession = localStorage.getItem('quizy-auth-token') !== null;
+        const cachedSub = localStorage.getItem('quizy-subscription');
 
-        
         let initialMenuHTML = '';
         if (isLogin) {
             initialMenuHTML = `<a class="btn-gradient" href="index.html">Terug</a>`;
@@ -35,8 +34,15 @@ class QuizyHeader extends HTMLElement {
             initialMenuHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
         }
 
+        let logoHTML = 'Quizy';
+        let logoStyle = '';
+        if (hasSession && cachedSub && cachedSub !== 'none') {
+            logoHTML = `Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">${cachedSub}</span>`;
+            logoStyle = 'style="display: inline-flex; align-items: center;"';
+        }
+
         this.innerHTML = `
-            <a href="index.html" class="logo">Quizy</a>
+            <a href="index.html" class="logo" ${logoStyle}>${logoHTML}</a>
             <nav class="header-items" id="header-menu">
                 ${initialMenuHTML}
             </nav>
@@ -50,6 +56,7 @@ class QuizyHeader extends HTMLElement {
                     const supabase = await supabaseReady;
                     if (supabase) {
                         await supabase.auth.signOut();
+                        localStorage.removeItem('quizy-subscription');
                         window.location.href = 'index.html';
                     }
                 });
@@ -99,18 +106,25 @@ class QuizyHeader extends HTMLElement {
                         .select('subscription')
                         .eq('id', user.id)
                         .single();
-                    if (profile && profile.subscription && profile.subscription !== 'none') {
+                    if (profile && profile.subscription) {
+                        localStorage.setItem('quizy-subscription', profile.subscription);
                         const logo = this.querySelector('.logo');
                         if (logo) {
-                            logo.innerHTML = `Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">${profile.subscription}</span>`;
-                            logo.style.display = 'inline-flex';
-                            logo.style.alignItems = 'center';
+                            if (profile.subscription !== 'none') {
+                                logo.innerHTML = `Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">${profile.subscription}</span>`;
+                                logo.style.display = 'inline-flex';
+                                logo.style.alignItems = 'center';
+                            } else {
+                                logo.innerHTML = 'Quizy';
+                                logo.style.display = '';
+                            }
                         }
                     }
                 } catch (err) {
                     console.error('Error fetching profile subscription:', err);
                 }
             } else {
+                localStorage.removeItem('quizy-subscription');
                 menu.innerHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
             }
         } else if (user) {
@@ -121,17 +135,25 @@ class QuizyHeader extends HTMLElement {
                     .select('subscription')
                     .eq('id', user.id)
                     .single();
-                if (profile && profile.subscription && profile.subscription !== 'none') {
+                if (profile && profile.subscription) {
+                    localStorage.setItem('quizy-subscription', profile.subscription);
                     const logo = this.querySelector('.logo');
                     if (logo) {
-                        logo.innerHTML = `Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">${profile.subscription}</span>`;
-                        logo.style.display = 'inline-flex';
-                        logo.style.alignItems = 'center';
+                        if (profile.subscription !== 'none') {
+                            logo.innerHTML = `Quizy <span style="font-size: 0.55em; vertical-align: middle; color: var(--primary); font-weight: 800; margin-left: 6px; border: 1.5px solid var(--primary); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.5px; display: inline-block; line-height: 1; text-transform: uppercase;">${profile.subscription}</span>`;
+                            logo.style.display = 'inline-flex';
+                            logo.style.alignItems = 'center';
+                        } else {
+                            logo.innerHTML = 'Quizy';
+                            logo.style.display = '';
+                        }
                     }
                 }
             } catch (err) {
                 console.error('Error fetching profile subscription:', err);
             }
+        } else {
+            localStorage.removeItem('quizy-subscription');
         }
     }
 }
