@@ -1,4 +1,5 @@
 import Toast from './toast.js';
+import { supabaseReady } from './supabase-init.js';
 
 class QuizySetModal extends HTMLElement {
     constructor() {
@@ -12,11 +13,42 @@ class QuizySetModal extends HTMLElement {
         ];
         this.currentMode = 'create'; 
         this.currentSetId = null;
+        this.maxCards = 200;
     }
 
     connectedCallback() {
         this.render();
         this.setupEventListeners();
+    }
+
+    async fetchMaxCards() {
+        try {
+            const supabase = await supabaseReady;
+            if (!supabase) return;
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('max_cards')
+                .eq('id', user.id)
+                .single();
+            if (!error && data && data.max_cards !== null && data.max_cards !== undefined) {
+                this.maxCards = data.max_cards;
+                this.updateCardCountDisplay();
+            }
+        } catch (err) {
+            console.error('Error fetching max_cards:', err);
+        }
+    }
+
+    updateCardCountDisplay() {
+        if (!this.cardCountIndicator) {
+            this.cardCountIndicator = this.querySelector('#card-count-indicator');
+        }
+        if (this.cardCountIndicator) {
+            const allRows = this.termsContainer ? this.termsContainer.querySelectorAll('.term-row:not(.removing)').length : 0;
+            this.cardCountIndicator.textContent = `(${allRows} / ${this.maxCards || 200})`;
+        }
     }
 
     render() {
@@ -77,7 +109,7 @@ class QuizySetModal extends HTMLElement {
                             <!-- Main: Cards -->
                             <div class="split-main">
                                 <div class="main-header-row">
-                                    <h4 class="section-title main-title">Lijst met kaarten</h4>
+                                    <h4 class="section-title main-title">Lijst met kaarten <span id="card-count-indicator" style="font-size: 0.85em; font-weight: normal; color: var(--text-muted); margin-left: 8px;">(0 / 200)</span></h4>
                                     <button type="button" id="btn-import-terms" class="btn-secondary btn-small">
                                         <span class="material-symbols-rounded">download</span>
                                         Importeren
@@ -145,6 +177,7 @@ class QuizySetModal extends HTMLElement {
         this.col2Header = this.querySelector('#col2-header');
         this.submitBtn = this.querySelector('#btn-submit-set');
         this.visibilitySelect = this.querySelector('#set-visibility');
+        this.cardCountIndicator = this.querySelector('#card-count-indicator');
     }
 
     setupEventListeners() {
@@ -240,6 +273,7 @@ class QuizySetModal extends HTMLElement {
         this.modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         this.resetForm();
+        this.fetchMaxCards();
 
         if (mode === 'edit' && setData) {
             this.modalTitleText.textContent = 'Set bewerken';
@@ -273,6 +307,7 @@ class QuizySetModal extends HTMLElement {
         for (let i = 0; i < 5; i++) {
             this.addTermRow('', '', false);
         }
+        this.updateCardCountDisplay();
         if (this.splitMain) this.splitMain.scrollTop = 0;
         if (this.splitSidebar) this.splitSidebar.scrollTop = 0;
     }
@@ -312,12 +347,13 @@ class QuizySetModal extends HTMLElement {
 
         this.termsContainer.innerHTML = '';
         if (data.rows && data.rows.length > 0) {
-            data.rows.slice(0, 200).forEach(r => this.addTermRow(r.term, r.definition, false, false, r.id, r.starred));
+            data.rows.slice(0, this.maxCards).forEach(r => this.addTermRow(r.term, r.definition, false, false, r.id, r.starred));
         } else {
             for (let i = 0; i < 5; i++) {
                 this.addTermRow('', '', false, false);
             }
         }
+        this.updateCardCountDisplay();
         this.updatePlaceholdersAndHeaders();
         if (this.splitMain) this.splitMain.scrollTop = 0;
         if (this.splitSidebar) this.splitSidebar.scrollTop = 0;
@@ -325,9 +361,9 @@ class QuizySetModal extends HTMLElement {
 
     addTermRow(term = '', definition = '', shouldScroll = true, showToastOnLimit = true, cardId = null, starred = false) {
         const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
-        if (allRows.length >= 200) {
+        if (allRows.length >= this.maxCards) {
             if (showToastOnLimit) {
-                Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
+                Toast.show(`Een set mag maximaal ${this.maxCards} kaarten bevatten.`, 'error');
             }
             return;
         }
@@ -356,6 +392,7 @@ class QuizySetModal extends HTMLElement {
                 row.addEventListener('animationend', () => {
                     row.remove();
                     this.updateDeleteButtonsState();
+                    this.updateCardCountDisplay();
                 }, { once: true });
                 this.updateDeleteButtonsState();
             }
@@ -363,6 +400,7 @@ class QuizySetModal extends HTMLElement {
  
         this.termsContainer.appendChild(row);
         this.updateDeleteButtonsState();
+        this.updateCardCountDisplay();
         this.updatePlaceholdersAndHeaders();
  
         
@@ -581,8 +619,8 @@ class QuizySetModal extends HTMLElement {
             return;
         }
 
-        if (rows.length > 200) {
-            Toast.show('Een set mag maximaal 200 kaarten bevatten.', 'error');
+        if (rows.length > this.maxCards) {
+            Toast.show(`Een set mag maximaal ${this.maxCards} kaarten bevatten.`, 'error');
             return;
         }
 
@@ -682,14 +720,14 @@ class QuizySetModal extends HTMLElement {
         }
 
         const currentCount = allEmpty ? 0 : existingRows.length;
-        if (currentCount + parsedRows.length > 200) {
-            const allowedCount = 200 - currentCount;
+        if (currentCount + parsedRows.length > this.maxCards) {
+            const allowedCount = this.maxCards - currentCount;
             if (allowedCount <= 0) {
-                Toast.show('De set heeft al het maximum van 200 kaarten bereikt.', 'error');
+                Toast.show(`De set heeft al het maximum van ${this.maxCards} kaarten bereikt.`, 'error');
                 return;
             }
             parsedRows.splice(allowedCount);
-            Toast.show(`Slechts ${allowedCount} woorden konden worden geïmporteerd (maximaal 200 kaarten).`, 'warning');
+            Toast.show(`Slechts ${allowedCount} woorden konden worden geïmporteerd (maximaal ${this.maxCards} kaarten).`, 'warning');
         }
 
         parsedRows.forEach(row => {
@@ -697,6 +735,7 @@ class QuizySetModal extends HTMLElement {
         });
 
         this.updateDeleteButtonsState();
+        this.updateCardCountDisplay();
         this.updatePlaceholdersAndHeaders();
 
         
