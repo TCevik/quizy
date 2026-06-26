@@ -14,6 +14,7 @@ class QuizySetModal extends HTMLElement {
         this.currentMode = 'create'; 
         this.currentSetId = null;
         this.maxCards = 200;
+        this.originalCardCount = 0;
     }
 
     connectedCallback() {
@@ -279,11 +280,13 @@ class QuizySetModal extends HTMLElement {
             this.modalTitleText.textContent = 'Set bewerken';
             this.submitBtn.textContent = 'Wijzigingen opslaan';
             this.currentSetId = setData.id;
+            this.originalCardCount = (setData.rows && setData.rows.length) ? setData.rows.length : 0;
             this.fillFormData(setData);
         } else {
             this.modalTitleText.textContent = 'Nieuwe set maken';
             this.submitBtn.textContent = 'Set aanmaken';
             this.currentSetId = null;
+            this.originalCardCount = 0;
         }
     }
 
@@ -347,7 +350,7 @@ class QuizySetModal extends HTMLElement {
 
         this.termsContainer.innerHTML = '';
         if (data.rows && data.rows.length > 0) {
-            data.rows.slice(0, this.maxCards).forEach(r => this.addTermRow(r.term, r.definition, false, false, r.id, r.starred));
+            data.rows.forEach(r => this.addTermRow(r.term, r.definition, false, false, r.id, r.starred, true));
         } else {
             for (let i = 0; i < 5; i++) {
                 this.addTermRow('', '', false, false);
@@ -359,9 +362,9 @@ class QuizySetModal extends HTMLElement {
         if (this.splitSidebar) this.splitSidebar.scrollTop = 0;
     }
 
-    addTermRow(term = '', definition = '', shouldScroll = true, showToastOnLimit = true, cardId = null, starred = false) {
+    addTermRow(term = '', definition = '', shouldScroll = true, showToastOnLimit = true, cardId = null, starred = false, ignoreLimit = false) {
         const allRows = this.termsContainer.querySelectorAll('.term-row:not(.removing)');
-        if (allRows.length >= this.maxCards) {
+        if (!ignoreLimit && allRows.length >= this.maxCards) {
             if (showToastOnLimit) {
                 Toast.show(`Een set mag maximaal ${this.maxCards} kaarten bevatten.`, 'error');
             }
