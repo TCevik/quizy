@@ -74,6 +74,7 @@ class SpellingQuiz extends BaseQuiz {
                         <div id="sp-feedback-container" style="display: none;"></div>
 
                         <div class="sp-action-area">
+                            <button type="button" class="btn-sp-action secondary" id="sp-btn-override" style="display: none;"></button>
                             <button type="button" class="btn-sp-action secondary" id="sp-btn-skip">
                                 Overslaan
                             </button>
@@ -117,6 +118,7 @@ class SpellingQuiz extends BaseQuiz {
         this.confirmModal = this.overlay.querySelector('#sp-confirm-modal');
         this.infoBtn = this.overlay.querySelector('#sp-info-btn');
         this.keybindsModal = this.overlay.querySelector('#sp-keybinds-modal');
+        this.overrideBtn = this.overlay.querySelector('#sp-btn-override');
     }
 
     addEventListeners() {
@@ -124,6 +126,12 @@ class SpellingQuiz extends BaseQuiz {
             this.infoBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.keybindsModal.open('spelling');
+            });
+        }
+
+        if (this.overrideBtn) {
+            this.overrideBtn.addEventListener('click', () => {
+                this.handleOverride();
             });
         }
 
@@ -317,6 +325,9 @@ class SpellingQuiz extends BaseQuiz {
         
         this.submitBtn.textContent = 'Controleren';
         this.skipBtn.style.display = 'inline-flex';
+        if (this.overrideBtn) {
+            this.overrideBtn.style.display = 'none';
+        }
         
         const card = this.activeQueue[this.currentIndex];
         if (!card) return;
@@ -435,10 +446,15 @@ class SpellingQuiz extends BaseQuiz {
         const correctAnswer = this.settings.swapSides ? card.term : card.definition;
         const result = this.checkSpellingAnswer(inputVal, correctAnswer);
         const isCorrect = result.isCorrect;
+        this.currentResult = { isCorrect, hasTypo: result.hasTypo, correctAlternative: result.correctAlternative };
 
         this.answered = true;
         this.userInputEl.disabled = true;
         this.skipBtn.style.display = 'none';
+        if (this.overrideBtn) {
+            this.overrideBtn.style.display = 'inline-flex';
+            this.overrideBtn.textContent = isCorrect ? 'Toch foutrekenen' : 'Toch goedrekenen';
+        }
         this.submitBtn.textContent = 'Volgende';
 
         const cardKey = this.getCardKey(card);
@@ -554,6 +570,91 @@ class SpellingQuiz extends BaseQuiz {
         `;
         this.feedbackContainer.style.display = 'block';
         this.submitBtn.focus();
+    }
+
+    handleOverride() {
+        const card = this.activeQueue[this.currentIndex];
+        const cardKey = this.getCardKey(card);
+        const inputVal = this.userInputEl.value.trim();
+        const correctAnswer = this.settings.swapSides ? card.term : card.definition;
+
+        if (this.currentResult.isCorrect) {
+            // Change to incorrect
+            this.currentResult.isCorrect = false;
+            
+            // Remove from learned
+            this.learnedCardKeys.delete(cardKey);
+            
+            // Increment failure count
+            this.failureCounts.set(cardKey, (this.failureCounts.get(cardKey) || 0) + 1);
+
+            // Re-insert into queue
+            const offset = Math.floor(Math.random() * 3) + 3;
+            const insertIndex = this.currentIndex + 1 + offset;
+            if (insertIndex >= this.activeQueue.length) {
+                this.activeQueue.push(card);
+            } else {
+                this.activeQueue.splice(insertIndex, 0, card);
+            }
+
+            // Update UI
+            this.feedbackContainer.innerHTML = `
+                <div class="sp-feedback-card incorrect">
+                    <span class="material-symbols-rounded feedback-icon">cancel</span>
+                    <div class="feedback-text-container">
+                        <span class="feedback-title">Onjuist... (Handmatig afgekeurd)</span>
+                        <span class="feedback-desc">Jouw antwoord: <strong style="color: #ef4444;">${escapeHtml(inputVal || '(leeg)')}</strong></span>
+                        <span class="feedback-desc">Correcte spelling: <strong style="color: #43a047;">${escapeHtml(correctAnswer)}</strong></span>
+                    </div>
+                </div>
+            `;
+            this.overrideBtn.textContent = 'Toch goedrekenen';
+        } else {
+            // Change to correct
+            this.currentResult.isCorrect = true;
+
+            // Remove re-inserted card from queue
+            const idx = this.activeQueue.indexOf(card, this.currentIndex + 1);
+            if (idx !== -1) {
+                this.activeQueue.splice(idx, 1);
+            }
+
+            // Decrement failure count
+            const currentFailures = this.failureCounts.get(cardKey) || 0;
+            if (currentFailures > 0) {
+                this.failureCounts.set(cardKey, currentFailures - 1);
+            }
+
+            // Add to learned if appropriate
+            if (this.isReviewPhase) {
+                let appearsLater = false;
+                for (let i = this.currentIndex + 1; i < this.activeQueue.length; i++) {
+                    if (this.getCardKey(this.activeQueue[i]) === cardKey) {
+                        appearsLater = true;
+                        break;
+                    }
+                }
+                if (!appearsLater) {
+                    this.learnedCardKeys.add(cardKey);
+                }
+            } else {
+                if (!this.failureCounts.has(cardKey) || this.failureCounts.get(cardKey) === 0) {
+                    this.learnedCardKeys.add(cardKey);
+                }
+            }
+
+            // Update UI
+            this.feedbackContainer.innerHTML = `
+                <div class="sp-feedback-card correct">
+                    <span class="material-symbols-rounded feedback-icon">check_circle</span>
+                    <div class="feedback-text-container">
+                        <span class="feedback-title">Correct! (Handmatig goedgekeurd)</span>
+                        <span class="feedback-desc">Goed gespeld.</span>
+                    </div>
+                </div>
+            `;
+            this.overrideBtn.textContent = 'Toch foutrekenen';
+        }
     }
 
     cleanupListeners() {

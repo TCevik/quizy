@@ -580,6 +580,7 @@ class LearnModeQuiz extends BaseQuiz {
                 </div>
                 <div id="learn-sp-feedback" style="display: none;"></div>
                 <div class="learn-controls">
+                    <button type="button" class="btn-control" id="learn-sp-override" style="display: none; background: transparent; border-color: rgba(255,255,255,0.1);"></button>
                     <button type="button" class="btn-control" id="learn-sp-skip" style="background: transparent; border-color: rgba(255,255,255,0.1);">
                         Overslaan
                     </button>
@@ -600,7 +601,9 @@ class LearnModeQuiz extends BaseQuiz {
         const feedback = this.cardArea.querySelector('#learn-sp-feedback');
         const submitBtn = this.cardArea.querySelector('#learn-sp-submit');
         const skipBtn = this.cardArea.querySelector('#learn-sp-skip');
+        const overrideBtn = this.cardArea.querySelector('#learn-sp-override');
         let answered = false;
+        let inputVal = '';
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -610,7 +613,7 @@ class LearnModeQuiz extends BaseQuiz {
                 return;
             }
 
-            const inputVal = input.value.trim();
+            inputVal = input.value.trim();
             const result = checkSpellingAnswer(inputVal, correctAnswer, {
                 skipPunctuation: this.settings.skipPunctuation,
                 allowSlashParts: this.settings.allowSlashParts,
@@ -618,9 +621,14 @@ class LearnModeQuiz extends BaseQuiz {
                 allowTypos: this.settings.allowTypos !== false
             });
             const correct = result.isCorrect;
+            this.currentResult = { isCorrect: correct };
             answered = true;
             input.disabled = true;
             skipBtn.style.display = 'none';
+            if (overrideBtn) {
+                overrideBtn.style.display = 'inline-flex';
+                overrideBtn.textContent = correct ? 'Toch foutrekenen' : 'Toch goedrekenen';
+            }
             submitBtn.textContent = 'Volgende';
 
             if (correct) {
@@ -663,6 +671,46 @@ class LearnModeQuiz extends BaseQuiz {
             }
             feedback.style.display = 'block';
         });
+
+        if (overrideBtn) {
+            overrideBtn.addEventListener('click', () => {
+                const cardKey = this.getCardKey(card);
+                if (this.currentResult.isCorrect) {
+                    // Change to incorrect
+                    this.currentResult.isCorrect = false;
+                    this.cardLevels.set(cardKey, this.normalizeCardLevel(1));
+                    this.failedInCurrentBatch.add(cardKey);
+
+                    feedback.innerHTML = `
+                        <div class="learn-sp-feedback-card incorrect">
+                            <div class="learn-sp-feedback-status incorrect">
+                                <span class="material-symbols-rounded">cancel</span>
+                                Helaas, onjuist. (Handmatig afgekeurd)
+                            </div>
+                            <div class="learn-sp-feedback-detail">Jouw antwoord: <span class="learn-sp-feedback-original">${escapeHtml(inputVal || '(leeg)')}</span></div>
+                            <div class="learn-sp-feedback-detail" style="font-weight: 600;">Correct antwoord: ${escapeHtml(correctAnswer)}</div>
+                        </div>
+                    `;
+                    overrideBtn.textContent = 'Toch goedrekenen';
+                } else {
+                    // Change to correct
+                    this.currentResult.isCorrect = true;
+                    this.advanceCardLevel(card, 3);
+                    this.failedInCurrentBatch.delete(cardKey);
+
+                    feedback.innerHTML = `
+                        <div class="learn-sp-feedback-card correct">
+                            <div class="learn-sp-feedback-status correct">
+                                <span class="material-symbols-rounded">check_circle</span>
+                                Helemaal goed! (Handmatig goedgekeurd)
+                            </div>
+                            <div class="learn-sp-feedback-detail">${escapeHtml(correctAnswer)}</div>
+                        </div>
+                    `;
+                    overrideBtn.textContent = 'Toch foutrekenen';
+                }
+            });
+        }
 
         skipBtn.addEventListener('click', () => {
             if (answered) return;
