@@ -521,3 +521,105 @@
 .split-main::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
 }
+
+@media (max-width: 768px) {
+    #create-set-modal.modal-overlay {
+        padding-top: 0 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        height: 100vh !important;
+        background: #080c14 !important;
+        z-index: 999999 !important;
+    }
+
+    .modal-card.modal-card-wide {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        background: #080c14 !important;
+    }
+
+    .modal-form {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .modal-body.split-layout {
+        flex-direction: column !important;
+        overflow-y: auto !important;
+        flex: 1 !important;
+    }
+
+    .split-sidebar {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding: 16px !important;
+        flex-shrink: 0 !important;
+        overflow-y: visible !important;
+    }
+
+    .split-main {
+        width: 100% !important;
+        padding: 16px !important;
+        overflow-y: visible !important;
+        flex: 1 !important;
+    }
+
+    .terms-header-row {
+        display: none !important;
+    }
+
+    .terms-rows-container {
+        gap: 16px !important;
+    }
+
+    .term-row {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        background: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 12px !important;
+        padding: 12px 56px 12px 12px !important;
+        position: relative !important;
+    }
+
+    .btn-delete-row {
+        position: absolute !important;
+        right: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+    }
+
+    .modal-footer {
+        padding: 16px !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        background: #080c14 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 10 !important;
+    }
+
+    .modal-footer .btn-secondary,
+    .modal-footer .btn-gradient,
+    .modal-footer button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 768px) {
+  *:not(input):not(textarea):not(select) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

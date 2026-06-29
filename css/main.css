@@ -547,3 +547,9 @@ quizy-settings-panel .settings-actions button {
     flex: 1;
 }
 
+@media (max-width: 768px) {
+  *:not(input):not(textarea):not(select) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

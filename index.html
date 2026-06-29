@@ -22,10 +22,26 @@
     <div class="hero-wrapper">
         <section class="hero">
             <div class="hero-content">
-                <h1>Test je kennis, overtref jezelf met Quizy</h1>
-                <p>Daag jezelf uit met interactieve quizzen, leer elke dag iets nieuws en klim naar de top van het
+                <div class="mobile-welcome">
+                    <div class="mobile-user-row">
+                        <div class="welcome-text">
+                            <span class="mobile-subtitle">Welkom bij Quizy 👋</span>
+                            <h2>Wat ga je vandaag leren?</h2>
+                        </div>
+                        <a href="profile.html" class="mobile-avatar">
+                            <span class="material-symbols-rounded">account_circle</span>
+                        </a>
+                    </div>
+                    <div class="mobile-search-box">
+                        <span class="material-symbols-rounded">search</span>
+                        <input type="text" placeholder="Zoek door leersets..." readonly onclick="window.location.href='dashboard.html'">
+                    </div>
+                </div>
+
+                <h1 class="desktop-only">Test je kennis, overtref jezelf met Quizy</h1>
+                <p class="desktop-only">Daag jezelf uit met interactieve quizzen, leer elke dag iets nieuws en klim naar de top van het
                     klassement. Speel direct gratis de populairste quizzen.</p>
-                <div class="hero-buttons">
+                <div class="hero-buttons desktop-only">
                     <a class="start-btn" href="login.html">Start Direct</a>
                     <div class="hero-secondary-btn">
                         <span class="material-symbols-rounded">play_circle</span>
@@ -35,8 +51,9 @@
             </div>
 
             <div class="hero-visual">
+                <h3 class="mobile-section-title">Populaire Categorieën</h3>
                 <div class="mock-container">
-                    <div class="mock-card glass-panel">
+                    <div class="mock-card glass-panel" onclick="window.location.href='login.html'">
                         <span class="material-symbols-rounded mock-icon">language</span>
                         <div class="mock-card-title">Talen</div>
                         <div class="mock-tag">Spaans</div>
@@ -44,7 +61,7 @@
                             <div class="mock-progress" style="width: 80%"></div>
                         </div>
                     </div>
-                    <div class="mock-card glass-panel">
+                    <div class="mock-card glass-panel" onclick="window.location.href='login.html'">
                         <span class="material-symbols-rounded mock-icon">functions</span>
                         <div class="mock-card-title">Wiskunde</div>
                         <div class="mock-tag">Formules</div>
@@ -52,7 +69,7 @@
                             <div class="mock-progress" style="width: 45%"></div>
                         </div>
                     </div>
-                    <div class="mock-card glass-panel">
+                    <div class="mock-card glass-panel" onclick="window.location.href='login.html'">
                         <span class="material-symbols-rounded mock-icon">history</span>
                         <div class="mock-card-title">Geschiedenis</div>
                         <div class="mock-tag">WO II</div>
@@ -60,7 +77,7 @@
                             <div class="mock-progress" style="width: 90%"></div>
                         </div>
                     </div>
-                    <div class="mock-card glass-panel">
+                    <div class="mock-card glass-panel" onclick="window.location.href='login.html'">
                         <span class="material-symbols-rounded mock-icon">biotech</span>
                         <div class="mock-card-title">Biologie</div>
                         <div class="mock-tag">DNA</div>
@@ -68,7 +85,7 @@
                             <div class="mock-progress" style="width: 30%"></div>
                         </div>
                     </div>
-                    <div class="mock-card glass-panel">
+                    <div class="mock-card glass-panel" onclick="window.location.href='login.html'">
                         <span class="material-symbols-rounded mock-icon">palette</span>
                         <div class="mock-card-title">Kunst</div>
                         <div class="mock-tag">Cultuur</div>
@@ -89,24 +106,31 @@
     </div>
 
     <main class="main-content">
+        <h3 class="mobile-section-title">Waarom Quizy?</h3>
         <section class="features">
             <div class="card">
                 <span class="material-symbols-rounded card-icon">bolt</span>
-                <h3>Razendsnel Leren</h3>
-                <p>Meteen aan de slag. Kies een leerset, start je sessie en test direct je kennis zonder enige
-                    afleiding.</p>
+                <div>
+                    <h3>Razendsnel Leren</h3>
+                    <p>Meteen aan de slag. Kies een leerset, start je sessie en test direct je kennis zonder enige
+                        afleiding.</p>
+                </div>
             </div>
             <div class="card">
                 <span class="material-symbols-rounded card-icon">psychology</span>
-                <h3>Eindeloze Onderwerpen</h3>
-                <p>Van talen en wiskunde to geschiedenis en biologie. Vind of maak de perfecte set voor jouw volgende
-                    toets.</p>
+                <div>
+                    <h3>Eindeloze Onderwerpen</h3>
+                    <p>Van talen en wiskunde tot geschiedenis en biologie. Vind of maak de perfecte set voor jouw volgende
+                        toets.</p>
+                </div>
             </div>
             <div class="card">
                 <span class="material-symbols-rounded card-icon">trophy</span>
-                <h3>Volg je Voortgang</h3>
-                <p>Zie precies wat je al kent en waar je nog even op moet oefenen. Verbeter je resultaten stap voor
-                    stap.</p>
+                <div>
+                    <h3>Volg je Voortgang</h3>
+                    <p>Zie precies wat je al kent en waar je nog even op moet oefenen. Verbeter je resultaten stap voor
+                        stap.</p>
+                </div>
             </div>
         </section>
 
@@ -131,8 +155,22 @@
             </div>
         </section>
     </main>
-
     <quizy-footer></quizy-footer>
+
+    <div class="mobile-bottom-nav">
+        <a href="index.html" class="nav-item active">
+            <span class="material-symbols-rounded">home</span>
+            <span>Home</span>
+        </a>
+        <a href="dashboard.html" class="nav-item">
+            <span class="material-symbols-rounded">dashboard</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <span class="material-symbols-rounded">person</span>
+            <span>Profiel</span>
+        </a>
+    </div>
 </body>
 
 </html>

@@ -4,7 +4,8 @@
     top: var(--header-height);
     left: 0;
     width: 100vw;
-    height: calc(100vh - var(--header-height));
+    height: 100%;
+    height: calc(100dvh - var(--header-height));
     background: var(--bg-dark);
     z-index: 1500;
     box-sizing: border-box;
@@ -463,3 +464,10 @@
     transform: translateY(-2px);
 }
 
+
+@media (max-width: 768px) {
+  *:not(input):not(textarea):not(select) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

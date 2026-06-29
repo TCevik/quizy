@@ -290,4 +290,179 @@ body {
 
 .submit-btn.loading .material-symbols-rounded {
     animation: spin 1s linear infinite;
+}
+
+/* Mobile App Look */
+.mobile-top-bar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --header-height: 0px;
+    }
+
+    body {
+        margin: 0 !important;
+        background-color: #080c14 !important;
+        color: var(--text-light) !important;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    quizy-header, quizy-footer {
+        display: none !important;
+    }
+
+    .mobile-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .back-btn {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        transition: background 0.2s;
+    }
+
+    .back-btn:active {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .mobile-logo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1.4em;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #ffffff 30%, var(--primary) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .login-wrapper {
+        padding: 40px 24px;
+        align-items: flex-start;
+        flex-direction: column;
+        background: radial-gradient(circle at top right, rgba(67, 160, 71, 0.08), transparent 60%), #080c14 !important;
+        height: 100vh;
+    }
+
+    .login-container {
+        padding: 0;
+        box-shadow: none;
+        background: transparent;
+        border: none;
+        max-width: 100%;
+        margin-top: 20px;
+    }
+
+    .login-container:hover {
+        box-shadow: none;
+        border: none;
+    }
+
+    .login-header {
+        text-align: left;
+        margin-bottom: 40px;
+    }
+
+    .login-header h2 {
+        font-size: 2.2em;
+        font-weight: 800;
+        letter-spacing: -0.6px;
+        color: var(--text-light);
+    }
+
+    .login-header p {
+        font-size: 1.05em;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 8px;
+    }
+
+    .input-wrapper input {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border-radius: 20px !important;
+        padding: 18px 16px 18px 54px !important;
+        font-size: 1.05em !important;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    .input-wrapper input:focus {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(67, 160, 71, 0.15) !important;
+    }
+
+    .input-icon {
+        font-size: 1.4em !important;
+        left: 18px !important;
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    .input-group label:not([for="password"]) {
+        display: none;
+    }
+    
+    .label-row {
+        justify-content: flex-end;
+    }
+    
+    .label-row label {
+        display: none;
+    }
+
+    .forgot-password {
+        font-size: 0.95em;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 500;
+    }
+
+    .submit-btn {
+        margin-top: 24px;
+        padding: 18px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 1.15em;
+        box-shadow: 0 8px 24px rgba(67, 160, 71, 0.25);
+    }
+
+    .signup-prompt {
+        margin-top: 40px;
+        font-size: 1.05em;
+    }
+    
+    .modal-content {
+        background: #080c14;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 32px 24px;
+        border-radius: 24px;
+    }
+    
+    .close-btn {
+        top: 16px;
+        right: 16px;
+    }
 }
+@media (max-width: 768px) {
+  *:not(input):not(textarea):not(select) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

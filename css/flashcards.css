@@ -465,3 +465,10 @@
     color: var(--primary);
 }
 
+
+@media (max-width: 768px) {
+  *:not(input):not(textarea):not(select) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

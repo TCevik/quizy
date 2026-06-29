@@ -396,3 +396,10 @@
     margin-top: 15px;
     margin-bottom: 15px;
 }
+
+@media (max-width: 768px) {
+  *:not(input):not(textarea):not(select) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

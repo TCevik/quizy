@@ -372,3 +372,10 @@
     transform: translateY(-2px);
 }
 
+
+@media (max-width: 768px) {
+  *:not(input):not(textarea):not(select) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
