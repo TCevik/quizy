@@ -489,7 +489,7 @@ class QuizySettingsPanel extends HTMLElement {
         };
 
         let extraSettingsHTML = '';
-        if (mode === 'spelling') {
+        if (mode === 'spelling' || mode === 'dictation') {
             extraSettingsHTML = getSpellingSettingsHTML(s);
         } else if (mode === 'learn') {
             const toggleFc = s.flashcards !== false;
@@ -543,12 +543,16 @@ class QuizySettingsPanel extends HTMLElement {
                 swapSidesDesc = `Toon ${escapeHtml(this.lang2 || 'de vertaling')} als vraag en ${escapeHtml(this.lang1 || 'het woord')} als antwoord.`;
             } else if (mode === 'spelling') {
                 swapSidesDesc = `Vraag ${escapeHtml(this.lang2 || 'de vertaling')} en typ ${escapeHtml(this.lang1 || 'het woord')}.`;
+            } else if (mode === 'dictation') {
+                swapSidesDesc = `Beluister en typ ${escapeHtml(this.lang2 || 'de vertaling')} (in plaats van ${escapeHtml(this.lang1 || 'het woord')}).`;
             } else if (mode === 'learn') {
                 swapSidesDesc = 'Draai de term en definitie om tijdens het leren.';
             }
         } else {
             if (mode === 'flashcards') {
                 swapSidesDesc = 'Toon de definitie op de voorkant en de term op de achterkant.';
+            } else if (mode === 'dictation') {
+                swapSidesDesc = 'Beluister en typ de definitie (in plaats van de term).';
             } else if (mode === 'learn') {
                 swapSidesDesc = 'Draai de term en definitie om tijdens het leren.';
             }
@@ -604,6 +608,7 @@ class QuizySettingsPanel extends HTMLElement {
                     <span class="setting-description">${swapSidesDesc}</span>
                 </div>
 
+                ${mode !== 'dictation' ? `
                 <div class="setting-item">
                     <div class="setting-row">
                         <label for="setting-auto-speak" class="setting-label">Automatisch uitspreken</label>
@@ -614,6 +619,7 @@ class QuizySettingsPanel extends HTMLElement {
                     </div>
                     <span class="setting-description">${autoSpeakDesc}</span>
                 </div>
+                ` : ''}
 
                 ${mode !== 'learn' ? `
                 <div class="setting-item">
@@ -655,7 +661,7 @@ class QuizySettingsPanel extends HTMLElement {
                     detail.timePressure = this.querySelector('#setting-time-pressure')?.checked || false;
                 }
 
-                if (mode === 'spelling' || mode === 'learn') {
+                if (mode === 'spelling' || mode === 'dictation' || mode === 'learn') {
                     detail.ignoreParentheses = this.querySelector('#setting-ignore-parentheses')?.checked || false;
                     detail.skipPunctuation = this.querySelector('#setting-skip-punctuation')?.checked || false;
                     detail.allowSlashParts = this.querySelector('#setting-allow-slash-parts')?.checked || false;
@@ -809,6 +815,32 @@ class QuizyKeybindsModal extends HTMLElement {
             </div>
         `;
 
+        const dictationKeybinds = `
+            <div class="keybind-section">
+                <h4 style="margin-top: 0; color: var(--green); display: flex; align-items: center; gap: 8px; font-size: 1.05em;">
+                    <span class="material-symbols-rounded">headphones</span> Dictaat
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Woord opnieuw afspelen</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">Ctrl</kbd>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Antwoord typen</span>
+                        <span style="color: var(--text-light); font-size: 0.85em; font-style: italic;">Gewoon typen</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Antwoord bevestigen</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">Enter</kbd>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--text-muted); font-size: 0.9em;">Volgende vraag</span>
+                        <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 0.8em; box-shadow: 0 2px 0 rgba(0,0,0,0.3); color: var(--text-light); font-weight: bold;">Enter</kbd>
+                    </div>
+                </div>
+            </div>
+        `;
+
         if (mode === 'flashcards') {
             title = 'Toetsenbord Sneltoetsen: Flashcards';
             content = flashcardKeybinds;
@@ -818,6 +850,9 @@ class QuizyKeybindsModal extends HTMLElement {
         } else if (mode === 'spelling') {
             title = 'Toetsenbord Sneltoetsen: Spelling';
             content = spellingKeybinds;
+        } else if (mode === 'dictation') {
+            title = 'Toetsenbord Sneltoetsen: Dictaat';
+            content = dictationKeybinds;
         } else {
             title = 'Toetsenbord Sneltoetsen: Leermodus';
             content = `
@@ -827,6 +862,8 @@ class QuizyKeybindsModal extends HTMLElement {
                     ${mcKeybinds}
                     <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;">
                     ${spellingKeybinds}
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;">
+                    ${dictationKeybinds}
                 </div>
             `;
         }
