@@ -27,7 +27,8 @@ class LearnModeQuiz extends BaseQuiz {
             autoSpeak: 'autoSpeak' in options ? !!options.autoSpeak : ('autoSpeak' in savedSettings ? !!savedSettings.autoSpeak : false),
             ignoreParentheses: 'ignoreParentheses' in options ? !!options.ignoreParentheses : ('ignoreParentheses' in savedSettings ? !!savedSettings.ignoreParentheses : true),
             skipPunctuation: 'skipPunctuation' in options ? !!options.skipPunctuation : ('skipPunctuation' in savedSettings ? !!savedSettings.skipPunctuation : true),
-            allowSlashParts: 'allowSlashParts' in options ? !!options.allowSlashParts : ('allowSlashParts' in savedSettings ? !!savedSettings.allowSlashParts : true)
+            allowSlashParts: 'allowSlashParts' in options ? !!options.allowSlashParts : ('allowSlashParts' in savedSettings ? !!savedSettings.allowSlashParts : true),
+            allowTypos: 'allowTypos' in options ? !!options.allowTypos : ('allowTypos' in savedSettings ? !!savedSettings.allowTypos : true)
         };
 
         const success = this.initSession(mappedOptions, mappedOptions);
@@ -141,7 +142,8 @@ class LearnModeQuiz extends BaseQuiz {
                     autoSpeak: newSettings.autoSpeak,
                     ignoreParentheses: newSettings.ignoreParentheses,
                     skipPunctuation: newSettings.skipPunctuation,
-                    allowSlashParts: newSettings.allowSlashParts
+                    allowSlashParts: newSettings.allowSlashParts,
+                    allowTypos: newSettings.allowTypos
                 };
                 
                 await this.saveSettings(saveMapped);
@@ -609,11 +611,13 @@ class LearnModeQuiz extends BaseQuiz {
             }
 
             const inputVal = input.value.trim();
-            const correct = checkSpellingAnswer(inputVal, correctAnswer, {
+            const result = checkSpellingAnswer(inputVal, correctAnswer, {
                 skipPunctuation: this.settings.skipPunctuation,
                 allowSlashParts: this.settings.allowSlashParts,
-                ignoreParentheses: this.settings.ignoreParentheses
+                ignoreParentheses: this.settings.ignoreParentheses,
+                allowTypos: this.settings.allowTypos !== false
             });
+            const correct = result.isCorrect;
             answered = true;
             input.disabled = true;
             skipBtn.style.display = 'none';
@@ -621,15 +625,28 @@ class LearnModeQuiz extends BaseQuiz {
 
             if (correct) {
                 this.advanceCardLevel(card, 3);
-                feedback.innerHTML = `
-                    <div class="learn-sp-feedback-card correct">
-                        <div class="learn-sp-feedback-status correct">
-                            <span class="material-symbols-rounded">check_circle</span>
-                            Helemaal goed!
+                if (result.hasTypo) {
+                    const correctAlternativeToShow = result.correctAlternative || correctAnswer;
+                    feedback.innerHTML = `
+                        <div class="learn-sp-feedback-card typo-warning">
+                            <div class="learn-sp-feedback-status typo-warning">
+                                <span class="material-symbols-rounded">warning</span>
+                                Bijna goed!
+                            </div>
+                            <div class="learn-sp-feedback-detail">Gerekend als goed, maar let op je spelling: <strong>${escapeHtml(correctAlternativeToShow)}</strong></div>
                         </div>
-                        <div class="learn-sp-feedback-detail">${escapeHtml(correctAnswer)}</div>
-                    </div>
-                `;
+                    `;
+                } else {
+                    feedback.innerHTML = `
+                        <div class="learn-sp-feedback-card correct">
+                            <div class="learn-sp-feedback-status correct">
+                                <span class="material-symbols-rounded">check_circle</span>
+                                Helemaal goed!
+                            </div>
+                            <div class="learn-sp-feedback-detail">${escapeHtml(correctAnswer)}</div>
+                        </div>
+                    `;
+                }
             } else {
                 this.cardLevels.set(this.getCardKey(card), this.normalizeCardLevel(1));
                 this.failedInCurrentBatch.add(this.getCardKey(card));

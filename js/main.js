@@ -64,7 +64,8 @@ export function checkSpellingAnswer(userInput, correctAnswer, options = {}) {
     const {
         skipPunctuation = true,
         allowSlashParts = true,
-        ignoreParentheses = true
+        ignoreParentheses = true,
+        allowTypos = true
     } = options;
     
     function normalizeString(str) {
@@ -81,13 +82,14 @@ export function checkSpellingAnswer(userInput, correctAnswer, options = {}) {
     }
 
     const normalizedInput = normalizeString(userInput);
+    const inputWithoutSpaces = normalizedInput.replace(/\s/g, '');
     let answers = [correctAnswer];
 
     if (allowSlashParts) {
         let newAnswers = [];
         answers.forEach(ans => {
-            if (ans.includes('/')) {
-                const parts = ans.split('/').map(p => p.trim());
+            if (/[\/,;]/.test(ans)) {
+                const parts = ans.split(/[\/,;]/).map(p => p.trim());
                 newAnswers.push(...parts);
             }
         });
@@ -109,5 +111,51 @@ export function checkSpellingAnswer(userInput, correctAnswer, options = {}) {
     const normalizedAcceptable = answers.map(ans => normalizeString(ans));
     const uniqueAcceptable = [...new Set(normalizedAcceptable)].filter(Boolean);
 
-    return uniqueAcceptable.includes(normalizedInput);
+    if (uniqueAcceptable.includes(normalizedInput)) {
+        return { isCorrect: true, hasTypo: false, correctAlternative: null };
+    }
+
+    if (!allowTypos) {
+        return { isCorrect: false, hasTypo: false, correctAlternative: null };
+    }
+
+    function getDamerauLevenshteinDistance(a, b) {
+        const matrix = Array.from({ length: a.length + 1 }, () => []);
+        for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+        for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+        for (let i = 1; i <= a.length; i++) {
+            for (let j = 1; j <= b.length; j++) {
+                const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j] + 1,       // Deletion
+                    matrix[i][j - 1] + 1,       // Insertion
+                    matrix[i - 1][j - 1] + cost // Substitution
+                );
+                if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+                    matrix[i][j] = Math.min(
+                        matrix[i][j],
+                        matrix[i - 2][j - 2] + 1 // Transposition
+                    );
+                }
+            }
+        }
+        return matrix[a.length][b.length];
+    }
+
+    for (const ans of uniqueAcceptable) {
+        const ansWithoutSpaces = ans.replace(/\s/g, '');
+        const len = ansWithoutSpaces.length;
+        let allowedTyposCount = 0;
+        if (len >= 5 && len <= 9) {
+            allowedTyposCount = 1;
+        } else if (len >= 10) {
+            allowedTyposCount = 2;
+        }
+        const dist = getDamerauLevenshteinDistance(inputWithoutSpaces, ansWithoutSpaces);
+        if (dist <= allowedTyposCount) {
+            return { isCorrect: true, hasTypo: true, correctAlternative: ans };
+        }
+    }
+
+    return { isCorrect: false, hasTypo: false, correctAlternative: null };
 };

@@ -473,7 +473,7 @@ const init = async () => {
                 if (visibilityWarningModal) {
                     visibilityWarningModal.open({
                         title: 'Set privé maken?',
-                        message: 'Als je deze set privé maakt, verdwijnt hij uit de "Gedeeld met mij" map van alle gebruikers die hem hebben opgeslagen. Ze moeten de set opnieuw toevoegen als je hem later weer openbaar maakt.',
+                        message: 'Als je deze set privé maakt, verdwijnt hij uit de "Laatst bezocht" map van alle gebruikers die hem hebben opgeslagen. Ze moeten de set opnieuw toevoegen als je hem later weer openbaar maakt.',
                         sub: '⚠ Andere gebruikers verliezen direct toegang tot deze set.',
                         confirmText: 'Privé maken'
                     });

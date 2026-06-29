@@ -262,6 +262,11 @@
     border-color: rgba(16, 185, 129, 0.2);
 }
 
+.learn-sp-feedback-card.typo-warning {
+    background: rgba(249, 115, 22, 0.1);
+    border-color: rgba(249, 115, 22, 0.2);
+}
+
 .learn-sp-feedback-card.incorrect {
     background: rgba(239, 68, 68, 0.1);
     border-color: rgba(239, 68, 68, 0.2);
@@ -277,6 +282,10 @@
 
 .learn-sp-feedback-status.correct {
     color: #10b981;
+}
+
+.learn-sp-feedback-status.typo-warning {
+    color: #f97316;
 }
 
 .learn-sp-feedback-status.incorrect {

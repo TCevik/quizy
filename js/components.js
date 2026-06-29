@@ -441,6 +441,7 @@ class QuizySettingsPanel extends HTMLElement {
             const ignoreParentheses = settingsObj.ignoreParentheses !== false;
             const skipPunctuation = settingsObj.skipPunctuation !== false;
             const allowSlashParts = settingsObj.allowSlashParts !== false;
+            const allowTypos = settingsObj.allowTypos !== false;
 
             return `
                 <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;">
@@ -473,6 +474,16 @@ class QuizySettingsPanel extends HTMLElement {
                         </label>
                     </div>
                     <span class="setting-description">Als het antwoord "hoi/hallo" is, is "hoi" óf "hallo" goed.</span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-row">
+                        <label for="setting-allow-typos" class="setting-label">Typefouten tolereren</label>
+                        <label class="fc-switch">
+                            <input type="checkbox" id="setting-allow-typos" ${allowTypos ? 'checked' : ''}>
+                            <span class="fc-slider"></span>
+                        </label>
+                    </div>
+                    <span class="setting-description">Kleine spelling- of typefouten rekenen we ook goed.</span>
                 </div>
             `;
         };
@@ -648,6 +659,7 @@ class QuizySettingsPanel extends HTMLElement {
                     detail.ignoreParentheses = this.querySelector('#setting-ignore-parentheses')?.checked || false;
                     detail.skipPunctuation = this.querySelector('#setting-skip-punctuation')?.checked || false;
                     detail.allowSlashParts = this.querySelector('#setting-allow-slash-parts')?.checked || false;
+                    detail.allowTypos = this.querySelector('#setting-allow-typos')?.checked || false;
                 }
                 if (mode === 'learn') {
                     detail.flashcards = this.querySelector('#setting-toggle-fc')?.checked || false;

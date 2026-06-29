@@ -19,7 +19,8 @@ class SpellingQuiz extends BaseQuiz {
             timePressure: false,
             ignoreParentheses: true,
             skipPunctuation: true,
-            allowSlashParts: true
+            allowSlashParts: true,
+            allowTypos: true
         });
         if (!success) return;
 
@@ -184,6 +185,7 @@ class SpellingQuiz extends BaseQuiz {
                 this.settings.ignoreParentheses = newSettings.ignoreParentheses;
                 this.settings.skipPunctuation = newSettings.skipPunctuation;
                 this.settings.allowSlashParts = newSettings.allowSlashParts;
+                this.settings.allowTypos = newSettings.allowTypos;
                 
                 if (newSettings.timePressure !== this.settings.timePressure) {
                     this.settings.timePressure = newSettings.timePressure;
@@ -293,7 +295,8 @@ class SpellingQuiz extends BaseQuiz {
         return checkSpellingHelper(userInput, correctAnswer, {
             skipPunctuation: this.settings.skipPunctuation,
             allowSlashParts: this.settings.allowSlashParts,
-            ignoreParentheses: this.settings.ignoreParentheses
+            ignoreParentheses: this.settings.ignoreParentheses,
+            allowTypos: this.settings.allowTypos !== false
         });
     }
 
@@ -430,7 +433,8 @@ class SpellingQuiz extends BaseQuiz {
         const inputVal = this.userInputEl.value.trim();
         const card = this.activeQueue[this.currentIndex];
         const correctAnswer = this.settings.swapSides ? card.term : card.definition;
-        const isCorrect = this.checkSpellingAnswer(inputVal, correctAnswer);
+        const result = this.checkSpellingAnswer(inputVal, correctAnswer);
+        const isCorrect = result.isCorrect;
 
         this.answered = true;
         this.userInputEl.disabled = true;
@@ -457,15 +461,28 @@ class SpellingQuiz extends BaseQuiz {
                 }
             }
 
-            this.feedbackContainer.innerHTML = `
-                <div class="sp-feedback-card correct">
-                    <span class="material-symbols-rounded feedback-icon">check_circle</span>
-                    <div class="feedback-text-container">
-                        <span class="feedback-title">Correct!</span>
-                        <span class="feedback-desc">Goed gespeld.</span>
+            if (result.hasTypo) {
+                const correctAlternativeToShow = result.correctAlternative || correctAnswer;
+                this.feedbackContainer.innerHTML = `
+                    <div class="sp-feedback-card typo-warning">
+                        <span class="material-symbols-rounded feedback-icon">warning</span>
+                        <div class="feedback-text-container">
+                            <span class="feedback-title">Bijna goed!</span>
+                            <span class="feedback-desc">Gerekend als goed, maar let op je spelling: <strong>${escapeHtml(correctAlternativeToShow)}</strong></span>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                this.feedbackContainer.innerHTML = `
+                    <div class="sp-feedback-card correct">
+                        <span class="material-symbols-rounded feedback-icon">check_circle</span>
+                        <div class="feedback-text-container">
+                            <span class="feedback-title">Correct!</span>
+                            <span class="feedback-desc">Goed gespeld.</span>
+                        </div>
+                    </div>
+                `;
+            }
             
             if (this.settings.autoSpeak) {
                 const speakAnswerText = this.settings.swapSides ? card.term : card.definition;
