@@ -548,8 +548,9 @@ quizy-settings-panel .settings-actions button {
 }
 
 @media (max-width: 768px) {
-  *:not(input):not(textarea):not(select) {
+  .btn, button, a, .mc-option-btn, .segment-btn, .setting-label, .term-card {
     -webkit-user-select: none;
     user-select: none;
+    cursor: pointer;
   }
 }
