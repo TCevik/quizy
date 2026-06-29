@@ -186,7 +186,12 @@ class LearnModeQuiz extends BaseQuiz {
         document.addEventListener('click', this.clickOutsideHandler);
 
         this.keydownHandler = (e) => {
-            if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.isContentEditable)) {
+            const isSpellingAnswered = this.currentSubMode === 'spelling' && (() => {
+                const feedback = this.cardArea.querySelector('#learn-sp-feedback');
+                return feedback && feedback.style.display !== 'none';
+            })();
+
+            if (!isSpellingAnswered && document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.isContentEditable)) {
                 return;
             }
             if (this.settingsPanel.classList.contains('active') || (this.keybindsModal && this.keybindsModal.classList.contains('active'))) {
@@ -210,7 +215,8 @@ class LearnModeQuiz extends BaseQuiz {
             } else if (this.currentSubMode === 'multiple-choice') {
                 const optionsGrid = this.cardArea.querySelector('#learn-mc-options');
                 const nextBtn = this.cardArea.querySelector('#learn-mc-next');
-                const answered = nextBtn && nextBtn.style.display !== 'none';
+                const actionArea = this.cardArea.querySelector('#learn-mc-action');
+                const answered = actionArea && actionArea.style.display !== 'none';
                 
                 if (!answered && optionsGrid) {
                     const totalOptions = optionsGrid.children.length;
@@ -251,6 +257,12 @@ class LearnModeQuiz extends BaseQuiz {
                         e.preventDefault();
                         nextBtn.click();
                     }
+                }
+            } else if (this.currentSubMode === 'spelling') {
+                const submitBtn = this.cardArea.querySelector('#learn-sp-submit');
+                if (isSpellingAnswered && submitBtn && (e.code === 'Enter' || e.code === 'Space')) {
+                    e.preventDefault();
+                    submitBtn.click();
                 }
             }
         };
@@ -670,6 +682,7 @@ class LearnModeQuiz extends BaseQuiz {
                 `;
             }
             feedback.style.display = 'block';
+            submitBtn.focus();
         });
 
         if (overrideBtn) {

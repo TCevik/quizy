@@ -297,6 +297,17 @@ class SpellingQuiz extends BaseQuiz {
         });
 
         this.closeBtn.addEventListener('click', () => this.closeOverlay());
+
+        this.keydownHandler = (e) => {
+            if (this.settingsPanel.classList.contains('active') || (this.keybindsModal && this.keybindsModal.classList.contains('active'))) {
+                return;
+            }
+            if (this.answered && (e.code === 'Enter' || e.code === 'Space')) {
+                e.preventDefault();
+                this.submitBtn.click();
+            }
+        };
+        document.addEventListener('keydown', this.keydownHandler);
     }
 
     checkSpellingAnswer(userInput, correctAnswer) {
@@ -661,6 +672,9 @@ class SpellingQuiz extends BaseQuiz {
         super.cleanupListeners();
         if (this.clickOutsideHandler) {
             document.removeEventListener('click', this.clickOutsideHandler);
+        }
+        if (this.keydownHandler) {
+            document.removeEventListener('keydown', this.keydownHandler);
         }
     }
 }
