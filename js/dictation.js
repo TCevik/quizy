@@ -59,10 +59,12 @@ class DictationQuiz extends BaseQuiz {
                         <span class="material-symbols-rounded" style="font-size: 36px;">volume_up</span>
                     </button>
                     <div class="sp-question-label" id="dict-question-label" style="text-align: center;">Typ wat je hoort</div>
-                    <div id="dict-hint-container" style="min-height: 24px; text-align: center; color: var(--text-muted); font-size: 0.95em; font-style: italic;"></div>
-                    <button type="button" class="btn-sp-action secondary" id="dict-hint-btn" style="padding: 6px 12px; font-size: 0.85em; border-radius: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 6px; color: var(--text-muted); cursor: pointer;">
-                        <span class="material-symbols-rounded" style="font-size: 16px;">lightbulb</span> Toon betekenis hint
-                    </button>
+                    <div class="dict-hint-wrapper" style="height: 32px; display: flex; align-items: center; justify-content: center; width: 100%;">
+                        <button type="button" class="btn-sp-action secondary" id="dict-hint-btn" style="padding: 6px 12px; font-size: 0.85em; border-radius: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 6px; color: var(--text-muted); cursor: pointer; margin: 0;">
+                            <span class="material-symbols-rounded" style="font-size: 16px;">lightbulb</span> Toon betekenis hint
+                        </button>
+                        <div id="dict-hint-container" style="display: none; text-align: center; color: var(--text-muted); font-size: 0.95em; font-style: italic;"></div>
+                    </div>
                 </div>
 
                 <div style="width: 100%;">
@@ -71,7 +73,7 @@ class DictationQuiz extends BaseQuiz {
                             <input type="text" id="dict-user-input" class="sp-input" placeholder="Typ je antwoord hier..." autofocus>
                         </div>
                         
-                        <div id="dict-feedback-container" style="display: none;"></div>
+                        <div id="dict-feedback-container"></div>
 
                         <div class="sp-action-area">
                             <button type="button" class="btn-sp-action secondary" id="dict-btn-override" style="display: none;"></button>
@@ -268,6 +270,7 @@ class DictationQuiz extends BaseQuiz {
         this.hintShown = true;
         const hintText = this.settings.swapSides ? card.term : card.definition;
         this.hintContainer.textContent = `Betekenis: ${hintText}`;
+        this.hintContainer.style.display = 'block';
         this.hintBtn.style.display = 'none';
         this.userInputEl.focus();
     }
@@ -291,9 +294,15 @@ class DictationQuiz extends BaseQuiz {
         this.answered = false;
         this.hintShown = false;
         this.hintContainer.textContent = '';
+        this.hintContainer.style.display = 'none';
         this.hintBtn.style.display = 'inline-flex';
-        this.feedbackContainer.style.display = 'none';
-        this.feedbackContainer.innerHTML = '';
+        this.feedbackContainer.classList.remove('active');
+        const container = this.feedbackContainer;
+        setTimeout(() => {
+            if (!container.classList.contains('active')) {
+                container.innerHTML = '';
+            }
+        }, 350);
         this.userInputEl.value = '';
         this.userInputEl.disabled = false;
         this.userInputEl.focus();
@@ -484,7 +493,7 @@ class DictationQuiz extends BaseQuiz {
             `;
         }
 
-        this.feedbackContainer.style.display = 'block';
+        this.feedbackContainer.classList.add('active');
         this.submitBtn.focus();
     }
 
@@ -519,7 +528,7 @@ class DictationQuiz extends BaseQuiz {
                 </div>
             </div>
         `;
-        this.feedbackContainer.style.display = 'block';
+        this.feedbackContainer.classList.add('active');
         this.submitBtn.focus();
     }
 

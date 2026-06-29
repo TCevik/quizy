@@ -71,7 +71,7 @@ class SpellingQuiz extends BaseQuiz {
                             <input type="text" id="sp-user-input" class="sp-input" placeholder="Typ je antwoord hier..." autofocus>
                         </div>
                         
-                        <div id="sp-feedback-container" style="display: none;"></div>
+                        <div id="sp-feedback-container"></div>
 
                         <div class="sp-action-area">
                             <button type="button" class="btn-sp-action secondary" id="sp-btn-override" style="display: none;"></button>
@@ -327,8 +327,13 @@ class SpellingQuiz extends BaseQuiz {
 
     updateQuestion() {
         this.answered = false;
-        this.feedbackContainer.style.display = 'none';
-        this.feedbackContainer.innerHTML = '';
+        this.feedbackContainer.classList.remove('active');
+        const container = this.feedbackContainer;
+        setTimeout(() => {
+            if (!container.classList.contains('active')) {
+                container.innerHTML = '';
+            }
+        }, 350);
         this.userInputEl.value = '';
         this.userInputEl.disabled = false;
         this.userInputEl.focus();
@@ -545,7 +550,7 @@ class SpellingQuiz extends BaseQuiz {
             }
         }
 
-        this.feedbackContainer.style.display = 'block';
+        this.feedbackContainer.classList.add('active');
         this.submitBtn.focus();
     }
 
@@ -579,7 +584,7 @@ class SpellingQuiz extends BaseQuiz {
                 </div>
             </div>
         `;
-        this.feedbackContainer.style.display = 'block';
+        this.feedbackContainer.classList.add('active');
         this.submitBtn.focus();
     }
 
