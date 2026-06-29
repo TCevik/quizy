@@ -4,8 +4,7 @@
     top: var(--header-height);
     left: 0;
     width: 100vw;
-    height: 100%;
-    height: calc(100dvh - var(--header-height));
+    height: calc(100vh - var(--header-height));
     background: var(--bg-dark);
     z-index: 1500;
     box-sizing: border-box;
