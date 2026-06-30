@@ -6,8 +6,8 @@ class QuizyHeader extends HTMLElement {
     async connectedCallback() {
         const isLogin = this.hasAttribute('login-page');
         const pathname = window.location.pathname;
-        const isDashboard = pathname.includes('dashboard.html');
-        const isProfile = pathname.includes('profile.html');
+        const isDashboard = /\/dashboard(\.html)?\/?$/.test(pathname);
+        const isProfile = /\/profile(\.html)?\/?$/.test(pathname);
 
         const hasSession = localStorage.getItem('quizy-auth-token') !== null;
         const cachedSub = localStorage.getItem('quizy-subscription');
