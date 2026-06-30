@@ -74,8 +74,7 @@ class LearnModeQuiz extends BaseQuiz {
             <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>
             <quizy-keybinds-modal id="learn-keybinds-modal" mode="learn"></quizy-keybinds-modal>
         `;
-        this.overlay.innerHTML = this.wrapWithAds(mainContent);
-        this.triggerAds();
+        this.overlay.innerHTML = mainContent;
     }
 
     setupElements() {

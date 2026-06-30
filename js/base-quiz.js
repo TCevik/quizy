@@ -103,13 +103,6 @@ export class BaseQuiz {
         this.overlay.classList.add('active');
     }
 
-    wrapWithAds(contentHtml) {
-        return contentHtml;
-    }
-
-    triggerAds() {
-    }
-
     closeOverlay() {
         this.cleanupListeners();
         if (this.overlay) {

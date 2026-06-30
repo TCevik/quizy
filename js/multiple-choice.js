@@ -85,8 +85,7 @@ class MultipleChoiceQuiz extends BaseQuiz {
             <quizy-confirm-modal id="mc-confirm-modal"></quizy-confirm-modal>
             <quizy-keybinds-modal id="mc-keybinds-modal" mode="multiple-choice"></quizy-keybinds-modal>
         `;
-        this.overlay.innerHTML = this.wrapWithAds(mainContent);
-        this.triggerAds();
+        this.overlay.innerHTML = mainContent;
     }
 
     setupElements() {
