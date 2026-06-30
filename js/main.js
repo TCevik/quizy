@@ -195,4 +195,37 @@ document.addEventListener('click', async (e) => {
             });
         }
     }
-});
+});
+
+export function toggleButtonLoading(button, isLoading, normalText, normalIcon, loadingText) {
+    if (!button) return;
+    const textSpan = button.querySelector('span:not(.material-symbols-rounded)') || button.querySelector('span');
+    const iconSpan = button.querySelector('.material-symbols-rounded');
+    
+    button.disabled = isLoading;
+    if (isLoading) {
+        button.classList.add('loading');
+        if (textSpan) textSpan.textContent = loadingText;
+        if (iconSpan) iconSpan.textContent = 'progress_activity';
+    } else {
+        button.classList.remove('loading');
+        if (textSpan) textSpan.textContent = normalText;
+        if (iconSpan) iconSpan.textContent = normalIcon;
+    }
+}
+
+export function resetTurnstiles(container = document) {
+    if (window.turnstile) {
+        container.querySelectorAll('.cf-turnstile').forEach(div => {
+            try {
+                window.turnstile.reset(div);
+            } catch (e) {
+                console.error('Error resetting Turnstile:', e);
+            }
+        });
+    }
+}
+
+export function getRedirectUrl(path) {
+    return window.location.origin + '/' + path.replace(/^\//, '');
+}

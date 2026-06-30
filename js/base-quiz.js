@@ -239,7 +239,115 @@ export class BaseQuiz {
     }
 
     // Subclass hooks
+    bindCommonSettingsEvents(onUpdateUI) {
+        if (this.settingsBtn && this.settingsPanel) {
+            this.settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.settingsPanel.classList.contains('active')) {
+                    this.settingsPanel.close();
+                } else {
+                    const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
+                    this.settingsPanel.open(
+                        this.settings,
+                        hasStarred,
+                        state.currentSet.mode === 'talen',
+                        state.currentSet.lang1,
+                        state.currentSet.lang2
+                    );
+                }
+            });
+        }
+
+        if (this.settingsPanel) {
+            this.settingsPanel.addEventListener('save', async (e) => {
+                const newSettings = e.detail;
+
+                const applySettings = async () => {
+                    this.settingsPanel.close();
+                    await this.saveSettings(newSettings);
+                    this.closeOverlay();
+                    this.open(newSettings);
+                };
+
+                if (newSettings.starOnly !== this.settings.starOnly) {
+                    this.confirmModal.open();
+                    const onConfirm = () => {
+                        this.confirmModal.removeEventListener('confirm', onConfirm);
+                        applySettings();
+                    };
+                    this.confirmModal.addEventListener('confirm', onConfirm);
+                } else {
+                    await this.saveSettings(newSettings);
+
+                    if (newSettings.randomize !== this.settings.randomize) {
+                        this.settings.randomize = newSettings.randomize;
+                        if (this.settings.randomize) {
+                            const remaining = this.activeQueue.slice(this.currentIndex + 1);
+                            this.shuffleArray(remaining);
+                            this.activeQueue.splice(this.currentIndex + 1, this.activeQueue.length - (this.currentIndex + 1), ...remaining);
+                            Toast.show(this.mode === 'flashcards' ? 'Kaarten worden nu in willekeurige volgorde getoond.' : 'Vragen worden nu in willekeurige volgorde getoond.', 'success');
+                        } else {
+                            const remaining = this.activeQueue.slice(this.currentIndex + 1);
+                            remaining.sort((a, b) => this.originalCards.indexOf(a) - this.originalCards.indexOf(b));
+                            this.activeQueue.splice(this.currentIndex + 1, this.activeQueue.length - (this.currentIndex + 1), ...remaining);
+                            Toast.show(this.mode === 'flashcards' ? 'Willekeurige volgorde uitgeschakeld. Kaarten gaan verder in de originele volgorde.' : 'Willekeurige volgorde uitgeschakeld. Vragen gaan verder in de originele volgorde.', 'info');
+                        }
+                    }
+
+                    if (newSettings.swapSides !== this.settings.swapSides) {
+                        this.settings.swapSides = newSettings.swapSides;
+                        Toast.show(state.currentSet.mode === 'talen' ? 'Talen zijn omgedraaid.' : 'Term en definitie zijn omgedraaid.', 'success');
+                    }
+
+                    if (newSettings.autoSpeak !== this.settings.autoSpeak) {
+                        this.settings.autoSpeak = newSettings.autoSpeak;
+                        Toast.show(this.settings.autoSpeak ? 'Automatisch uitspreken ingeschakeld.' : 'Automatisch uitspreken uitgeschakeld.', 'success');
+                    }
+
+                    const extraKeys = ['ignoreParentheses', 'skipPunctuation', 'allowSlashParts', 'allowTypos'];
+                    for (const key of extraKeys) {
+                        if (key in newSettings) {
+                            this.settings[key] = newSettings[key];
+                        }
+                    }
+
+                    if (newSettings.timePressure !== this.settings.timePressure) {
+                        this.settings.timePressure = newSettings.timePressure;
+                        const timerContainer = this.overlay.querySelector('.quizy-timer-bar-container');
+                        if (timerContainer) {
+                            timerContainer.style.display = this.settings.timePressure ? 'block' : 'none';
+                        }
+                        if (this.settings.timePressure) {
+                            if (typeof this.triggerTimer === 'function') {
+                                this.triggerTimer();
+                            }
+                        } else {
+                            this.stopTimer();
+                        }
+                        Toast.show(this.settings.timePressure ? 'Tijdsdruk ingeschakeld.' : 'Tijdsdruk uitgeschakeld.', 'success');
+                    }
+
+                    if (typeof onUpdateUI === 'function') {
+                        onUpdateUI(newSettings);
+                    }
+                    this.settingsPanel.close();
+                }
+            });
+        }
+
+        this.clickOutsideHandler = (e) => {
+            if (this.settingsPanel && !this.settingsPanel.contains(e.target) && this.settingsBtn && e.target !== this.settingsBtn && !this.settingsBtn.contains(e.target)) {
+                this.settingsPanel.close();
+            }
+        };
+        document.addEventListener('click', this.clickOutsideHandler);
+    }
+
     cleanupListeners() {
         this.stopTimer();
+        if (this.clickOutsideHandler) {
+            document.removeEventListener('click', this.clickOutsideHandler);
+            this.clickOutsideHandler = null;
+        }
     }
 }

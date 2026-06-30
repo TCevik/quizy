@@ -1,5 +1,6 @@
 import { supabaseReady, getFriendlyErrorMessage } from './supabase-init.js';
 import Toast from './toast.js';
+import { toggleButtonLoading, resetTurnstiles, getRedirectUrl } from './main.js';
 
 const initLogin = async () => {
     const loginForm = document.getElementById('loginForm');
@@ -19,23 +20,6 @@ const initLogin = async () => {
 
     const nameInput = document.getElementById('name');
     const confirmPasswordInput = document.getElementById('confirm-password');
-
-    function toggleButtonLoading(button, isLoading, normalText, normalIcon, loadingText) {
-        if (!button) return;
-        const textSpan = button.querySelector('span:not(.material-symbols-rounded)') || button.querySelector('span');
-        const iconSpan = button.querySelector('.material-symbols-rounded');
-        
-        button.disabled = isLoading;
-        if (isLoading) {
-            button.classList.add('loading');
-            if (textSpan) textSpan.textContent = loadingText;
-            if (iconSpan) iconSpan.textContent = 'progress_activity';
-        } else {
-            button.classList.remove('loading');
-            if (textSpan) textSpan.textContent = normalText;
-            if (iconSpan) iconSpan.textContent = normalIcon;
-        }
-    }
 
     if (toggleAuthBtn) {
         toggleAuthBtn.addEventListener('click', (e) => {
@@ -108,7 +92,7 @@ const initLogin = async () => {
                     } else {
                         Toast.show(`Inloggen mislukt: ${getFriendlyErrorMessage(error)}`, 'error');
                     }
-                    resetAllTurnstiles();
+                    resetTurnstiles();
                 } else {
                     window.location.href = 'dashboard.html';
                 }
@@ -163,18 +147,18 @@ const initLogin = async () => {
 
                 if (error) {
                     Toast.show(`Registratie mislukt: ${getFriendlyErrorMessage(error)}`, 'error');
-                    resetAllTurnstiles();
+                    resetTurnstiles();
                 } else {
                     
                     if (data?.user && data.user.identities && data.user.identities.length === 0) {
                         Toast.show('Dit e-mailadres is al geregistreerd.', 'error');
-                        resetAllTurnstiles();
+                        resetTurnstiles();
                     } else if (data?.session) {
                         window.location.href = 'dashboard.html';
                     } else {
                         
                         Toast.show('Registratie succesvol! Controleer je e-mail voor een verificatielink.', 'success');
-                        resetAllTurnstiles();
+                        resetTurnstiles();
                     }
                 }
             }
@@ -213,7 +197,7 @@ const initLogin = async () => {
             toggleButtonLoading(submitBtn, true, 'Link versturen', 'send', 'Versturen...');
 
             const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-                redirectTo: window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/reset-password.html',
+                redirectTo: getRedirectUrl('reset-password.html'),
                 captchaToken: captchaToken
             });
 
@@ -221,11 +205,11 @@ const initLogin = async () => {
 
             if (error) {
                 Toast.show(`Fout: ${getFriendlyErrorMessage(error)}`, 'error');
-                resetAllTurnstiles();
+                resetTurnstiles();
             } else {
                 Toast.show('Er is een herstellink naar je e-mailadres gestuurd!', 'success');
                 resetForm.reset();
-                resetAllTurnstiles();
+                resetTurnstiles();
                 if (resetModal) resetModal.style.display = 'none';
             }
         });
@@ -242,18 +226,6 @@ const initLogin = async () => {
         });
     }
 
-    function resetAllTurnstiles() {
-        if (window.turnstile) {
-            document.querySelectorAll('.cf-turnstile').forEach(div => {
-                try {
-                    window.turnstile.reset(div);
-                } catch (e) {
-                    console.error('Error resetting Turnstile in login:', e);
-                }
-            });
-        }
-    }
-
     async function resendConfirmationEmail(email, customMessageEl = null) {
         Toast.show('Verificatiemail versturen...', 'info');
 
@@ -264,18 +236,18 @@ const initLogin = async () => {
             type: 'signup',
             email: email,
             options: {
-                emailRedirectTo: window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/dashboard.html',
+                emailRedirectTo: getRedirectUrl('dashboard.html'),
                 captchaToken: captchaToken
             }
         });
 
         if (error) {
             Toast.show(`Fout: ${getFriendlyErrorMessage(error)}`, 'error');
-            resetAllTurnstiles();
+            resetTurnstiles();
         } else {
             Toast.show('Je e-mailadres is nog niet bevestigd. Er is direct een nieuwe verificatiemail naar je verstuurd!', 'success');
             if (resendForm) resendForm.reset();
-            resetAllTurnstiles();
+            resetTurnstiles();
             if (resendModal) resendModal.style.display = 'none';
         }
     }

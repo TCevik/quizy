@@ -63,12 +63,7 @@ export async function saveLocalSets(sets) {
 }
 
 export async function saveLocalSet(set) {
-    const db = await getDB();
-    const existing = await db.get(STORE_NAME, normalizeId(set.id));
-    if (existing && existing.cards && !set.cards) {
-        set.cards = existing.cards;
-    }
-    await db.put(STORE_NAME, set);
+    await saveLocalSets([set]);
 }
 
 export async function deleteLocalSet(id) {
@@ -135,14 +130,6 @@ export async function syncSets(supabase, userId) {
                                 .in('id', idsNeedingFullFetch);
 
                             if (!fullErr && fullSets) {
-                                const activeSharedIds = new Set(remoteSharedMeta.map(s => s.id));
-
-                                for (const id of sharedLocalIds) {
-                                    if (!activeSharedIds.has(id)) {
-                                        await deleteLocalSet(id);
-                                    }
-                                }
-
                                 for (const fullSet of fullSets) {
                                     if (fullSet.cards) {
                                         fullSet.cards.sort((a, b) => (a.position || 0) - (b.position || 0));

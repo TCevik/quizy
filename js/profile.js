@@ -1,5 +1,6 @@
 import { supabaseReady } from './supabase-init.js';
 import Toast from './toast.js';
+import { resetTurnstiles, getRedirectUrl } from './main.js';
 
 const initProfile = async () => {
     const supabase = await supabaseReady;
@@ -105,13 +106,7 @@ const initProfile = async () => {
         Toast.show(text, isSuccess ? 'success' : 'error');
     }
 
-    function resetProfileTurnstile() {
-        if (window.turnstile && profileResetForm) {
-            profileResetForm.querySelectorAll('.cf-turnstile').forEach(div => {
-                try { window.turnstile.reset(div); } catch (e) { console.error('Error resetting Turnstile in profile:', e); }
-            });
-        }
-    }
+
 
     if (resetPasswordBtn && profileResetModal) {
         resetPasswordBtn.addEventListener('click', (e) => {
@@ -124,12 +119,12 @@ const initProfile = async () => {
     if (closeProfileResetModal && profileResetModal) {
         closeProfileResetModal.addEventListener('click', () => {
             profileResetModal.style.display = 'none';
-            resetProfileTurnstile();
+            resetTurnstiles(profileResetForm);
         });
         window.addEventListener('click', (e) => {
             if (e.target === profileResetModal) {
                 profileResetModal.style.display = 'none';
-                resetProfileTurnstile();
+                resetTurnstiles(profileResetForm);
             }
         });
     }
@@ -142,17 +137,17 @@ const initProfile = async () => {
             showMessage('Bezig met verzenden van herstellink...', true);
 
             const { error: resetError } = await supabase.auth.resetPasswordForEmail(user.email, {
-                redirectTo: window.location.origin + '/reset-password.html',
+                redirectTo: getRedirectUrl('reset-password.html'),
                 captchaToken: captchaToken
             });
 
             if (resetError) {
                 showMessage(`Fout bij verzenden: ${resetError.message}`, false);
-                resetProfileTurnstile();
+                resetTurnstiles(profileResetForm);
             } else {
                 showMessage('Er is een herstellink naar je e-mailadres gestuurd!', true);
                 profileResetModal.style.display = 'none';
-                resetProfileTurnstile();
+                resetTurnstiles(profileResetForm);
             }
         });
     }

@@ -134,91 +134,9 @@ class SpellingQuiz extends BaseQuiz {
             });
         }
 
-        this.settingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (this.settingsPanel.classList.contains('active')) {
-                this.settingsPanel.close();
-            } else {
-                const hasStarred = (state.currentSet.cards || []).some(c => c.starred);
-                this.settingsPanel.open(
-                    this.settings,
-                    hasStarred,
-                    state.currentSet.mode === 'talen',
-                    state.currentSet.lang1,
-                    state.currentSet.lang2
-                );
-            }
+        this.bindCommonSettingsEvents(() => {
+            this.updateQuestion();
         });
-
-        this.settingsPanel.addEventListener('save', async (e) => {
-            const newSettings = e.detail;
-
-            const applySettings = async () => {
-                this.settingsPanel.close();
-                await this.saveSettings(newSettings);
-                this.closeOverlay();
-                this.open(newSettings);
-            };
-
-            if (newSettings.starOnly !== this.settings.starOnly) {
-                this.confirmModal.open();
-                const onConfirm = () => {
-                    this.confirmModal.removeEventListener('confirm', onConfirm);
-                    applySettings();
-                };
-                this.confirmModal.addEventListener('confirm', onConfirm);
-            } else {
-                await this.saveSettings(newSettings);
-
-                if (newSettings.randomize !== this.settings.randomize) {
-                    this.settings.randomize = newSettings.randomize;
-                    if (this.settings.randomize) {
-                        const remaining = this.activeQueue.slice(this.currentIndex + 1);
-                        this.shuffleArray(remaining);
-                        this.activeQueue.splice(this.currentIndex + 1, this.activeQueue.length - (this.currentIndex + 1), ...remaining);
-                        Toast.show('Vragen worden nu in willekeurige volgorde getoond.', 'success');
-                    } else {
-                        const remaining = this.activeQueue.slice(this.currentIndex + 1);
-                        remaining.sort((a, b) => {
-                            return this.originalCards.indexOf(a) - this.originalCards.indexOf(b);
-                        });
-                        this.activeQueue.splice(this.currentIndex + 1, this.activeQueue.length - (this.currentIndex + 1), ...remaining);
-                        Toast.show('Willekeurige volgorde uitgeschakeld. Vragen gaan verder in de originele volgorde.', 'info');
-                    }
-                }
-                
-                this.settings.swapSides = newSettings.swapSides;
-                this.settings.autoSpeak = newSettings.autoSpeak;
-                this.settings.ignoreParentheses = newSettings.ignoreParentheses;
-                this.settings.skipPunctuation = newSettings.skipPunctuation;
-                this.settings.allowSlashParts = newSettings.allowSlashParts;
-                this.settings.allowTypos = newSettings.allowTypos;
-                
-                if (newSettings.timePressure !== this.settings.timePressure) {
-                    this.settings.timePressure = newSettings.timePressure;
-                    const timerContainer = this.overlay.querySelector('.quizy-timer-bar-container');
-                    if (timerContainer) {
-                        timerContainer.style.display = this.settings.timePressure ? 'block' : 'none';
-                    }
-                    if (this.settings.timePressure) {
-                        this.triggerTimer();
-                    } else {
-                        this.stopTimer();
-                    }
-                    Toast.show(this.settings.timePressure ? 'Tijdsdruk ingeschakeld.' : 'Tijdsdruk uitgeschakeld.', 'success');
-                }
-                
-                this.updateQuestion();
-                this.settingsPanel.close();
-            }
-        });
-
-        this.clickOutsideHandler = (e) => {
-            if (!this.settingsPanel.contains(e.target) && e.target !== this.settingsBtn && !this.settingsBtn.contains(e.target)) {
-                this.settingsPanel.close();
-            }
-        };
-        document.addEventListener('click', this.clickOutsideHandler);
 
         this.starBtn.addEventListener('click', async (e) => {
             e.stopPropagation();

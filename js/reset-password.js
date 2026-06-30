@@ -1,5 +1,6 @@
 import { supabaseReady, getFriendlyErrorMessage } from './supabase-init.js';
 import Toast from './toast.js';
+import { toggleButtonLoading } from './main.js';
 
 const initReset = async () => {
     
@@ -17,23 +18,6 @@ const initReset = async () => {
     if (!supabase) return;
 
     const resetPasswordForm = document.getElementById('resetPasswordForm');
-
-    function toggleButtonLoading(button, isLoading, normalText, normalIcon, loadingText) {
-        if (!button) return;
-        const textSpan = button.querySelector('span:not(.material-symbols-rounded)') || button.querySelector('span');
-        const iconSpan = button.querySelector('.material-symbols-rounded');
-        
-        button.disabled = isLoading;
-        if (isLoading) {
-            button.classList.add('loading');
-            if (textSpan) textSpan.textContent = loadingText;
-            if (iconSpan) iconSpan.textContent = 'progress_activity';
-        } else {
-            button.classList.remove('loading');
-            if (textSpan) textSpan.textContent = normalText;
-            if (iconSpan) iconSpan.textContent = normalIcon;
-        }
-    }
 
     if (resetPasswordForm) {
         resetPasswordForm.addEventListener('submit', async (e) => {
