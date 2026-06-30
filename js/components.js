@@ -25,13 +25,23 @@ class QuizyHeader extends HTMLElement {
                     <span class="material-symbols-rounded" style="margin-right: 8px;">account_circle</span>
                     Profiel
                 </a>
+                <a href="#" class="pwa-install-btn" style="display: none;">
+                    <span class="material-symbols-rounded" style="margin-right: 8px;">download</span>
+                    App Installeren
+                </a>
                 <a href="#" id="logoutBtn">
                     <span class="material-symbols-rounded" style="margin-right: 8px;">logout</span>
                     Uitloggen
                 </a>
             `;
         } else {
-            initialMenuHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
+            initialMenuHTML = `
+                <a href="#" class="pwa-install-btn" style="display: none;">
+                    <span class="material-symbols-rounded" style="margin-right: 8px;">download</span>
+                    App Installeren
+                </a>
+                <a class="btn-gradient" href="login.html">Inloggen op Quizy</a>
+            `;
         }
 
         let logoHTML = 'Quizy';
@@ -96,6 +106,10 @@ class QuizyHeader extends HTMLElement {
                             <span class="material-symbols-rounded" style="margin-right: 8px;">account_circle</span>
                             Profiel
                         </a>
+                        <a href="#" class="pwa-install-btn" style="display: none;">
+                            <span class="material-symbols-rounded" style="margin-right: 8px;">download</span>
+                            App Installeren
+                        </a>
                         <a href="#" id="logoutBtn">
                             <span class="material-symbols-rounded" style="margin-right: 8px;">logout</span>
                             Uitloggen
@@ -138,7 +152,13 @@ class QuizyHeader extends HTMLElement {
                 }
             } else {
                 localStorage.removeItem('quizy-subscription');
-                menu.innerHTML = `<a class="btn-gradient" href="login.html">Inloggen op Quizy</a>`;
+                menu.innerHTML = `
+                    <a href="#" class="pwa-install-btn" style="display: none;">
+                        <span class="material-symbols-rounded" style="margin-right: 8px;">download</span>
+                        App Installeren
+                    </a>
+                    <a class="btn-gradient" href="login.html">Inloggen op Quizy</a>
+                `;
             }
         } else if (user) {
             // Even on login page or if isLogin is true, if they are logged in, check subscription for logo
@@ -167,6 +187,12 @@ class QuizyHeader extends HTMLElement {
             }
         } else {
             localStorage.removeItem('quizy-subscription');
+        }
+
+        if (window.deferredPrompt) {
+            this.querySelectorAll('.pwa-install-btn').forEach(btn => {
+                btn.style.display = 'inline-flex';
+            });
         }
     }
 }

@@ -164,4 +164,35 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(() => {});
     });
-}
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.deferredPrompt = e;
+    document.querySelectorAll('.pwa-install-btn').forEach(btn => {
+        btn.style.display = 'inline-flex';
+    });
+});
+
+window.addEventListener('appinstalled', () => {
+    window.deferredPrompt = null;
+    document.querySelectorAll('.pwa-install-btn').forEach(btn => {
+        btn.style.display = 'none';
+    });
+});
+
+document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.pwa-install-btn');
+    if (btn && window.deferredPrompt) {
+        e.preventDefault();
+        const promptEvent = window.deferredPrompt;
+        promptEvent.prompt();
+        const { outcome } = await promptEvent.userChoice;
+        if (outcome === 'accepted') {
+            window.deferredPrompt = null;
+            document.querySelectorAll('.pwa-install-btn').forEach(b => {
+                b.style.display = 'none';
+            });
+        }
+    }
+});
