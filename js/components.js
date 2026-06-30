@@ -56,6 +56,9 @@ class QuizyHeader extends HTMLElement {
             <nav class="header-items" id="header-menu">
                 ${initialMenuHTML}
             </nav>
+            <a href="#" class="pwa-install-btn mobile-install-btn" style="display: none; align-items: center; justify-content: center; color: var(--text-light); text-decoration: none; padding: 8px; margin-left: auto; margin-right: 8px;">
+                <span class="material-symbols-rounded">download</span>
+            </a>
             ${hasSession ? `
             <a href="#" id="mobileLogoutBtn" class="mobile-logout-btn">
                 <span class="material-symbols-rounded">logout</span>

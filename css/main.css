@@ -575,3 +575,9 @@ quizy-settings-panel .settings-actions button {
     cursor: pointer;
   }
 }
+
+@media (min-width: 769px) {
+  .mobile-install-btn {
+    display: none !important;
+  }
+}
