@@ -159,3 +159,9 @@ export function checkSpellingAnswer(userInput, correctAnswer, options = {}) {
 
     return { isCorrect: false, hasTypo: false, correctAlternative: null };
 };
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+}
