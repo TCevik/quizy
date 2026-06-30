@@ -54,8 +54,6 @@ class DictationQuiz extends BaseQuiz {
                     <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
                 </div>
 
-                <div class="quizy-ad-container" data-ad-type="display" style="width: 100%; margin: 8px 0;"></div>
-
                 <div class="sp-question-card" id="dict-question" style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 32px 24px;">
                     <button class="btn-sp-speak" id="dict-replay-btn" title="Beluister opnieuw (Ctrl)" style="position: static; width: 80px; height: 80px; border-radius: 50%; background: rgba(67, 160, 71, 0.1); border: 2px solid rgba(67, 160, 71, 0.2); color: var(--primary); display: flex; align-items: center; justify-content: center; transform: none; transition: all 0.2s ease;">
                         <span class="material-symbols-rounded" style="font-size: 36px;">volume_up</span>
@@ -95,8 +93,6 @@ class DictationQuiz extends BaseQuiz {
                         <div class="progress-bar-fill" id="dict-progress-fill" style="background: var(--primary);"></div>
                     </div>
                 </div>
-
-                <div class="quizy-ad-container" data-ad-type="multiplex" style="width: 100%; margin: 8px 0;"></div>
             </div>
 
             <quizy-confirm-modal id="dict-confirm-modal"></quizy-confirm-modal>

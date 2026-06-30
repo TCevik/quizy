@@ -59,8 +59,6 @@ class LearnModeQuiz extends BaseQuiz {
                     </div>
                 </div>
 
-                <div class="quizy-ad-container" data-ad-type="display" style="width: 100%; margin: 8px 0;"></div>
-
                 <div class="progress-container">
                     <span class="progress-text" id="learn-progress-text">Voortgang: 0%</span>
                     <div class="progress-bar-bg">
@@ -71,8 +69,6 @@ class LearnModeQuiz extends BaseQuiz {
                 <div class="learn-card-area" id="learn-card-area"></div>
 
                 <div class="learn-batch-dots" id="learn-batch-dots"></div>
-
-                <div class="quizy-ad-container" data-ad-type="multiplex" style="width: 100%; margin: 8px 0;"></div>
             </div>
 
             <quizy-confirm-modal id="learn-confirm-modal"></quizy-confirm-modal>
