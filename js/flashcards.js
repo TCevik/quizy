@@ -51,6 +51,8 @@ class FlashcardsQuiz extends BaseQuiz {
                     <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
                 </div>
 
+                <div class="quizy-ad-container" data-ad-type="display" style="width: 100%; margin: 8px 0;"></div>
+
                 <div class="flashcard-wrapper" id="fc-card">
                     <div class="flashcard-inner">
                         <div class="flashcard-face flashcard-front">
@@ -95,6 +97,8 @@ class FlashcardsQuiz extends BaseQuiz {
                         <div class="progress-bar-fill" id="fc-progress-fill"></div>
                     </div>
                 </div>
+
+                <div class="quizy-ad-container" data-ad-type="multiplex" style="width: 100%; margin: 8px 0;"></div>
             </div>
 
             <quizy-confirm-modal id="fc-confirm-modal"></quizy-confirm-modal>

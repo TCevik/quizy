@@ -54,6 +54,8 @@ class SpellingQuiz extends BaseQuiz {
                     <div class="quizy-timer-bar-fill" style="width: 100%; height: 100%; background: var(--orange); transition: width 0.1s linear;"></div>
                 </div>
 
+                <div class="quizy-ad-container" data-ad-type="display" style="width: 100%; margin: 8px 0;"></div>
+
                 <div class="sp-question-card" id="sp-question">
                     <button class="btn-sp-speak" title="Uitspreken">
                         <span class="material-symbols-rounded">volume_up</span>
@@ -91,6 +93,8 @@ class SpellingQuiz extends BaseQuiz {
                         <div class="progress-bar-fill" id="sp-progress-fill"></div>
                     </div>
                 </div>
+
+                <div class="quizy-ad-container" data-ad-type="multiplex" style="width: 100%; margin: 8px 0;"></div>
             </div>
 
             <quizy-confirm-modal id="sp-confirm-modal"></quizy-confirm-modal>
