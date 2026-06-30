@@ -46,12 +46,17 @@ class QuizyHeader extends HTMLElement {
             <nav class="header-items" id="header-menu">
                 ${initialMenuHTML}
             </nav>
+            ${hasSession ? `
+            <a href="#" id="mobileLogoutBtn" class="mobile-logout-btn">
+                <span class="material-symbols-rounded">logout</span>
+            </a>
+            ` : ''}
         `;
 
         const setupLogout = () => {
-            const logoutBtn = this.querySelector('#logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', async (e) => {
+            const logoutBtns = this.querySelectorAll('#logoutBtn, #mobileLogoutBtn');
+            logoutBtns.forEach(btn => {
+                btn.addEventListener('click', async (e) => {
                     e.preventDefault();
                     const supabase = await supabaseReady;
                     if (supabase) {
@@ -60,7 +65,7 @@ class QuizyHeader extends HTMLElement {
                         window.location.href = 'index.html';
                     }
                 });
-            }
+            });
         };
 
         setupLogout();
@@ -96,6 +101,14 @@ class QuizyHeader extends HTMLElement {
                             Uitloggen
                         </a>
                     `;
+                    if (!this.querySelector('#mobileLogoutBtn')) {
+                        const mobileBtn = document.createElement('a');
+                        mobileBtn.href = '#';
+                        mobileBtn.id = 'mobileLogoutBtn';
+                        mobileBtn.className = 'mobile-logout-btn';
+                        mobileBtn.innerHTML = '<span class="material-symbols-rounded">logout</span>';
+                        this.appendChild(mobileBtn);
+                    }
                     setupLogout();
                 }
 

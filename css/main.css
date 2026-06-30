@@ -135,6 +135,23 @@ body {
     cursor: pointer;
 }
 
+.mobile-logout-btn {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-logout-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.25);
+        text-decoration: none;
+        padding: 8px;
+        transition: color 0.2s;
+    }
+}
+
+
 .glass-panel {
     background: rgba(var(--bg-dark-rgb), 0.45);
     backdrop-filter: blur(20px);
