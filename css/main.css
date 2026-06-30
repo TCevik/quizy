@@ -169,6 +169,10 @@ quizy-footer {
     margin-top: auto;
 }
 
+.mobile-bottom-nav {
+    display: none;
+}
+
 
 body:has(.learn-overlay.active) quizy-footer,
 body:has(.flashcards-overlay.active) quizy-footer,
