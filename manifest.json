@@ -1,7 +1,7 @@
 {
   "name": "Quizy",
   "short_name": "Quizy",
-  "start_url": "./index.html",
+  "start_url": "./dashboard.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#43a047",
