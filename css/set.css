@@ -500,10 +500,11 @@ body {
         font-size: 1.55em !important;
         font-weight: 800 !important;
         letter-spacing: -0.8px !important;
-        background: linear-gradient(135deg, #ffffff 30%, var(--primary) 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        background: none !important;
+        -webkit-background-clip: initial !important;
+        background-clip: initial !important;
+        -webkit-text-fill-color: var(--text-light) !important;
+        color: var(--text-light) !important;
     }
 
     .header-items {
